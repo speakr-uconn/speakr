@@ -1,2 +1,1 @@
-# speakr
-Android application for creating a sound system using an ad hoc network of phones.
+Speakr is an Android application for creating a speaker system using cellular phones.
