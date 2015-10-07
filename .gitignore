@@ -1,0 +1,30 @@
+ld/
+bin/
+gen/
+tmp/
+# proguard/ comment if not using proguard.
+.gradle/
+.settings/
+.idea/
+app/app.iml
+gradle/
+build.gradle
+gradlew.bat
+speakr.iml
+gradle.properties
+settings.gradle
+gradlew
+build/
+# General Files
+
+.project
+.classpath
+.DS_Store
+local.properties
+*.iml
+# gradlew comment when using gradle wrapper
+# gradlew.bat comment when using gradle wrapper
+Thumbs.db
+
+
+# files specific to current project
