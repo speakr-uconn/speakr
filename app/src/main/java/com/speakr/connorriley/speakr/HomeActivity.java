@@ -1,26 +1,58 @@
 package com.speakr.connorriley.speakr;
 
-import android.app.Activity;
-import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
+import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
-public class HomeActivity extends Activity {
+import java.util.List;
 
-    private ListView jamsListView;
-    private ArrayAdapter arrayAdapter;
-    private String[] jamsArray = {"test jam 1", "test jam 2", "bangers"};
+public class HomeActivity extends ActionBarActivity {
+
+    private ListView listView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-        jamsListView = (ListView) findViewById(R.id.jams_list);
-
-        arrayAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, jamsArray);
-        jamsListView.setAdapter(arrayAdapter);
+        listView = (ListView)findViewById(R.id.jams_list);
+        String[] values = new String[] {
+                "Jam 1",
+                "Jam 2",
+                "Bangers",
+                "Club mix"
+        };
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(
+                this,
+                android.R.layout.simple_expandable_list_item_1,
+                android.R.id.text1,
+                values
+        );
+        listView.setAdapter(adapter);
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_home, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_settings) {
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
 }
