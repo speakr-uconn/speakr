@@ -1,5 +1,6 @@
 package com.speakr.connorriley.speakr;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
@@ -7,7 +8,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.os.Handler;
 
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends Activity {
 
     private final int SPLASH_SCREEN_DURATION = 1000;
 

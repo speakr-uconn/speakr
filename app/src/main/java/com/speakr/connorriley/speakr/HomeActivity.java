@@ -1,5 +1,6 @@
 package com.speakr.connorriley.speakr;
 
+import android.app.Activity;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.Menu;
@@ -9,7 +10,7 @@ import android.widget.ListView;
 
 import java.util.List;
 
-public class HomeActivity extends ActionBarActivity {
+public class HomeActivity extends Activity {
 
     private ListView listView;
 
