@@ -51,7 +51,6 @@ public class PlayerActivity extends Activity implements MediaPlayerControl {
     }
 
     //-- TODO: Reorder the methods in this and MusicService.java to have a sensible ordering, to make it easier to find stuff
-
     public void getSongList() {
         //retrieve song info
 
@@ -105,14 +104,20 @@ public class PlayerActivity extends Activity implements MediaPlayerControl {
     }
 
     private void setController(){
-        //set the controller up
-        controller = new MusicController(this);
-        controller.setPrevNextListeners(new View.OnClickListener() {
+        //-- Method to set up the controller. This is the object controlling the playback options, of Skip, Play/Pause, and Seek.
+        if(controller == null)
+            controller = new MusicController(this); //-- only make a new controller if it's null
+
+        controller.setPrevNextListeners(
+        //-- "Next" button listener
+        new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 playNext();
             }
-        }, new View.OnClickListener() {
+        },
+        //-- "Previous" button listener
+        new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 playPrev();
