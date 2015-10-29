@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <item android:id="@+id/nav_jams"
+        android:title="Jams" />
+    <item android:id="@+id/nav_music_player"
+        android:title="Music Player" />
+    <!--
     <group android:checkableBehavior="single">
         <item android:id="@+id/nav_camara" android:icon="@android:drawable/ic_menu_camera"
             android:title="Import" />
@@ -20,5 +25,5 @@
                 android:title="Send" />
         </menu>
     </item>
-
+    -->
 </menu>

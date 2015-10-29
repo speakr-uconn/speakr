@@ -26,7 +26,6 @@
             android:theme="@style/AppTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -40,12 +39,6 @@
             android:label="@string/title_activity_player"
             android:launchMode="singleTop"
             android:screenOrientation="portrait">
-            <!--
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-            -->
         </activity>
         <service android:name="com.speakr.connorriley.speakr.MusicService" />
     </application>

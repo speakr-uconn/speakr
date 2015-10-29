@@ -3,6 +3,8 @@ package com.speakr.connorriley.speakr;
 import android.app.Activity;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarActivity;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -20,7 +22,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.MediaController.MediaPlayerControl;
 
-public class PlayerActivity extends ActionBarActivity implements MediaPlayerControl {
+public class PlayerActivity extends Activity implements MediaPlayerControl {
     //-- Referenced the following websites:
     //-- Pulling song list: http://code.tutsplus.com/tutorials/create-a-music-player-on-android-project-setup--mobile-22764
     //-- MediaPlayer itself: http://code.tutsplus.com/tutorials/create-a-music-player-on-android-song-playback--mobile-22778
@@ -49,7 +51,6 @@ public class PlayerActivity extends ActionBarActivity implements MediaPlayerCont
     }
 
     //-- TODO: Reorder the methods in this and MusicService.java to have a sensible ordering, to make it easier to find stuff
-    //-- TODO: Make the bar of icons (with previous song, seek, play/pause, next song) appear all the way at the bottom. Currently looks hideous where it appears
 
     public void getSongList() {
         //retrieve song info
@@ -118,7 +119,8 @@ public class PlayerActivity extends ActionBarActivity implements MediaPlayerCont
             }
         });
         controller.setMediaPlayer(this);
-        controller.setAnchorView(findViewById(R.id.song_list));
+        //-- Place the controller, with the { |<, <<, play/pause, >>, >| } buttons, at the bottom (anchored to the bottom of the layout)
+        controller.setAnchorView(findViewById(R.id.playerLayout));
         controller.setEnabled(true);
     }
 
@@ -241,6 +243,12 @@ public class PlayerActivity extends ActionBarActivity implements MediaPlayerCont
         return 0;
     }
 
+    public void openJamsActivity(){
+        //-- Mike 10/28/15
+        Intent intent = new Intent(this, HomeActivity.class);
+        startActivity(intent);
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         //menu item selected
@@ -256,6 +264,35 @@ public class PlayerActivity extends ActionBarActivity implements MediaPlayerCont
 
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @SuppressWarnings("StatementWithEmptyBody")
+    public boolean onNavigationItemSelected(MenuItem item) {
+        // Handle navigation view item clicks here.
+        int id = item.getItemId();
+
+        if(id == R.id.nav_jams){
+            openJamsActivity();
+        }
+        /*
+        if (id == R.id.nav_camara) {
+            // Handle the camera action
+        } else if (id == R.id.nav_gallery) {
+
+        } else if (id == R.id.nav_slideshow) {
+
+        } else if (id == R.id.nav_manage) {
+
+        } else if (id == R.id.nav_share) {
+
+        } else if (id == R.id.nav_send) {
+
+        }
+        */
+
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawer.closeDrawer(GravityCompat.START);
+        return true;
     }
 
     //connect to the service

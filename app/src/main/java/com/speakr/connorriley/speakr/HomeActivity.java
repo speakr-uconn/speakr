@@ -1,8 +1,10 @@
 package com.speakr.connorriley.speakr;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.support.design.widget.FloatingActionButton;
@@ -14,12 +16,16 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.widget.Toast;
+
 import java.util.List;
 
 public class HomeActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener{
 
     private ListView listView;
+    private ListView mDrawerList;
+    private ArrayAdapter<String> mAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +65,32 @@ public class HomeActivity extends AppCompatActivity
                 values
         );
         listView.setAdapter(adapter);*/
+
+        addDrawerItems();
+    }
+
+    public void openPlayerActivity(){
+        //-- Mike 10/28/15
+        Intent intent = new Intent(this, PlayerActivity.class);
+        startActivity(intent);
+    }
+
+    private void addDrawerItems() {
+        //-- Mike 10/28/15
+        //-- I wanted to use this to populate the drawer ... but currently this is not in use
+        //-- It'd probably be wise if we made a single helper class for the items in our Drawer (hamburger menu)
+        final String[] osArray = {"Jams", "Media Player"};
+        mDrawerList = (ListView) findViewById(R.id.navList);
+        mAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, osArray);
+        mDrawerList.setAdapter(mAdapter);
+
+        mDrawerList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                String clickedItem = osArray[position];
+                Toast.makeText(HomeActivity.this, "You selected " + clickedItem, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     @Override
@@ -99,6 +131,13 @@ public class HomeActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
+        if(id == R.id.nav_jams){
+
+        }
+        else if(id == R.id.nav_music_player){
+            openPlayerActivity();
+        }
+        /*
         if (id == R.id.nav_camara) {
             // Handle the camera action
         } else if (id == R.id.nav_gallery) {
@@ -112,6 +151,7 @@ public class HomeActivity extends AppCompatActivity
         } else if (id == R.id.nav_send) {
 
         }
+        */
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
