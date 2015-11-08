@@ -6,4 +6,12 @@
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="title_activity_player">Speakr</string>
     <string name="hello_world">Hello world!</string>
+    <string name="title_activity_test">TestActivity</string>
+
+    <string name="title_section1">Section 1</string>
+    <string name="title_section2">Section 2</string>
+    <string name="title_section3">Section 3</string>
+
+    <string name="action_example">Example action</string>
+    <string name="title_activity_home2">Home2Activity</string>
 </resources>
