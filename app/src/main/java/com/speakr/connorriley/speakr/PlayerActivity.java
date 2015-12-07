@@ -2,10 +2,9 @@ package com.speakr.connorriley.speakr;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarActivity;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -28,8 +27,8 @@ public class PlayerActivity extends Activity implements MediaPlayerControl {
     //-- MediaPlayer itself: http://code.tutsplus.com/tutorials/create-a-music-player-on-android-song-playback--mobile-22778
     //-- User controls: http://code.tutsplus.com/tutorials/create-a-music-player-on-android-user-controls--mobile-22787
 
-    private ArrayList<Song> songList;
-    private ListView songView;
+    private ArrayList<Song> songList, songQueue;
+    private ListView songQueueView, songListView;
     private MusicService musicSrv;
     private Intent playIntent;
     private boolean musicBound=false;
@@ -42,11 +41,12 @@ public class PlayerActivity extends Activity implements MediaPlayerControl {
         //-- In menu_main.xml I had several app:showAsAction="always" calls, but it didn't fix it. Haven't gone back to fix that yet.
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_player);
-        songView = (ListView)findViewById(R.id.song_list);
+        songQueueView = (ListView)findViewById(R.id.song_queue);
+        songListView = (ListView)findViewById(R.id.song_list);
+        songQueue = new ArrayList<Song>();
         songList = new ArrayList<Song>();
         getSongList();
-        SongAdapter songAdt = new SongAdapter(this, songList);
-        songView.setAdapter(songAdt);
+        updateSongAdapters();
         setController();
     }
 
@@ -66,6 +66,7 @@ public class PlayerActivity extends Activity implements MediaPlayerControl {
                     (android.provider.MediaStore.Audio.Media._ID);
             int artistColumn = musicCursor.getColumnIndex
                     (android.provider.MediaStore.Audio.Media.ARTIST);
+
             //add songs to list
 
             //-- TODO: Make sure we're looking at a file with a valid type
@@ -91,6 +92,65 @@ public class PlayerActivity extends Activity implements MediaPlayerControl {
                 return a.getTitle().compareTo(b.getTitle());
             }
         });
+    }
+
+    //-- Song Manipulation between queues - Mike - 12-6
+    public void addToQueue(View view){
+        Song songToAdd = songList.get(getListRowIndex(view));
+        songList.remove(songToAdd);
+        songQueue.add(songToAdd);
+
+        updateSongAdapters();
+    }
+
+    public void removeFromQueue(View view){
+        int index = getQueueRowIndex(view);
+        if(index != -1) {
+            Song songToRemove = songQueue.get(index);
+            songList.add(songToRemove);
+            songQueue.remove(songToRemove);
+            updateSongAdapters();
+        }
+    }
+
+    public void moveUp(View view){
+        int index = getQueueRowIndex(view);
+        if(index > 0)
+            Collections.swap(songQueue, index, index-1);
+        updateSongAdapters();
+    }
+
+    public void moveDown(View view){
+        int index = getQueueRowIndex(view);
+        if(index < (songQueue.size() - 1))
+            Collections.swap(songQueue, index, index+1);
+        updateSongAdapters();
+    }
+
+    public int getListRowIndex(View view){
+        View parentRow = (View) view.getParent();
+        if(parentRow.findViewById(R.id.thisLayout) == null)
+            parentRow = (View) parentRow.getParent();
+        return songListView.getPositionForView(parentRow);
+    }
+
+    public int getQueueRowIndex(View view){
+        View parentRow = (View) view.getParent();
+        if(parentRow.findViewById(R.id.thisLayout) == null)
+            parentRow = (View) parentRow.getParent();
+        return songQueueView.getPositionForView(parentRow);
+    }
+    //-- End song manipulation between queues
+
+    public void updateSongAdapters(){
+        SongQueueAdapter songAdt = new SongQueueAdapter(this, songQueue);
+        songQueueView.setAdapter(songAdt);
+
+        SongListAdapter songAdt2 = new SongListAdapter(this, songList);
+        songListView.setAdapter(songAdt2);
+
+        if(musicSrv != null)
+            musicSrv.setList(songQueue);
     }
 
     public void songPicked(View view){

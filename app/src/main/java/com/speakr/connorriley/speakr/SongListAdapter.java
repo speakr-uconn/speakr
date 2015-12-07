@@ -6,17 +6,19 @@ import android.widget.BaseAdapter;
 import java.util.ArrayList;
 import android.content.Context;
 import android.view.LayoutInflater;
+import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 /**
  * Created by Michael on 10/21/2015.
  */
-public class SongAdapter extends BaseAdapter {
+public class SongListAdapter extends BaseAdapter {
     private ArrayList<Song> songs;
     private LayoutInflater songInf;
 
-    public SongAdapter(Context c, ArrayList<Song> theSongs){
+    public SongListAdapter(Context c, ArrayList<Song> theSongs){
         songs = theSongs;
         songInf = LayoutInflater.from(c);
     }
@@ -38,10 +40,17 @@ public class SongAdapter extends BaseAdapter {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        //map to song layout
-        LinearLayout songLay = (LinearLayout) songInf.inflate
-                (R.layout.song, parent, false);
-        //get title and artist views
+
+        if(convertView == null) {
+            LayoutInflater inflater = (LayoutInflater) LayoutInflater.from(parent.getContext());
+            convertView = inflater.inflate(R.layout.listrow, parent ,false);
+        }
+
+        //-- Map to song layout
+        //LinearLayout songLay = (LinearLayout) songInf.inflate(R.layout.song, parent, false);
+        RelativeLayout songLay = (RelativeLayout) songInf.inflate(R.layout.listrow, parent, false);
+
+        //-- Get title and artist views
         TextView songView = (TextView)songLay.findViewById(R.id.song_title);
         TextView artistView = (TextView)songLay.findViewById(R.id.song_artist);
         //get song using position
@@ -49,6 +58,9 @@ public class SongAdapter extends BaseAdapter {
         //get title and artist strings
         songView.setText(currSong.getTitle());
         artistView.setText(currSong.getArtist());
+
+        final Button b = (Button) convertView.findViewById(R.id.add);
+
         //set position as tag
         songLay.setTag(position);
         return songLay;
