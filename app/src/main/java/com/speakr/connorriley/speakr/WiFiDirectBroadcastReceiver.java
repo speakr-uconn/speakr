@@ -22,7 +22,7 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
     }
 
     @Override
-    public void onReeceive(Context context, Intent intent) {
+    public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
         switch (action) {
             case WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION:
