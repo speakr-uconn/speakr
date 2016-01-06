@@ -4,4 +4,6 @@
     <color name="primaryDark">#311B92</color>
     <color name="primaryLight">#7E57C2</color>
     <color name="accent">#FFC107</color> <!-- or #FFB300 -->
+    <color name="layout_border_color">#FF111111</color>
+
 </resources>

@@ -29,7 +29,7 @@ import java.util.List;
  * parent activity to handle user interaction events
  */
 public class DeviceListFragment extends ListFragment implements PeerListListener {
-
+    // aldjhfaksjajf
     private List<WifiP2pDevice> peers = new ArrayList<WifiP2pDevice>();
     ProgressDialog progressDialog = null;
     View mContentView = null;
