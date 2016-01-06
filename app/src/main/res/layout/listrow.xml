@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/thisLayout"
+    android:layout_width="fill_parent"
+    android:layout_height="60sp"
+    android:orientation="horizontal"
+    android:padding="1sp" >
+
+    <TextView
+        android:id="@+id/song_title"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#FFFFFF99"
+        android:textSize="20sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/song_artist"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#FFFFFF99"
+        android:layout_alignParentBottom="true"
+        android:textSize="18sp" />
+
+    <Button
+        android:id="@+id/add"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="5dp"
+        android:onClick="addToQueue"
+        android:text="+"
+    />
+
+</RelativeLayout>
