@@ -43,6 +43,11 @@
             android:launchMode="singleTop"
             android:screenOrientation="portrait" >
         </activity>
+        <activity
+            android:name=".WiFiDirectActivity"
+            android:label="@string/title_activity_wifi"
+            android:theme="@style/AppTheme.NoActionBar" >
+        </activity>
 
         <service android:name=".MusicService" />
     </application>

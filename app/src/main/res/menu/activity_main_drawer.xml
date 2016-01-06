@@ -5,6 +5,8 @@
         android:title="Jams" />
     <item android:id="@+id/nav_music_player"
         android:title="Music Player" />
+    <item android:id="@+id/nav_wifi"
+        android:title="WiFi Direct" />
     <!--
     <group android:checkableBehavior="single">
         <item android:id="@+id/nav_camara" android:icon="@android:drawable/ic_menu_camera"

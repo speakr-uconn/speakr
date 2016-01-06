@@ -2,18 +2,20 @@
     <string name="app_name">Speakr</string>
     <string name="action_settings">Settings</string>
     <string name="title_activity_home">HomeActivity</string>
+    <string name="title_activity_player">Speakr</string>
+    <string name="title_activity_test">TestActivity</string>
+    <string name="title_activity_home2">Home2Activity</string>
+    <string name="title_activity_wifi">WiFi Activity</string>
+
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
-    <string name="title_activity_player">Speakr</string>
     <string name="hello_world">Hello world!</string>
-    <string name="title_activity_test">TestActivity</string>
 
     <string name="title_section1">Section 1</string>
     <string name="title_section2">Section 2</string>
     <string name="title_section3">Section 3</string>
 
     <string name="action_example">Example action</string>
-    <string name="title_activity_home2">Home2Activity</string>
     <string name="empty_message">No devices found. Turn on P2P and perform discovery from the Action Bar</string>
     <string name="p2p_off_warning">Enable P2P from action bar button above or system settings</string>
     <string name="group_owner_text">"Am I the Group Owner? "</string>

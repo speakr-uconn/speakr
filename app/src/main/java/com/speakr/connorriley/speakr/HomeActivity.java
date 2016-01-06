@@ -75,11 +75,17 @@ public class HomeActivity extends AppCompatActivity
         startActivity(intent);
     }
 
+    public void openWifiActivity(){
+        //-- Mike 1/6/16
+        Intent intent = new Intent(this, WiFiDirectActivity.class);
+        startActivity(intent);
+    }
+
     private void addDrawerItems() {
         //-- Mike 10/28/15
         //-- I wanted to use this to populate the drawer ... but currently this is not in use
         //-- It'd probably be wise if we made a single helper class for the items in our Drawer (hamburger menu)
-        final String[] osArray = {"Jams", "Media Player"};
+        final String[] osArray = {"Jams", "Media Player", "WiFi"};
         mDrawerList = (ListView) findViewById(R.id.navList);
         mAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, osArray);
         mDrawerList.setAdapter(mAdapter);
@@ -136,6 +142,9 @@ public class HomeActivity extends AppCompatActivity
         }
         else if(id == R.id.nav_music_player){
             openPlayerActivity();
+        }
+        else if(id == R.id.nav_wifi){
+            openWifiActivity();
         }
         /*
         if (id == R.id.nav_camara) {
