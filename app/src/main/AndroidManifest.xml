@@ -45,8 +45,7 @@
         </activity>
         <activity
             android:name=".WiFiDirectActivity"
-            android:label="@string/title_activity_wifi"
-            android:theme="@style/AppTheme.NoActionBar" >
+            android:label="@string/title_activity_wifi" >
         </activity>
 
         <service android:name=".MusicService" />
