@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">Speakr</string>
     <string name="action_settings">Settings</string>
-    <string name="title_activity_home">HomeActivity</string>
+    <string name="title_activity_home">Select a Jam</string>
     <string name="title_activity_player">Speakr</string>
     <string name="title_activity_test">TestActivity</string>
     <string name="title_activity_home2">Home2Activity</string>
@@ -34,4 +34,11 @@
     <string name="nickname">Enter your nickname</string>
     <string name="jam_name">Enter a name for your Jam</string>
     <string name="done">done</string>
+    <string name="long_text">Android 5.0 Lollipop was one of the most significant Android releases ever,
+        in no small part due to the introduction of material design,
+        a new design language that refreshed the entire Android experience
+    </string>
+
+    <string name="drawer_open">Open navigation drawer</string>
+    <string name="drawer_close">Close navigation drawer</string>
 </resources>

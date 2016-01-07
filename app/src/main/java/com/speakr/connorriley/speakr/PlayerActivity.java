@@ -376,7 +376,7 @@ public class PlayerActivity extends Activity implements MediaPlayerControl {
 
     public void openJamsActivity(){
         //-- Mike 10/28/15
-        Intent intent = new Intent(this, HomeActivity.class);
+        Intent intent = new Intent(this, JamListActivity.class);
         startActivity(intent);
     }
 
