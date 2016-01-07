@@ -31,4 +31,7 @@
     <string name="client_text">This device will act as a client. Click on Gallery button to pick a local(stored) file</string>
     <string name="yes">yes</string>
     <string name="no">no</string>
+    <string name="nickname">Enter your nickname</string>
+    <string name="jam_name">Enter a name for your Jam</string>
+    <string name="done">done</string>
 </resources>

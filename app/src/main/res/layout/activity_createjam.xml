@@ -9,7 +9,7 @@
     android:fitsSystemWindows="true"
     tools:openDrawer="start">
 
-    <include layout="@layout/app_bar_main"
+    <include layout="@layout/app_bar_create_jam"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
@@ -29,4 +29,5 @@
         android:layout_width="200dp"
         android:layout_height="match_parent"
         android:layout_gravity="left|start" />
+
 </android.support.v4.widget.DrawerLayout>
