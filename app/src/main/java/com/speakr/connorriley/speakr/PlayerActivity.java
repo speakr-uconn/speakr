@@ -1,7 +1,11 @@
 package com.speakr.connorriley.speakr;
 
+import android.Manifest;
 import android.app.Activity;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 
@@ -41,13 +45,58 @@ public class PlayerActivity extends Activity implements MediaPlayerControl {
         //-- In menu_main.xml I had several app:showAsAction="always" calls, but it didn't fix it. Haven't gone back to fix that yet.
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_player);
+
         songQueueView = (ListView)findViewById(R.id.song_queue);
         songListView = (ListView)findViewById(R.id.song_list);
         songQueue = new ArrayList<Song>();
         songList = new ArrayList<Song>();
+        getPermissions();
+    }
+
+    public void config(){
         getSongList();
         updateSongAdapters();
         setController();
+    }
+
+    public void getPermissions(){
+        if (ContextCompat.checkSelfPermission(PlayerActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            if (ActivityCompat.shouldShowRequestPermissionRationale(PlayerActivity.this,
+                    Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                // Show an explanation to the user *asynchronously* -- don't block
+                // this thread waiting for the user's response! (that's not done yet - MM)
+                ActivityCompat.requestPermissions(PlayerActivity.this, //-- try again to ask permission
+                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                        55);
+            }
+            else {
+                // Request the permission the first time we ask
+                ActivityCompat.requestPermissions(PlayerActivity.this,
+                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                        55);
+                //-- Resulting method is onRequestPermissionsResult
+            }
+        }
+        else
+            config();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case 55: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    //-- Permission granted
+                    config();
+                }
+                else { // Permission denied
+                }
+                return;
+            }
+        }
     }
 
     //-- TODO: Reorder the methods in this and MusicService.java to have a sensible ordering, to make it easier to find stuff
