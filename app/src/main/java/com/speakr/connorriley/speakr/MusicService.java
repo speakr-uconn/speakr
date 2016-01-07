@@ -10,6 +10,7 @@ import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.PowerManager;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import java.util.Random;
 import android.app.Notification;
@@ -76,7 +77,7 @@ public class MusicService extends Service implements
         try{
             player.setDataSource(getApplicationContext(), trackUri);
         }
-        catch(Exception e){
+        catch(Exception e) {
             Log.e("MUSIC SERVICE", "Error setting data source", e);
         }
 
@@ -115,10 +116,14 @@ public class MusicService extends Service implements
     public void onPrepared(MediaPlayer mp) {
         //start playback
         mp.start();
+
         Intent notIntent = new Intent(this, SplashActivity.class);
         notIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pendInt = PendingIntent.getActivity(this, 0,
                 notIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        Intent onPreparedIntent = new Intent("MEDIA_PLAYER_PREPARED");
+        LocalBroadcastManager.getInstance(this).sendBroadcast(onPreparedIntent);
 
         Notification.Builder builder = new Notification.Builder(this);
 

@@ -2,10 +2,13 @@ package com.speakr.connorriley.speakr;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 
@@ -38,6 +41,15 @@ public class PlayerActivity extends Activity implements MediaPlayerControl {
     private boolean musicBound=false;
     private MusicController controller;
     private boolean paused = false, playbackPaused = false;
+
+    // Broadcast receiver to determine when music player has been prepared
+    private BroadcastReceiver onPrepareReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context c, Intent i) {
+            // When music player has been prepared, show controller
+            controller.show(0);
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -218,18 +230,18 @@ public class PlayerActivity extends Activity implements MediaPlayerControl {
             controller = new MusicController(this); //-- only make a new controller if it's null
 
         controller.setPrevNextListeners(
-        //-- "Next" button listener
-        new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                playNext();
-            }
-        },
-        //-- "Previous" button listener
-        new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                playPrev();
+                //-- "Next" button listener
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        playNext();
+                    }
+                },
+                //-- "Previous" button listener
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        playPrev();
             }
         });
         controller.setMediaPlayer(this);
@@ -281,6 +293,11 @@ public class PlayerActivity extends Activity implements MediaPlayerControl {
     @Override
     protected void onResume(){
         super.onResume();
+
+        // Set up receiver for media player onPrepared broadcast
+        LocalBroadcastManager.getInstance(this).registerReceiver(onPrepareReceiver,
+                new IntentFilter("MEDIA_PLAYER_PREPARED"));
+
         if(paused){
             setController();
             paused=false;
