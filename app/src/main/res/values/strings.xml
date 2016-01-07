@@ -6,7 +6,8 @@
     <string name="title_activity_test">TestActivity</string>
     <string name="title_activity_home2">Home2Activity</string>
     <string name="title_activity_wifi">WiFi Activity</string>
-    <string name="title_activity_splash">Splash Screen</string>
+    <string name="title_activity_splash">Speakr</string>
+    <string name="title_activity_createjam">Create Jam</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="hello_world">Hello world!</string>

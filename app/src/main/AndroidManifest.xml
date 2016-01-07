@@ -38,6 +38,11 @@
             android:theme="@style/AppTheme.NoActionBar" >
         </activity>
         <activity
+            android:name=".CreateJamActivity"
+            android:label="@string/title_activity_createjam"
+            android:theme="@style/AppTheme.NoActionBar" >
+        </activity>
+        <activity
             android:name=".PlayerActivity"
             android:label="@string/title_activity_player"
             android:launchMode="singleTop"

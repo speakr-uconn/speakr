@@ -20,8 +20,7 @@ import android.widget.Toast;
 
 import java.util.List;
 
-public class HomeActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener{
+public class HomeActivity extends HamburgerActivity {
 
     private ListView listView;
     private ListView mDrawerList;
@@ -30,27 +29,15 @@ public class HomeActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_home);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);     // fails on this
-        setSupportActionBar(toolbar);
-
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                Intent intent = new Intent(HomeActivity.this, CreateJamActivity.class);
+                startActivity(intent);
             }
         });
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.setDrawerListener(toggle);
-        toggle.syncState();
-
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
         /*listView = (ListView)findViewById(R.id.jams_list);
         String[] values = new String[] {
                 "Jam 1",
@@ -66,7 +53,7 @@ public class HomeActivity extends AppCompatActivity
         );
         listView.setAdapter(adapter);*/
 
-        addDrawerItems();
+        //addDrawerItems();
     }
 
     public void openPlayerActivity(){
@@ -100,16 +87,6 @@ public class HomeActivity extends AppCompatActivity
     }
 
     @Override
-    public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        if (drawer.isDrawerOpen(GravityCompat.START)) {
-            drawer.closeDrawer(GravityCompat.START);
-        } else {
-            super.onBackPressed();
-        }
-    }
-
-    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
@@ -136,16 +113,17 @@ public class HomeActivity extends AppCompatActivity
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
+        switch (id) {
+            case R.id.nav_jams:
+                break;
+            case R.id.nav_music_player:
+                openPlayerActivity();
+                break;
+            case R.id.nav_wifi:
+                openWifiActivity();
+                break;
+        }
 
-        if(id == R.id.nav_jams){
-
-        }
-        else if(id == R.id.nav_music_player){
-            openPlayerActivity();
-        }
-        else if(id == R.id.nav_wifi){
-            openWifiActivity();
-        }
         /*
         if (id == R.id.nav_camara) {
             // Handle the camera action
