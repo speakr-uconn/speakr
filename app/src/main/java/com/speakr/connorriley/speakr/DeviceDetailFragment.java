@@ -95,7 +95,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                         // Allow user to pick an image from Gallery or other
                         // registered apps
                         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                        intent.setType("image/*");
+                        intent.setType("audio/*");
                         startActivityForResult(intent, CHOOSE_FILE_RESULT_CODE);
                     }
                 });
