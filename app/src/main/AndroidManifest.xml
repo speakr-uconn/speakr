@@ -46,6 +46,7 @@
         <activity
             android:name=".PlayerActivity"
             android:label="@string/title_activity_player"
+            android:theme="@style/AppTheme.NoActionBar"
             android:launchMode="singleTop"
             android:screenOrientation="portrait" >
         </activity>

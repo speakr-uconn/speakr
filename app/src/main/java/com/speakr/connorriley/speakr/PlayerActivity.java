@@ -6,6 +6,10 @@ import android.content.BroadcastReceiver;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.support.design.widget.CollapsingToolbarLayout;
+import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.NavigationView;
+import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
@@ -18,6 +22,8 @@ import java.util.Comparator;
 import android.net.Uri;
 import android.content.ContentResolver;
 import android.database.Cursor;
+import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.widget.Toolbar;
 import android.widget.ListView;
 import android.os.IBinder;
 import android.content.ComponentName;
@@ -28,7 +34,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.MediaController.MediaPlayerControl;
 
-public class PlayerActivity extends Activity implements MediaPlayerControl {
+public class PlayerActivity extends HamburgerActivity implements View.OnClickListener, MediaPlayerControl {
     //-- Referenced the following websites:
     //-- Pulling song list: http://code.tutsplus.com/tutorials/create-a-music-player-on-android-project-setup--mobile-22764
     //-- MediaPlayer itself: http://code.tutsplus.com/tutorials/create-a-music-player-on-android-song-playback--mobile-22778
@@ -41,6 +47,8 @@ public class PlayerActivity extends Activity implements MediaPlayerControl {
     private boolean musicBound=false;
     private MusicController controller;
     private boolean paused = false, playbackPaused = false;
+    DrawerLayout drawerLayout;
+    Toolbar toolbar;
 
     // Broadcast receiver to determine when music player has been prepared
     private BroadcastReceiver onPrepareReceiver = new BroadcastReceiver() {
@@ -57,20 +65,74 @@ public class PlayerActivity extends Activity implements MediaPlayerControl {
         //-- In menu_main.xml I had several app:showAsAction="always" calls, but it didn't fix it. Haven't gone back to fix that yet.
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_player);
-
+        setupNavigationView();
+        setupToolbar();
         songQueueView = (ListView)findViewById(R.id.song_queue);
         songListView = (ListView)findViewById(R.id.song_list);
         songQueue = new ArrayList<Song>();
         songList = new ArrayList<Song>();
         getPermissions();
     }
+    // start UI set up -- Connor
+    private void setupNavigationView(){
 
+        drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        NavigationView navView = (NavigationView) findViewById(R.id.navList);
+        navView.setNavigationItemSelectedListener(this);
+    }
+    private void setupToolbar(){
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        if(toolbar != null) {
+            setSupportActionBar(toolbar);
+        }
+        // Show menu icon
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawer.setDrawerListener(toggle);
+        toggle.syncState();
+    }
     public void config(){
         getSongList();
         updateSongAdapters();
         setController();
     }
+    public void openPlayerActivity(){
+        //-- Mike 10/28/15
+        Intent intent = new Intent(this, PlayerActivity.class);
+        startActivity(intent);
+    }
 
+    public void openWifiActivity(){
+        //-- Mike 1/6/16
+        Intent intent = new Intent(this, WiFiDirectActivity.class);
+        startActivity(intent);
+    }
+
+    @SuppressWarnings("StatementWithEmptyBody")
+    @Override
+    public boolean onNavigationItemSelected(MenuItem item) {
+        // Handle navigation view item clicks here.
+        int id = item.getItemId();
+        switch (id) {
+            case R.id.nav_jams:
+                break;
+            case R.id.nav_music_player:
+                openPlayerActivity();
+                break;
+            case R.id.nav_wifi:
+                openWifiActivity();
+                break;
+        }
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawer.closeDrawer(GravityCompat.START);
+        return true;
+    }
+    @Override
+    public void onClick(View v) {
+
+    }
+    // end UI setup
     public void getPermissions(){
         if (ContextCompat.checkSelfPermission(PlayerActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -395,35 +457,6 @@ public class PlayerActivity extends Activity implements MediaPlayerControl {
 
         }
         return super.onOptionsItemSelected(item);
-    }
-
-    @SuppressWarnings("StatementWithEmptyBody")
-    public boolean onNavigationItemSelected(MenuItem item) {
-        // Handle navigation view item clicks here.
-        int id = item.getItemId();
-
-        if(id == R.id.nav_jams){
-            openJamsActivity();
-        }
-        /*
-        if (id == R.id.nav_camara) {
-            // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
-
-        } else if (id == R.id.nav_slideshow) {
-
-        } else if (id == R.id.nav_manage) {
-
-        } else if (id == R.id.nav_share) {
-
-        } else if (id == R.id.nav_send) {
-
-        }
-        */
-
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        drawer.closeDrawer(GravityCompat.START);
-        return true;
     }
 
     //connect to the service

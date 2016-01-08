@@ -116,14 +116,15 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
 
     private void setupFab(){
         fab = (FloatingActionButton) findViewById(R.id.fab);
-        if(fab != null)
+        if(fab != null) {
             fab.setOnClickListener(this);
+        }
     }
     private void setupToolbar(){
         toolbar = (Toolbar) findViewById(R.id.toolbar);
-        if(toolbar != null)
+        if(toolbar != null) {
             setSupportActionBar(toolbar);
-
+        }
         // Show menu icon
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
