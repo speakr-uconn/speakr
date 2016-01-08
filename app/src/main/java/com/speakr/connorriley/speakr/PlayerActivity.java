@@ -116,9 +116,9 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         int id = item.getItemId();
         switch (id) {
             case R.id.nav_jams:
+                openJamsActivity();
                 break;
             case R.id.nav_music_player:
-                openPlayerActivity();
                 break;
             case R.id.nav_wifi:
                 openWifiActivity();
