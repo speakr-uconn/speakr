@@ -105,6 +105,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.d("devicedetailfragment:", "onActivityResult");
 
         // User has picked an image. Transfer it to group owner i.e peer using
         // FileTransferService.
@@ -118,6 +119,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
         serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS,
                 info.groupOwnerAddress.getHostAddress());
         serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, 8988);
+        Log.d("DeviceDetailFragment", "startService about to be called");
         getActivity().startService(serviceIntent);
     }
 
@@ -207,7 +209,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
             this.statusText = (TextView) statusText;
         }
 
-        @Override
+        @Override   //TODO: Fix this method
         protected String doInBackground(Void... params) {
             try {
                 ServerSocket serverSocket = new ServerSocket(8988);
@@ -265,7 +267,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
         byte buf[] = new byte[1024];
         int len;
         long startTime=System.currentTimeMillis();
-
+        Log.d(WiFiDirectActivity.TAG, "starting tranfser of file in copy file");
         try {
             while ((len = inputStream.read(buf)) != -1) {
                 out.write(buf, 0, len);
