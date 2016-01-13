@@ -218,7 +218,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                 Log.d(WiFiDirectActivity.TAG, "Server: connection done");
                 final File f = new File(Environment.getExternalStorageDirectory() + "/"
                         + context.getPackageName() + "/wifip2pshared-" + System.currentTimeMillis()
-                        + ".jpg");
+                        + ".mp3");
 
                 File dirs = new File(f.getParent());
                 if (!dirs.exists())
@@ -246,7 +246,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                 statusText.setText("File copied - " + result);
                 Intent intent = new Intent();
                 intent.setAction(android.content.Intent.ACTION_VIEW);
-                intent.setDataAndType(Uri.parse("file://" + result), "image/*");
+                intent.setDataAndType(Uri.parse("file://" + result), "audio/*");
                 context.startActivity(intent);
             }
 
