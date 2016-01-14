@@ -21,10 +21,13 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 
+import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -216,6 +219,12 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                 Log.d(WiFiDirectActivity.TAG, "Server: Socket opened");
                 Socket client = serverSocket.accept();
                 Log.d(WiFiDirectActivity.TAG, "Server: connection done");
+
+                // receive mime type
+                DataInputStream is = new DataInputStream(client.getInputStream());
+                String str = is.readUTF();
+                Log.e("String", "type: " + str);
+
                 final File f = new File(Environment.getExternalStorageDirectory() + "/"
                         + context.getPackageName() + "/wifip2pshared-" + System.currentTimeMillis()
                         + ".mp3");
@@ -225,11 +234,12 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                     dirs.mkdirs();
                 f.createNewFile();
 
-                Log.d(WiFiDirectActivity.TAG, "server: copying files " + f.toString());
-                InputStream inputstream = client.getInputStream();
-                copyFile(inputstream, new FileOutputStream(f));
+                //Log.d(WiFiDirectActivity.TAG, "server: copying files " + f.toString());
+
+                //copyFile(inputstream, new FileOutputStream(f));
                 serverSocket.close();
-                return f.getAbsolutePath();
+                //return f.getAbsolutePath();
+                return null;
             } catch (IOException e) {
                 Log.e(WiFiDirectActivity.TAG, e.getMessage());
                 return null;

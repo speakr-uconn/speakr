@@ -8,12 +8,19 @@ import android.net.Uri;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.util.Log;
 
+import java.io.BufferedWriter;
+import java.io.DataOutputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.regex.Pattern;
 
 /**
  * Created by connorriley on 12/27/15.
@@ -46,15 +53,22 @@ public class FileTransferService extends IntentService {
                 socket.bind(null);
                 socket.connect((new InetSocketAddress(host, port)), SOCKET_TIMEOUT);
                 Log.d(WiFiDirectActivity.TAG, "Client scoket - " + socket.isConnected());
-                OutputStream stream = socket.getOutputStream();
+
+                // send mime type
+                DataOutputStream stream = new DataOutputStream(socket.getOutputStream());
                 ContentResolver cr = context.getContentResolver();
+                String type = cr.getType(Uri.parse(fileUri));
+                Log.e("String", "type:  " + type);
+                stream.writeUTF(type);
+
+
                 InputStream is = null;
                 try {
                     is = cr.openInputStream(Uri.parse(fileUri));
                 } catch (FileNotFoundException e) {
                     Log.d(WiFiDirectActivity.TAG, e.toString());
                 }
-                DeviceDetailFragment.copyFile(is, stream);
+                //DeviceDetailFragment.copyFile(is, stream);
                 Log.d(WiFiDirectActivity.TAG, "Client: Data written");
             } catch(IOException e) {
                 Log.e(WiFiDirectActivity.TAG, e.getMessage());
