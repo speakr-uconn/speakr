@@ -235,11 +235,11 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                 f.createNewFile();
 
                 //Log.d(WiFiDirectActivity.TAG, "server: copying files " + f.toString());
-
-                //copyFile(inputstream, new FileOutputStream(f));
+                InputStream inputstream = client.getInputStream();
+                copyFile(inputstream, new FileOutputStream(f));
                 serverSocket.close();
                 //return f.getAbsolutePath();
-                return null;
+                return f.getAbsolutePath();
             } catch (IOException e) {
                 Log.e(WiFiDirectActivity.TAG, e.getMessage());
                 return null;
