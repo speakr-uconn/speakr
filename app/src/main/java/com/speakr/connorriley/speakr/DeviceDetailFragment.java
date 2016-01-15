@@ -299,7 +299,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 
     public static String getFileExtention(String mime) throws MimeTypeException {
         switch (mime) {
-            case "audio/mp3":
+            case "audio/mpeg":
                 return ".mp3";
             case "audio/mp4":
                 return "m4a";
