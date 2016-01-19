@@ -141,6 +141,13 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
         view = (TextView) mContentView.findViewById(R.id.device_info);
         view.setText("Group Owner IP - " + info.groupOwnerAddress.getHostAddress());
 
+
+        // set both up as clients and servers
+        /*new FileServerAsyncTask(getActivity(), mContentView.findViewById(R.id.status_text))
+                .execute();
+        mContentView.findViewById(R.id.btn_start_client).setVisibility(View.VISIBLE);
+        ((TextView) mContentView.findViewById(R.id.status_text)).setText(getResources()
+                .getString(R.string.client_text)); */
         // After the group negotiation, we assign the group owner as the file
         // server. The file server is single threaded, single connection server
         // socket.
