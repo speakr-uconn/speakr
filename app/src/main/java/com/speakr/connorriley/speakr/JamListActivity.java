@@ -51,6 +51,7 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
         //setupTablayout();
         //setupCollapsingToolbarLayout();
         setupFab();
+        enable_atn_direct();
         startNetwork();
 
         /*Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -89,6 +90,20 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
 
         //addDrawerItems();
     }
+
+    public void enable_atn_direct(){
+        if (manager != null && channel != null) {
+
+            // Since this is the system wireless settings activity, it's
+            // not going to send us a result. We will be notified by
+            // WiFiDeviceBroadcastReceiver instead.
+
+            startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS));
+        } else {
+            Log.e(TAG, "channel or manager is null");
+        }
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
