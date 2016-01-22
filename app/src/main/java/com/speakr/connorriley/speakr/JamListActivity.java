@@ -51,7 +51,7 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
         //setupTablayout();
         //setupCollapsingToolbarLayout();
         setupFab();
-        enable_atn_direct();
+        //enable_atn_direct();
         startNetwork();
 
         /*Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -216,6 +216,7 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
 
         manager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
         channel = manager.initialize(this, getMainLooper(), null);
+        startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS));
 
         if (!isWifiP2pEnabled) {
             Toast.makeText(JamListActivity.this, R.string.p2p_off_warning,
