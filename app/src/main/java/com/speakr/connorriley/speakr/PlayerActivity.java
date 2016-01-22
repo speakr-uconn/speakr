@@ -24,6 +24,7 @@ import android.content.ContentResolver;
 import android.database.Cursor;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.widget.ListView;
 import android.os.IBinder;
 import android.content.ComponentName;
