@@ -218,15 +218,17 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
         channel = manager.initialize(this, getMainLooper(), null);
         //startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS)); //-- enable p2p on/off
 
+        /*
         if (!isWifiP2pEnabled) {
             Toast.makeText(JamListActivity.this, R.string.p2p_off_warning,
                     Toast.LENGTH_SHORT).show();
             return;
         }
+        */
 
         final DeviceListFragment fragment = (DeviceListFragment) getFragmentManager()
                 .findFragmentById(R.id.frag_list);
-        //fragment.onInitiateDiscovery();
+        fragment.onInitiateDiscovery();
         manager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
 
             @Override
