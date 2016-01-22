@@ -56,25 +56,4 @@
         app:headerLayout="@layout/nav_header"
         app:menu="@menu/navigation_drawer_items" />
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:id="@+id/linearLayout1"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
-        <fragment
-            class="com.speakr.connorriley.speakr.DeviceListFragment"
-            android:id="@+id/frag_list"
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/phone_list_height">
-            <!-- Preview: layout=@layout/row_devices -->
-        </fragment>
-        <fragment
-            class="com.speakr.connorriley.speakr.DeviceDetailFragment"
-            android:id="@+id/frag_detail"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
-            <!-- Preview: layout=@layout/device_detail -->
-        </fragment>
-    </LinearLayout>
-
 </android.support.v4.widget.DrawerLayout>
