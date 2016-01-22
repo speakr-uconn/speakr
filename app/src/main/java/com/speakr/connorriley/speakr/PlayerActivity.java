@@ -73,6 +73,8 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         songQueue = new ArrayList<Song>();
         songList = new ArrayList<Song>();
         getPermissions();
+        TimeSyncTask timeSyncTask = new TimeSyncTask();
+        timeSyncTask.execute(new TimeSync());
     }
     // start UI set up -- Connor
     private void setupNavigationView(){
