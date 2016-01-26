@@ -105,22 +105,22 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Log.d("devicedetailfragment:", "onActivityResult");
-
-        // User has picked an image. Transfer it to group owner i.e peer using
-        // FileTransferService.
-        Uri uri = data.getData();
-        TextView statusText = (TextView) mContentView.findViewById(R.id.status_text);
-        statusText.setText("Sending: " + uri);
-        Log.d(WiFiDirectActivity.TAG, "Intent----------- " + uri);
-        Intent serviceIntent = new Intent(getActivity(), FileTransferService.class);
-        serviceIntent.setAction(FileTransferService.ACTION_SEND_FILE);
-        serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_PATH, uri.toString());
-        serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS,
-                info.groupOwnerAddress.getHostAddress());
-        serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, 8988);
-        Log.d("DeviceDetailFragment", "startService about to be called");
-        getActivity().startService(serviceIntent);
+//        Log.d("devicedetailfragment:", "onActivityResult");
+//
+//        // User has picked an image. Transfer it to group owner i.e peer using
+//        // FileTransferService.
+//        Uri uri = data.getData();
+//        TextView statusText = (TextView) mContentView.findViewById(R.id.status_text);
+//        statusText.setText("Sending: " + uri);
+//        Log.d(WiFiDirectActivity.TAG, "Intent----------- " + uri);
+//        Intent serviceIntent = new Intent(getActivity(), FileTransferService.class);
+//        serviceIntent.setAction(FileTransferService.ACTION_SEND_FILE);
+//        serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_PATH, uri.toString());
+//        serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS,
+//                info.groupOwnerAddress.getHostAddress());
+//        serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, 8988);
+//        Log.d("DeviceDetailFragment", "startService about to be called");
+//        getActivity().startService(serviceIntent);
     }
 
     @Override

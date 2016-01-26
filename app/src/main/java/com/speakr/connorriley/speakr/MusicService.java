@@ -3,6 +3,7 @@ package com.speakr.connorriley.speakr;
 import android.app.Service;
 import android.content.Intent;
 import android.media.MediaPlayer;
+import android.net.wifi.p2p.WifiP2pInfo;
 import android.os.IBinder;
 import java.util.ArrayList;
 import android.content.ContentUris;
@@ -15,6 +16,7 @@ import android.util.Log;
 import java.util.Random;
 import android.app.Notification;
 import android.app.PendingIntent;
+import android.widget.TextView;
 
 /**
  * Created by Michael on 10/28/2015.
@@ -81,7 +83,23 @@ public class MusicService extends Service implements
             Log.e("MUSIC SERVICE", "Error setting data source", e);
         }
 
-        player.prepareAsync();
+        MediaPlayerTimeSyncBundle mtb = new MediaPlayerTimeSyncBundle(player, new TimeSync());
+        TimeSyncTask timeSyncTask = new TimeSyncTask();
+        sendFile(trackUri);
+        //player.prepareAsync();
+        timeSyncTask.execute(mtb);
+    }
+
+    private void sendFile(Uri trackUri) {
+        Intent serviceIntent = new Intent(getApplicationContext(), FileTransferService.class);
+        WifiP2pInfo info = new WifiP2pInfo();
+        serviceIntent.setAction(FileTransferService.ACTION_SEND_FILE);
+        serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_PATH, trackUri.toString());
+        serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS,
+                info.groupOwnerAddress.getHostAddress());
+        serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, 8988);
+        Log.d("DeviceDetailFragment", "startService about to be called");
+        getApplicationContext().startService(serviceIntent);
     }
 
     public void setShuffle(){
