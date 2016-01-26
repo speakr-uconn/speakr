@@ -152,7 +152,6 @@ public class DeviceListFragment extends ListFragment implements PeerListListener
             Log.d(WiFiDirectActivity.TAG, "No devices found");
             return;
         }
-
     }
 
     public void clearPeers() {

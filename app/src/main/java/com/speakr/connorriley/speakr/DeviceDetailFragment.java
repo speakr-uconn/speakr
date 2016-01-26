@@ -270,7 +270,6 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                 intent.setDataAndType(Uri.parse("file://" + result), "audio/*");
                 context.startActivity(intent);
             }
-
         }
 
         /*

@@ -42,6 +42,11 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
     private final IntentFilter intentFilter = new IntentFilter();
     private boolean retryChannel = false;
     private boolean isWifiP2pEnabled = false;
+
+    public void setIsWifiP2pEnabled(boolean isWifiP2pEnabled) {
+        this.isWifiP2pEnabled = isWifiP2pEnabled;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -216,15 +221,15 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
 
         manager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
         channel = manager.initialize(this, getMainLooper(), null);
-        //startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS)); //-- enable p2p on/off
 
-        /*
         if (!isWifiP2pEnabled) {
             Toast.makeText(JamListActivity.this, R.string.p2p_off_warning,
                     Toast.LENGTH_SHORT).show();
-            return;
+
+            //startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS)); //-- enable p2p on/off
+
+            //return;
         }
-        */
 
         final DeviceListFragment fragment = (DeviceListFragment) getFragmentManager()
                 .findFragmentById(R.id.frag_list);
@@ -378,5 +383,18 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
         if (fragmentDetails != null) {
             fragmentDetails.resetViews();
         }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        receiver = new JamListBroadcastReceiver(manager, channel, this);
+        registerReceiver(receiver, intentFilter);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        unregisterReceiver(receiver);
     }
 }
