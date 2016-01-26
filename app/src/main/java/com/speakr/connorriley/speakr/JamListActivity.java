@@ -42,9 +42,14 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
     private final IntentFilter intentFilter = new IntentFilter();
     private boolean retryChannel = false;
     private boolean isWifiP2pEnabled = false;
+    private boolean onConnection = false;
 
     public void setIsWifiP2pEnabled(boolean isWifiP2pEnabled) {
         this.isWifiP2pEnabled = isWifiP2pEnabled;
+    }
+
+    public void setConnected(boolean isConnected) {
+        this.onConnection = isConnected;
     }
 
     @Override
@@ -214,6 +219,7 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
     }
 
     public void startNetwork(){
+        onConnection = false;
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
@@ -223,8 +229,8 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
         channel = manager.initialize(this, getMainLooper(), null);
 
         if (!isWifiP2pEnabled) {
-            Toast.makeText(JamListActivity.this, R.string.p2p_off_warning,
-                    Toast.LENGTH_SHORT).show();
+            //Toast.makeText(JamListActivity.this, R.string.p2p_off_warning,
+            //        Toast.LENGTH_SHORT).show();
 
             //startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS)); //-- enable p2p on/off
 
@@ -248,6 +254,24 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
                         Toast.LENGTH_SHORT).show();
             }
         });
+        setTimeout();
+    }
+
+    public void discoverPeers(){
+    }
+
+    public void setTimeout(){
+        new android.os.Handler().postDelayed(
+                new Runnable() {
+                    public void run() {
+                        if (!onConnection) {
+                            //cancelDisconnect();
+                            //Toast.makeText(JamListActivity.this, "No devices found.",
+                            //        Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                },
+                10000);
     }
 
    @SuppressWarnings("StatementWithEmptyBody")
@@ -390,6 +414,7 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
         super.onResume();
         receiver = new JamListBroadcastReceiver(manager, channel, this);
         registerReceiver(receiver, intentFilter);
+        startNetwork();
     }
 
     @Override

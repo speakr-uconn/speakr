@@ -65,6 +65,7 @@ public class JamListBroadcastReceiver extends BroadcastReceiver {
                     DeviceDetailFragment fragment = (DeviceDetailFragment) mActivity
                             .getFragmentManager().findFragmentById(R.id.frag_detail);
                     mManager.requestConnectionInfo(mChannel, fragment);
+                    mActivity.setConnected(true);
                 } else {
                     // It's a disconnect
                     mActivity.resetData();
