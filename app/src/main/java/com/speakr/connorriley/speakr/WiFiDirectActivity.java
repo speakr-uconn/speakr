@@ -28,7 +28,6 @@ public class WiFiDirectActivity extends Activity implements WifiP2pManager.Chann
     private boolean retryChannel = false;
     private boolean isWifiP2pEnabled = false;
 
-
     public void setIsWifiP2pEnabled(boolean isWifiP2pEnabled) {
         this.isWifiP2pEnabled = isWifiP2pEnabled;
     }
