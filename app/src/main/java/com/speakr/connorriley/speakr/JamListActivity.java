@@ -233,15 +233,17 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
             //        Toast.LENGTH_SHORT).show();
 
             //startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS)); //-- enable p2p on/off
-
             //return;
         }
 
         final DeviceListFragment fragment = (DeviceListFragment) getFragmentManager()
                 .findFragmentById(R.id.frag_list);
         fragment.onInitiateDiscovery();
-        manager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
+        discoverPeers();
+    }
 
+    public void discoverPeers(){
+        manager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
             @Override
             public void onSuccess() {
                 Toast.makeText(JamListActivity.this, "Discovery Initiated",
@@ -252,12 +254,12 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
             public void onFailure(int reasonCode) {
                 Toast.makeText(JamListActivity.this, "Discovery Failed : " + reasonCode,
                         Toast.LENGTH_SHORT).show();
+                cancelDisconnect();
+                Toast.makeText(JamListActivity.this, "No devices found.",
+                        Toast.LENGTH_SHORT).show();
             }
         });
         setTimeout();
-    }
-
-    public void discoverPeers(){
     }
 
     public void setTimeout(){
@@ -414,7 +416,7 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
         super.onResume();
         receiver = new JamListBroadcastReceiver(manager, channel, this);
         registerReceiver(receiver, intentFilter);
-        startNetwork();
+        discoverPeers();
     }
 
     @Override
