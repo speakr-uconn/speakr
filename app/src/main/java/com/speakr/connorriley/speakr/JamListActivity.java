@@ -254,7 +254,7 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
             public void onFailure(int reasonCode) {
                 Toast.makeText(JamListActivity.this, "Discovery Failed : " + reasonCode,
                         Toast.LENGTH_SHORT).show();
-                cancelDisconnect();
+                //cancelDisconnect();
                 Toast.makeText(JamListActivity.this, "No devices found.",
                         Toast.LENGTH_SHORT).show();
             }
@@ -267,9 +267,9 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
                 new Runnable() {
                     public void run() {
                         if (!onConnection) {
-                            //cancelDisconnect();
-                            //Toast.makeText(JamListActivity.this, "No devices found.",
-                            //        Toast.LENGTH_SHORT).show();
+                            disconnect();
+                            Toast.makeText(JamListActivity.this, "No devices found.",
+                                    Toast.LENGTH_SHORT).show();
                         }
                     }
                 },
@@ -326,14 +326,19 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
     public void disconnect() {
         final DeviceDetailFragment fragment = (DeviceDetailFragment) getFragmentManager()
                 .findFragmentById(R.id.frag_detail);
+        final DeviceListFragment frag_list = (DeviceListFragment) getFragmentManager()
+                .findFragmentById(R.id.frag_list);
 
-        if(fragment == null)
+        if((fragment == null) || (frag_list == null))
             return;
         fragment.resetViews();
+
+        frag_list.progressDialog.dismiss();
         manager.removeGroup(channel, new WifiP2pManager.ActionListener() {
 
             @Override
             public void onFailure(int reasonCode) {
+
                 Log.d(TAG, "Disconnect failed. Reason :" + reasonCode);
             }
 
