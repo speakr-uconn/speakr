@@ -33,10 +33,11 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
     CollapsingToolbarLayout collapsingToolbarLayout;
     Toolbar toolbar;
     TabLayout tabLayout;
-    FloatingActionButton fab;
+    FloatingActionButton fab, refresh_jams;
 
     DeviceListFragment frag_list;
     DeviceDetailFragment frag_detail;
+    boolean isDiscovering = false;
 
     public static final String TAG = "wifidrect";
     private WifiP2pManager manager;
@@ -72,41 +73,6 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
         setupFab();
         //enable_atn_direct();
         startNetwork();
-
-        /*Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.setDrawerListener(toggle);
-        toggle.syncState();
-
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(JamListActivity.this, CreateJamActivity.class);
-                startActivity(intent);
-            }
-        });*/
-
-        /*listView = (ListView)findViewById(R.id.jams_list);
-        String[] values = new String[] {
-                "Jam 1",
-                "Jam 2",
-                "Bangers",
-                "Club mix"
-        };
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(
-                this,
-                android.R.layout.simple_expandable_list_item_1,
-                android.R.id.text1,
-                values
-        );
-        listView.setAdapter(adapter);*/
-
         //addDrawerItems();
     }
 
@@ -155,36 +121,21 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
         navView.setNavigationItemSelectedListener(this);
     }
 
-    /*private void setupCollapsingToolbarLayout(){
-
-        collapsingToolbarLayout = (CollapsingToolbarLayout) findViewById(R.id.collapsing_toolbar);
-        if(collapsingToolbarLayout != null){
-            collapsingToolbarLayout.setTitle(toolbar.getTitle());
-            //collapsingToolbarLayout.setCollapsedTitleTextColor(0xED1C24);
-            //collapsingToolbarLayout.setExpandedTitleColor(0xED1C24);
-        }
-    }*/
-
-    /*private void setupTablayout(){
-
-        tabLayout = (TabLayout) findViewById(R.id.tabLayout);
-
-        if(tabLayout == null)
-            return;
-
-        tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
-        tabLayout.addTab(tabLayout.newTab().setText("Tab 1"));
-        tabLayout.addTab(tabLayout.newTab().setText("Tab 2"));
-        tabLayout.addTab(tabLayout.newTab().setText("Tab 3"));
-        tabLayout.addTab(tabLayout.newTab().setText("Tab 4"));
-    }*/
-
     private void setupFab(){
         fab = (FloatingActionButton) findViewById(R.id.fab);
         if(fab != null) {
             fab.setOnClickListener(this);
         }
+        setupRefresh();
     }
+
+    private void setupRefresh(){
+        refresh_jams = (FloatingActionButton) findViewById(R.id.refresh_jams);
+        if(refresh_jams != null) {
+            refresh_jams.setOnClickListener(this);
+        }
+    }
+
     private void setupToolbar(){
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         if(toolbar != null) {
@@ -213,6 +164,10 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
             Intent intent = new Intent(JamListActivity.this, CreateJamActivity.class);
             startActivity(intent);
         }
+        else if(view.getId() == R.id.refresh_jams){
+            if(!isDiscovering)
+                discoverPeers();
+        }
     }
 
     public void openPlayerActivity(){
@@ -229,6 +184,7 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
 
     public void startNetwork(){
         onConnection = false;
+        isDiscovering = true;
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
@@ -332,6 +288,7 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
         if((frag_list == null) || (frag_detail == null))
             return;
         frag_detail.resetViews();
+        isDiscovering = false;
 
         frag_list.progressDialog.dismiss();
         manager.removeGroup(channel, new WifiP2pManager.ActionListener() {
