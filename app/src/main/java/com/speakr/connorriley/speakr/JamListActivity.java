@@ -248,6 +248,9 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
             public void onSuccess() {
                 Toast.makeText(JamListActivity.this, "Discovery Initiated",
                         Toast.LENGTH_SHORT).show();
+                final DeviceListFragment fragment = (DeviceListFragment) getFragmentManager()
+                        .findFragmentById(R.id.frag_list);
+                fragment.progressDialog.show();
             }
 
             @Override
