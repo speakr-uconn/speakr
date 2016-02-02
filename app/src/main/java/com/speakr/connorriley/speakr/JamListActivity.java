@@ -209,8 +209,6 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
         manager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
             @Override
             public void onSuccess() {
-                Toast.makeText(JamListActivity.this, "Discovery Initiated",
-                        Toast.LENGTH_SHORT).show();
                 frag_list.progressDialog.show();
             }
 
@@ -219,8 +217,6 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
                 Toast.makeText(JamListActivity.this, "Discovery Failed : " + reasonCode,
                         Toast.LENGTH_SHORT).show();
                 //cancelDisconnect();
-                Toast.makeText(JamListActivity.this, "No devices found.",
-                        Toast.LENGTH_SHORT).show();
             }
         });
         setTimeout();
@@ -230,11 +226,8 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
         new android.os.Handler().postDelayed(
                 new Runnable() {
                     public void run() {
-                        if (!onConnection) {
+                        if (!onConnection)
                             disconnect();
-                            Toast.makeText(JamListActivity.this, "No devices found.",
-                                    Toast.LENGTH_SHORT).show();
-                        }
                     }
                 },
                 10000);
