@@ -76,6 +76,20 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         TimeSyncTask timeSyncTask = new TimeSyncTask();
         timeSyncTask.execute(new TimeSync());
     }
+
+    @Override
+    protected void onResume(){
+        super.onResume();
+
+        // Set up receiver for media player onPrepared broadcast
+        LocalBroadcastManager.getInstance(this).registerReceiver(onPrepareReceiver,
+                new IntentFilter("MEDIA_PLAYER_PREPARED"));
+        config();           // might not be config, might just need to get song list
+        if(paused){
+            setController();
+            paused=false;
+        }
+    }
     // start UI set up -- Connor
     private void setupNavigationView(){
 
@@ -353,20 +367,6 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     protected void onPause(){
         super.onPause();
         paused=true;
-    }
-
-    @Override
-    protected void onResume(){
-        super.onResume();
-
-        // Set up receiver for media player onPrepared broadcast
-        LocalBroadcastManager.getInstance(this).registerReceiver(onPrepareReceiver,
-                new IntentFilter("MEDIA_PLAYER_PREPARED"));
-
-        if(paused){
-            setController();
-            paused=false;
-        }
     }
 
     @Override
