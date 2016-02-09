@@ -33,7 +33,11 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
     CollapsingToolbarLayout collapsingToolbarLayout;
     Toolbar toolbar;
     TabLayout tabLayout;
-    FloatingActionButton fab;
+    FloatingActionButton fab, refresh_jams;
+
+    DeviceListFragment frag_list;
+    DeviceDetailFragment frag_detail;
+    boolean isDiscovering = false;
 
     public static final String TAG = "wifidrect";
     private WifiP2pManager manager;
@@ -42,15 +46,26 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
     private final IntentFilter intentFilter = new IntentFilter();
     private boolean retryChannel = false;
     private boolean isWifiP2pEnabled = false;
+    private boolean onConnection = false;
 
     public void setIsWifiP2pEnabled(boolean isWifiP2pEnabled) {
         this.isWifiP2pEnabled = isWifiP2pEnabled;
+    }
+
+    public void setConnected(boolean isConnected) {
+        this.onConnection = isConnected;
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_jamlist);
+
+        frag_list = (DeviceListFragment) getFragmentManager()
+                .findFragmentById(R.id.frag_list);
+        frag_detail = (DeviceDetailFragment) getFragmentManager()
+                .findFragmentById(R.id.frag_detail);
+
         setupNavigationView();
         setupToolbar();
         //setupTablayout();
@@ -58,41 +73,6 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
         setupFab();
         //enable_atn_direct();
         startNetwork();
-
-        /*Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.setDrawerListener(toggle);
-        toggle.syncState();
-
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(JamListActivity.this, CreateJamActivity.class);
-                startActivity(intent);
-            }
-        });*/
-
-        /*listView = (ListView)findViewById(R.id.jams_list);
-        String[] values = new String[] {
-                "Jam 1",
-                "Jam 2",
-                "Bangers",
-                "Club mix"
-        };
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(
-                this,
-                android.R.layout.simple_expandable_list_item_1,
-                android.R.id.text1,
-                values
-        );
-        listView.setAdapter(adapter);*/
-
         //addDrawerItems();
     }
 
@@ -141,36 +121,21 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
         navView.setNavigationItemSelectedListener(this);
     }
 
-    /*private void setupCollapsingToolbarLayout(){
-
-        collapsingToolbarLayout = (CollapsingToolbarLayout) findViewById(R.id.collapsing_toolbar);
-        if(collapsingToolbarLayout != null){
-            collapsingToolbarLayout.setTitle(toolbar.getTitle());
-            //collapsingToolbarLayout.setCollapsedTitleTextColor(0xED1C24);
-            //collapsingToolbarLayout.setExpandedTitleColor(0xED1C24);
-        }
-    }*/
-
-    /*private void setupTablayout(){
-
-        tabLayout = (TabLayout) findViewById(R.id.tabLayout);
-
-        if(tabLayout == null)
-            return;
-
-        tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
-        tabLayout.addTab(tabLayout.newTab().setText("Tab 1"));
-        tabLayout.addTab(tabLayout.newTab().setText("Tab 2"));
-        tabLayout.addTab(tabLayout.newTab().setText("Tab 3"));
-        tabLayout.addTab(tabLayout.newTab().setText("Tab 4"));
-    }*/
-
     private void setupFab(){
         fab = (FloatingActionButton) findViewById(R.id.fab);
         if(fab != null) {
             fab.setOnClickListener(this);
         }
+        setupRefresh();
     }
+
+    private void setupRefresh(){
+        refresh_jams = (FloatingActionButton) findViewById(R.id.refresh_jams);
+        if(refresh_jams != null) {
+            refresh_jams.setOnClickListener(this);
+        }
+    }
+
     private void setupToolbar(){
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         if(toolbar != null) {
@@ -199,6 +164,10 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
             Intent intent = new Intent(JamListActivity.this, CreateJamActivity.class);
             startActivity(intent);
         }
+        else if(view.getId() == R.id.refresh_jams){
+            if(!isDiscovering)
+                discoverPeers();
+        }
     }
 
     public void openPlayerActivity(){
@@ -214,6 +183,8 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
     }
 
     public void startNetwork(){
+        onConnection = false;
+        isDiscovering = true;
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
@@ -223,31 +194,43 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
         channel = manager.initialize(this, getMainLooper(), null);
 
         if (!isWifiP2pEnabled) {
-            Toast.makeText(JamListActivity.this, R.string.p2p_off_warning,
-                    Toast.LENGTH_SHORT).show();
+            //Toast.makeText(JamListActivity.this, R.string.p2p_off_warning,
+            //        Toast.LENGTH_SHORT).show();
 
             //startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS)); //-- enable p2p on/off
-
             //return;
         }
 
-        final DeviceListFragment fragment = (DeviceListFragment) getFragmentManager()
-                .findFragmentById(R.id.frag_list);
-        fragment.onInitiateDiscovery();
-        manager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
+        frag_list.onInitiateDiscovery();
+        discoverPeers();
+    }
 
+    public void discoverPeers(){
+        manager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
             @Override
             public void onSuccess() {
-                Toast.makeText(JamListActivity.this, "Discovery Initiated",
-                        Toast.LENGTH_SHORT).show();
+                frag_list.progressDialog.show();
             }
 
             @Override
             public void onFailure(int reasonCode) {
                 Toast.makeText(JamListActivity.this, "Discovery Failed : " + reasonCode,
                         Toast.LENGTH_SHORT).show();
+                //cancelDisconnect();
             }
         });
+        setTimeout();
+    }
+
+    public void setTimeout(){
+        new android.os.Handler().postDelayed(
+                new Runnable() {
+                    public void run() {
+                        if (!onConnection)
+                            disconnect();
+                    }
+                },
+                10000);
     }
 
    @SuppressWarnings("StatementWithEmptyBody")
@@ -272,11 +255,8 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
 
     @Override
     public void showDetails(WifiP2pDevice device) {
-        DeviceDetailFragment fragment = (DeviceDetailFragment) getFragmentManager()
-                .findFragmentById(R.id.frag_detail);
-        if(fragment != null)
-            fragment.showDetails(device);
-
+        if(frag_detail != null)
+            frag_detail.showDetails(device);
     }
 
     @Override
@@ -298,22 +278,23 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
 
     @Override
     public void disconnect() {
-        final DeviceDetailFragment fragment = (DeviceDetailFragment) getFragmentManager()
-                .findFragmentById(R.id.frag_detail);
-
-        if(fragment == null)
+        if((frag_list == null) || (frag_detail == null))
             return;
-        fragment.resetViews();
+        frag_detail.resetViews();
+        isDiscovering = false;
+
+        frag_list.progressDialog.dismiss();
         manager.removeGroup(channel, new WifiP2pManager.ActionListener() {
 
             @Override
             public void onFailure(int reasonCode) {
+
                 Log.d(TAG, "Disconnect failed. Reason :" + reasonCode);
             }
 
             @Override
             public void onSuccess() {
-                fragment.getView().setVisibility(View.GONE);
+                frag_detail.getView().setVisibility(View.GONE);
             }
 
         });
@@ -345,13 +326,13 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
         if (manager != null) {
             final DeviceListFragment fragment = (DeviceListFragment) getFragmentManager()
                     .findFragmentById(R.id.frag_list);
-            if(fragment == null)
+            if(frag_list == null)
                 return;
-            if (fragment.getDevice() == null
-                    || fragment.getDevice().status == WifiP2pDevice.CONNECTED) {
+            if (frag_list.getDevice() == null
+                    || frag_list.getDevice().status == WifiP2pDevice.CONNECTED) {
                 disconnect();
-            } else if (fragment.getDevice().status == WifiP2pDevice.AVAILABLE
-                    || fragment.getDevice().status == WifiP2pDevice.INVITED) {
+            } else if (frag_list.getDevice().status == WifiP2pDevice.AVAILABLE
+                    || frag_list.getDevice().status == WifiP2pDevice.INVITED) {
 
                 manager.cancelConnect(channel, new WifiP2pManager.ActionListener() {
 
@@ -373,15 +354,11 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
     }
 
     public void resetData() {
-        DeviceListFragment fragmentList = (DeviceListFragment) getFragmentManager()
-                .findFragmentById(R.id.frag_list);
-        DeviceDetailFragment fragmentDetails = (DeviceDetailFragment) getFragmentManager()
-                .findFragmentById(R.id.frag_detail);
-        if (fragmentList != null) {
-            fragmentList.clearPeers();
+        if (frag_list != null) {
+            frag_list.clearPeers();
         }
-        if (fragmentDetails != null) {
-            fragmentDetails.resetViews();
+        if (frag_detail != null) {
+            frag_detail.resetViews();
         }
     }
 
@@ -390,6 +367,7 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
         super.onResume();
         receiver = new JamListBroadcastReceiver(manager, channel, this);
         registerReceiver(receiver, intentFilter);
+        discoverPeers();
     }
 
     @Override

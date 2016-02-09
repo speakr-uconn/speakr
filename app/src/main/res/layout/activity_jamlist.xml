@@ -13,9 +13,7 @@
     <android.support.design.widget.CoordinatorLayout
         android:id="@+id/coordinatorLayout"
         android:layout_height="match_parent"
-        android:layout_width="match_parent">
-
-
+        android:layout_width="match_parent" >
 
         <android.support.design.widget.AppBarLayout
             android:layout_width="match_parent"
@@ -43,7 +41,17 @@
             android:layout_marginBottom="20dp"
             android:layout_marginRight="20dp"
             android:layout_gravity="bottom|right"
-            app:fabSize="normal" />
+            />
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/refresh_jams"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@android:drawable/ic_menu_rotate"
+            android:layout_marginBottom="20dp"
+            android:layout_marginLeft="20dp"
+            android:layout_gravity="bottom|left"
+            />
 
     </android.support.design.widget.CoordinatorLayout>
     <android.support.design.widget.NavigationView

@@ -144,13 +144,13 @@ public class MusicService extends Service implements
         LocalBroadcastManager.getInstance(this).sendBroadcast(onPreparedIntent);
 
         Notification.Builder builder = new Notification.Builder(this);
-
         builder.setContentIntent(pendInt)
                 .setSmallIcon(R.mipmap.play)
                 .setTicker(songTitle)
                 .setOngoing(true)
                 .setContentTitle("Playing")
-        .setContentText(songTitle);
+                .setPriority(Notification.PRIORITY_HIGH)
+                .setContentText(songTitle);
         Notification not = builder.build();
 
         startForeground(NOTIFY_ID, not);
