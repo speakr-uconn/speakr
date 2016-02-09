@@ -50,6 +50,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     private boolean paused = false, playbackPaused = false;
     DrawerLayout drawerLayout;
     Toolbar toolbar;
+    private String songUri;
 
     // Broadcast receiver to determine when music player has been prepared
     private BroadcastReceiver onPrepareReceiver = new BroadcastReceiver() {
@@ -65,16 +66,44 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         //-- TODO: Add useful items, such as the "Shuffle" icon, to the action bar ...
         //-- In menu_main.xml I had several app:showAsAction="always" calls, but it didn't fix it. Haven't gone back to fix that yet.
         super.onCreate(savedInstanceState);
+        songUri = null;
         setContentView(R.layout.activity_player);
         setupNavigationView();
         setupToolbar();
-        songQueueView = (ListView)findViewById(R.id.song_queue);
-        songListView = (ListView)findViewById(R.id.song_list);
+        songQueueView = (ListView) findViewById(R.id.song_queue);
+        songListView = (ListView) findViewById(R.id.song_list);
         songQueue = new ArrayList<Song>();
         songList = new ArrayList<Song>();
         getPermissions();
         TimeSyncTask timeSyncTask = new TimeSyncTask();
         timeSyncTask.execute(new TimeSync());
+        // to start playing a song
+        Bundle bundle = getIntent().getExtras();
+        if (bundle != null) {
+            songUri = bundle.getString("Song");
+        }
+    }
+
+    @Override
+    protected void onResume(){
+        super.onResume();
+
+        // Set up receiver for media player onPrepared broadcast
+        LocalBroadcastManager.getInstance(this).registerReceiver(onPrepareReceiver,
+                new IntentFilter("MEDIA_PLAYER_PREPARED"));
+        getSongList();           // might not be config, might just need to get song list
+        if(paused){
+            setController();
+            paused=false;
+        }
+    }
+
+    private void setUpReceivedSong(String songUri) {
+        Log.d("PlayerActivity", "setupreceivedsong");
+        if(musicSrv != null) {
+            Log.d("PlayerActivity","musicserv not null");
+            musicSrv.playReceivedSong(songUri);
+        }
     }
     // start UI set up -- Connor
     private void setupNavigationView(){
@@ -341,6 +370,10 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE);
             startService(playIntent);
         }
+        if (songUri != null) {
+            Log.d("PlayerActivity", "SongURI: " + songUri);
+            setUpReceivedSong(songUri);
+        }
     }
 
     @Override
@@ -353,20 +386,6 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     protected void onPause(){
         super.onPause();
         paused=true;
-    }
-
-    @Override
-    protected void onResume(){
-        super.onResume();
-
-        // Set up receiver for media player onPrepared broadcast
-        LocalBroadcastManager.getInstance(this).registerReceiver(onPrepareReceiver,
-                new IntentFilter("MEDIA_PLAYER_PREPARED"));
-
-        if(paused){
-            setController();
-            paused=false;
-        }
     }
 
     @Override

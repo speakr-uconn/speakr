@@ -107,7 +107,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         Log.d("devicedetailfragment:", "onActivityResult");
 
-        // User has picked an image. Transfer it to group owner i.e peer using
+        // User has picked a song. Transfer it to group owner i.e peer using
         // FileTransferService.
         Uri uri = data.getData();
         TextView statusText = (TextView) mContentView.findViewById(R.id.status_text);
@@ -217,7 +217,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
             this.statusText = (TextView) statusText;
         }
 
-        @Override   //TODO: Fix this method
+        @Override
         protected String doInBackground(Void... params) {
             try {
                 ServerSocket serverSocket = new ServerSocket(8988);
@@ -228,14 +228,14 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                 // receive mime type
                 DataInputStream is = new DataInputStream(client.getInputStream());
                 String mimeType = is.readUTF();
-                Log.e("String", "type: " + mimeType);
+                Log.d("String", "type: " + mimeType);
                 String fileExtention = null;
                 try {
                     fileExtention = getFileExtention(mimeType);
                 } catch (MimeTypeException e) {
                     e.printStackTrace();
                 }
-                Log.e(WiFiDirectActivity.TAG, "File Extention: " + fileExtention);
+                Log.d(WiFiDirectActivity.TAG, "File Extention: " + fileExtention);
                 final File f = new File(Environment.getExternalStorageDirectory() + "/"
                         + context.getPackageName() + "/wifip2pshared-" + System.currentTimeMillis()
                         + fileExtention);
@@ -245,11 +245,10 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                     dirs.mkdirs();
                 f.createNewFile();
 
-                //Log.d(WiFiDirectActivity.TAG, "server: copying files " + f.toString());
+                Log.d(WiFiDirectActivity.TAG, "server: copying files " + f.toString());
                 InputStream inputstream = client.getInputStream();
                 copyFile(inputstream, new FileOutputStream(f));
                 serverSocket.close();
-                //return f.getAbsolutePath();
                 return f.getAbsolutePath();
             } catch (IOException e) {
                 Log.e(WiFiDirectActivity.TAG, e.getMessage());
@@ -264,11 +263,20 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
         @Override
         protected void onPostExecute(String result) {
             if (result != null) {
-                statusText.setText("File copied - " + result);
+                Log.d("DeviceDeatilFrag", "File copied - " + result);
                 Intent intent = new Intent();
                 intent.setAction(android.content.Intent.ACTION_VIEW);
                 intent.setDataAndType(Uri.parse("file://" + result), "audio/*");
                 context.startActivity(intent);
+
+                Log.d("DeviceDetailFrag", "start music player intent");
+                //Intent intent1 = new Intent(context, PlayerActivity.class);
+                // this adds a flag to clear the intent if its running and create a new one
+                //intent1.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK|Intent.FLAG_ACTIVITY_NEW_TASK);
+                //Bundle bundle = new Bundle();
+                //bundle.putString("Song", "file:/" + result);
+                //intent1.putExtras(bundle);
+                //context.startActivity(intent1);
             }
         }
 
@@ -309,9 +317,9 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
             case "audio/mpeg":
                 return ".mp3";
             case "audio/mp4":
-                return "m4a";
+                return ".m4a";
             case "audio/flac":
-                return "flac";
+                return ".flac";
         }
         throw new MimeTypeException("No Mime Type Found");
     }

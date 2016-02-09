@@ -4,6 +4,8 @@ import android.app.Service;
 import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.IBinder;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import android.content.ContentUris;
 import android.media.AudioManager;
@@ -65,7 +67,19 @@ public class MusicService extends Service implements
         player.setOnCompletionListener(this);
         player.setOnErrorListener(this);
     }
+    public void playReceivedSong(String songUri) {
+        player.reset();
 
+        Uri trackUri = Uri.parse(songUri);
+        try {
+            player.setDataSource(getApplicationContext(), trackUri);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        Log.d("MusicService", "Prepare Async");
+        player.prepareAsync();
+
+    }
     public void playSong(){ //play a song
         player.reset();
         Song playSong = songs.get(songPosn);        //get song
@@ -74,6 +88,7 @@ public class MusicService extends Service implements
         Uri trackUri = ContentUris.withAppendedId( //set uri
                 android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                 currSong);
+        Log.d("PlayerActivity", "Uri: " + trackUri);
         try{
             player.setDataSource(getApplicationContext(), trackUri);
         }
@@ -126,13 +141,13 @@ public class MusicService extends Service implements
         LocalBroadcastManager.getInstance(this).sendBroadcast(onPreparedIntent);
 
         Notification.Builder builder = new Notification.Builder(this);
-
         builder.setContentIntent(pendInt)
                 .setSmallIcon(R.mipmap.play)
                 .setTicker(songTitle)
                 .setOngoing(true)
                 .setContentTitle("Playing")
-        .setContentText(songTitle);
+                .setPriority(Notification.PRIORITY_HIGH)
+                .setContentText(songTitle);
         Notification not = builder.build();
 
         startForeground(NOTIFY_ID, not);
