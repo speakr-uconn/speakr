@@ -29,7 +29,6 @@ import java.util.List;
  * parent activity to handle user interaction events
  */
 public class DeviceListFragment extends ListFragment implements PeerListListener {
-    // aldjhfaksjajf
     private List<WifiP2pDevice> peers = new ArrayList<WifiP2pDevice>();
     ProgressDialog progressDialog = null;
     View mContentView = null;
@@ -39,7 +38,6 @@ public class DeviceListFragment extends ListFragment implements PeerListListener
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         this.setListAdapter(new WiFiPeerListAdapter(getActivity(), R.layout.row_devices, peers));
-
     }
 
     @Override
@@ -87,7 +85,6 @@ public class DeviceListFragment extends ListFragment implements PeerListListener
      * Array adapter for ListFragment that maintains WifiP2pDevice list.
      */
     private class WiFiPeerListAdapter extends ArrayAdapter<WifiP2pDevice> {
-
         private List<WifiP2pDevice> items;
 
         /**
@@ -121,9 +118,7 @@ public class DeviceListFragment extends ListFragment implements PeerListListener
                     bottom.setText(getDeviceStatus(device.status));
                 }
             }
-
             return v;
-
         }
     }
 
@@ -134,10 +129,12 @@ public class DeviceListFragment extends ListFragment implements PeerListListener
      */
     public void updateThisDevice(WifiP2pDevice device) {
         this.device = device;
+        /*
         TextView view = (TextView) mContentView.findViewById(R.id.my_name);
         view.setText(device.deviceName);
         view = (TextView) mContentView.findViewById(R.id.my_status);
         view.setText(getDeviceStatus(device.status));
+        */
     }
 
     @Override
