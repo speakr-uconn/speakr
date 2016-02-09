@@ -73,7 +73,6 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         songQueueView = (ListView) findViewById(R.id.song_queue);
         songListView = (ListView) findViewById(R.id.song_list);
         songQueue = new ArrayList<Song>();
-        songList = new ArrayList<Song>();
         getPermissions();
         TimeSyncTask timeSyncTask = new TimeSyncTask();
         timeSyncTask.execute(new TimeSync());
@@ -208,7 +207,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     //-- TODO: Reorder the methods in this and MusicService.java to have a sensible ordering, to make it easier to find stuff
     public void getSongList() {
         //retrieve song info
-
+        songList = new ArrayList<Song>();
         ContentResolver musicResolver = getContentResolver();
         Uri musicUri = android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
         Cursor musicCursor = musicResolver.query(musicUri, null, null, null, null);
