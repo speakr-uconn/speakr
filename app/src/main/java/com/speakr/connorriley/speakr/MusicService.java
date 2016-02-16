@@ -98,11 +98,7 @@ public class MusicService extends Service implements
             Log.e("MUSIC SERVICE", "Error setting data source", e);
         }
 
-        MediaPlayerTimeSyncBundle mtb = new MediaPlayerTimeSyncBundle(player, new TimeSync());
-        TimeSyncTask timeSyncTask = new TimeSyncTask();
-        sendFile(trackUri);
-        //player.prepareAsync();
-        timeSyncTask.execute(mtb);
+        player.prepareAsync();
     }
 
     private void sendFile(Uri trackUri) {
