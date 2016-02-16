@@ -6,6 +6,7 @@ import android.content.BroadcastReceiver;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
@@ -76,6 +77,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         getPermissions();
         TimeSyncTask timeSyncTask = new TimeSyncTask();
         timeSyncTask.execute(new TimeSync());
+        config();
         // to start playing a song
         Bundle bundle = getIntent().getExtras();
         if (bundle != null) {
@@ -90,7 +92,8 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         // Set up receiver for media player onPrepared broadcast
         LocalBroadcastManager.getInstance(this).registerReceiver(onPrepareReceiver,
                 new IntentFilter("MEDIA_PLAYER_PREPARED"));
-        getSongList();           // might not be config, might just need to get song list
+        config();
+        //getSongList();           // might not be config, might just need to get song list
         if(paused){
             setController();
             paused=false;
@@ -99,10 +102,10 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
 
     private void setUpReceivedSong(String songUri) {
         Log.d("PlayerActivity", "setupreceivedsong");
-        if(musicSrv != null) {
-            Log.d("PlayerActivity","musicserv not null");
+        //if(musicSrv != null) {
+            //Log.d("PlayerActivity","musicserv not null");
             musicSrv.playReceivedSong(songUri);
-        }
+        //}
     }
     // start UI set up -- Connor
     private void setupNavigationView(){
@@ -207,9 +210,10 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     //-- TODO: Reorder the methods in this and MusicService.java to have a sensible ordering, to make it easier to find stuff
     public void getSongList() {
         //retrieve song info
+        Log.d("PlayerActivity", "Get Song List");
         songList = new ArrayList<Song>();
         ContentResolver musicResolver = getContentResolver();
-        Uri musicUri = android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+        Uri musicUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
         Cursor musicCursor = musicResolver.query(musicUri, null, null, null, null);
 
         if(musicCursor!=null && musicCursor.moveToFirst()){

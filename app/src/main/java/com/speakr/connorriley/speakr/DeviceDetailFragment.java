@@ -249,6 +249,13 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                 InputStream inputstream = client.getInputStream();
                 copyFile(inputstream, new FileOutputStream(f));
                 serverSocket.close();
+                Intent mediaIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+                mediaIntent.setData(Uri.fromFile(f));
+                try {
+                    context.sendBroadcast(mediaIntent);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
                 return f.getAbsolutePath();
             } catch (IOException e) {
                 Log.e(WiFiDirectActivity.TAG, e.getMessage());
