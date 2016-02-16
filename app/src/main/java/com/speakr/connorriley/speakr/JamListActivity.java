@@ -324,8 +324,6 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
          * request
          */
         if (manager != null) {
-            final DeviceListFragment fragment = (DeviceListFragment) getFragmentManager()
-                    .findFragmentById(R.id.frag_list);
             if(frag_list == null)
                 return;
             if (frag_list.getDevice() == null

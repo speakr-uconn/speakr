@@ -175,10 +175,10 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
     public void showDetails(WifiP2pDevice device) {
         this.device = device;
         this.getView().setVisibility(View.VISIBLE);
-        TextView view = (TextView) mContentView.findViewById(R.id.device_address);
-        view.setText(device.deviceAddress);
-        view = (TextView) mContentView.findViewById(R.id.device_info);
-        view.setText(device.toString());
+        //TextView view = (TextView) mContentView.findViewById(R.id.device_address);
+        //view.setText(device.deviceAddress);
+        //view = (TextView) mContentView.findViewById(R.id.device_info);
+        //view.setText(device.toString());
 
     }
 
@@ -332,4 +332,3 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
     }
 
 }
-
