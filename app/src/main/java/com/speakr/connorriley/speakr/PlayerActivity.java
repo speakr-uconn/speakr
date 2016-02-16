@@ -5,6 +5,8 @@ import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.design.widget.CollapsingToolbarLayout;
@@ -51,7 +53,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     private boolean paused = false, playbackPaused = false;
     DrawerLayout drawerLayout;
     Toolbar toolbar;
-    private String songUri;
+    private String songPath;
 
     // Broadcast receiver to determine when music player has been prepared
     private BroadcastReceiver onPrepareReceiver = new BroadcastReceiver() {
@@ -67,21 +69,21 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         //-- TODO: Add useful items, such as the "Shuffle" icon, to the action bar ...
         //-- In menu_main.xml I had several app:showAsAction="always" calls, but it didn't fix it. Haven't gone back to fix that yet.
         super.onCreate(savedInstanceState);
-        songUri = null;
+        songPath = null;
         setContentView(R.layout.activity_player);
         setupNavigationView();
         setupToolbar();
         songQueueView = (ListView) findViewById(R.id.song_queue);
         songListView = (ListView) findViewById(R.id.song_list);
         songQueue = new ArrayList<Song>();
-        songList = new ArrayList<Song>();
         getPermissions();
         TimeSyncTask timeSyncTask = new TimeSyncTask();
         timeSyncTask.execute(new TimeSync());
+        config();
         // to start playing a song
         Bundle bundle = getIntent().getExtras();
         if (bundle != null) {
-            songUri = bundle.getString("Song");
+            songPath = bundle.getString("Song");
         }
     }
 
@@ -92,18 +94,23 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         // Set up receiver for media player onPrepared broadcast
         LocalBroadcastManager.getInstance(this).registerReceiver(onPrepareReceiver,
                 new IntentFilter("MEDIA_PLAYER_PREPARED"));
-        getSongList();           // might not be config, might just need to get song list
+        config();
+        //getSongList();           // might not be config, might just need to get song list
         if(paused){
             setController();
             paused=false;
         }
     }
 
-    private void setUpReceivedSong(String songUri) {
+    private void setUpReceivedSong() {
         Log.d("PlayerActivity", "setupreceivedsong");
-        if(musicSrv != null) {
+       // MediaPlayer testPlayer = MediaPlayer.create(getApplicationContext(), Uri.parse(songPath));
+       // testPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+       // testPlayer.start();
+
+        if(musicSrv != null) {          // musicSrv is always null - needs to not be null
             Log.d("PlayerActivity","musicserv not null");
-            musicSrv.playReceivedSong(songUri);
+            musicSrv.playReceivedSong(songPath);
         }
     }
     // start UI set up -- Connor
@@ -209,10 +216,10 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     //-- TODO: Reorder the methods in this and MusicService.java to have a sensible ordering, to make it easier to find stuff
     public void getSongList() {
         //retrieve song info
-
+        Log.d("PlayerActivity", "Get Song List");
+        songList = new ArrayList<Song>();
         ContentResolver musicResolver = getContentResolver();
-        Uri musicUri = android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-        //com.speakr.connorriley.speakr
+        Uri musicUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
         Cursor musicCursor = musicResolver.query(musicUri, null, null, null, null);
 
         if(musicCursor!=null && musicCursor.moveToFirst()){
@@ -372,9 +379,9 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE);
             startService(playIntent);
         }
-        if (songUri != null) {
-            Log.d("PlayerActivity", "SongURI: " + songUri);
-            setUpReceivedSong(songUri);
+        if (songPath != null) {
+            Log.d("PlayerActivity", "SongURI: " + songPath);
+            setUpReceivedSong();
         }
     }
 
