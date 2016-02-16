@@ -271,19 +271,19 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
         protected void onPostExecute(String result) {
             if (result != null) {
                 Log.d("DeviceDeatilFrag", "File copied - " + result);
-                Intent intent = new Intent();
+                /*Intent intent = new Intent();
                 intent.setAction(android.content.Intent.ACTION_VIEW);
                 intent.setDataAndType(Uri.parse("file://" + result), "audio/*");
-                context.startActivity(intent);
+                context.startActivity(intent); */
 
                 Log.d("DeviceDetailFrag", "start music player intent");
-                //Intent intent1 = new Intent(context, PlayerActivity.class);
+                Intent playerIntent = new Intent(context, PlayerActivity.class);
                 // this adds a flag to clear the intent if its running and create a new one
-                //intent1.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK|Intent.FLAG_ACTIVITY_NEW_TASK);
-                //Bundle bundle = new Bundle();
-                //bundle.putString("Song", "file:/" + result);
-                //intent1.putExtras(bundle);
-                //context.startActivity(intent1);
+                playerIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK|Intent.FLAG_ACTIVITY_NEW_TASK);
+                Bundle bundle = new Bundle();
+                bundle.putString("Song", result);
+                playerIntent.putExtras(bundle);
+                context.startActivity(playerIntent);
             }
         }
 
