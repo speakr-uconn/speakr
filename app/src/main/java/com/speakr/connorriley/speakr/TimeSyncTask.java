@@ -11,15 +11,14 @@ import java.util.Calendar;
 /**
  * Created by Viren on 1/22/2016.
  */
-public class TimeSyncTask extends AsyncTask<MediaPlayerTimeSyncBundle, Void, Long> {
+public class TimeSyncTask extends AsyncTask<TimeSync, Void, Long> {
 
     private final String LOG_TAG = TimeSyncTask.class.getSimpleName();
 
 
     @Override
-    protected Long doInBackground(MediaPlayerTimeSyncBundle... params) {
-        MediaPlayer m = params[0].getmMediaPlayer();
-        TimeSync timeSync = params[0].getmTimeSync();
+    protected Long doInBackground(TimeSync... params) {
+        TimeSync timeSync = params[0];
         long time = timeSync.getNTPTime();
         if (time != -1) {
             Log.d(LOG_TAG, "Time received: " + time);
@@ -29,10 +28,6 @@ public class TimeSyncTask extends AsyncTask<MediaPlayerTimeSyncBundle, Void, Lon
 
             Log.d(LOG_TAG, "Server time: " + df.format(calendar.getTime()));
             Log.d(LOG_TAG, "System time: " + df.format(System.currentTimeMillis()));
-
-            while (System.currentTimeMillis() != (time + 1000)) {}
-            m.prepareAsync();
-
         } else {
             Log.e(LOG_TAG, "ERROR: time received was " + time);
         }
