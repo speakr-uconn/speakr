@@ -252,6 +252,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                 Intent mediaIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
                 mediaIntent.setData(Uri.fromFile(f));
                 try {
+                    Log.d("DeviceDetailFragment", "Media Scanner Intent");
                     context.sendBroadcast(mediaIntent);
                 } catch (Exception ex) {
                     ex.printStackTrace();

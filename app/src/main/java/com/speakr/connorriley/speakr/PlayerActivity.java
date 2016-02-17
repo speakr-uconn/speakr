@@ -108,10 +108,11 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
        // testPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
        // testPlayer.start();
 
-        if(musicSrv != null) {          // musicSrv is always null - needs to not be null
+        if(musicSrv != null && songPath != null) {          // musicSrv is always null - needs to not be null
             Log.d("PlayerActivity","musicserv not null");
             musicSrv.playReceivedSong(songPath);
         }
+        songPath = null;
     }
     // start UI set up -- Connor
     private void setupNavigationView(){
@@ -374,14 +375,10 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     @Override
     protected void onStart() {
         super.onStart();
-        if(playIntent==null){
+        if(playIntent==null) {
             playIntent = new Intent(this, MusicService.class);
             bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE);
             startService(playIntent);
-        }
-        if (songPath != null) {
-            Log.d("PlayerActivity", "SongURI: " + songPath);
-            setUpReceivedSong();
         }
     }
 
@@ -501,6 +498,10 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             //pass list
             musicSrv.setList(songList);
             musicBound = true;
+            if (songPath != null) {
+                Log.d("PlayerActivity", "SongURI: " + songPath);
+                setUpReceivedSong();
+            }
         }
 
         @Override
