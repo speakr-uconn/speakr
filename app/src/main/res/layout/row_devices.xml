@@ -3,9 +3,9 @@
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
-    android:layout_height="?android:attr/listPreferredItemHeight"
-    android:background="#FFFFFF"
-    android:paddingTop="10dp">
+    android:layout_height="wrap_content"
+    android:background="#FFFF0F"
+    android:paddingTop="20px">
 
     <android.support.v7.widget.CardView
         android:layout_width="match_parent"
@@ -14,40 +14,51 @@
         android:layout_marginBottom="@dimen/card_margin"
         android:layout_marginLeft="@dimen/card_margin"
         android:layout_marginRight="@dimen/card_margin"
+        android:paddingTop="10px"
+        android:paddingBottom="10px"
         >
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="fill_parent">
+            android:layout_height="match_parent"
+            android:orientation="vertical">
 
-            <ImageView
-                android:id="@+id/icon"
-                android:layout_width="wrap_content"
-                android:layout_height="fill_parent"
-                android:layout_marginRight="2dip"
-                android:src="@drawable/machine" />
             <LinearLayout
-                android:orientation="vertical"
-                android:background="#2EFEF7"
                 android:layout_width="match_parent"
-                android:layout_weight="1"
-                android:layout_height="fill_parent">
-                <TextView
-                    android:id="@+id/device_name"
-                    android:layout_width="fill_parent"
-                    android:layout_height="30px"
+                android:layout_height="fill_parent"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:id="@+id/icon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="fill_parent"
+                    android:layout_marginRight="2dip"
+                    android:src="@drawable/machine" />
+                <LinearLayout
+                    android:orientation="vertical"
+                    android:background="#2EFEF7"
+                    android:layout_width="match_parent"
                     android:layout_weight="1"
-                    android:textColor="#000000"
-                    android:text="@string/app_name"
-                    android:gravity="center_vertical" />
-                <TextView
-                    android:layout_width="fill_parent"
-                    android:layout_height="30px"
-                    android:layout_weight="1"
-                    android:id="@+id/device_details"
-                    android:singleLine="true"
-                    android:textColor="#DF0101"
-                    android:ellipsize="marquee" />
+                    android:layout_height="wrap_content">
+                    <TextView
+                        android:id="@+id/device_name"
+                        android:layout_width="fill_parent"
+                        android:layout_height="100px"
+                        android:layout_weight="1"
+                        android:textColor="#000000"
+                        android:text="Device Name"
+                        android:gravity="center_vertical" />
+                    <TextView
+                        android:layout_width="fill_parent"
+                        android:layout_height="100px"
+                        android:layout_weight="1"
+                        android:id="@+id/device_details"
+                        android:singleLine="true"
+                        android:textColor="#DF0101"
+                        android:text="Device Details"
+                        android:ellipsize="marquee"
+                        android:gravity="center_vertical"/>
+                </LinearLayout>
             </LinearLayout>
         </LinearLayout>
     </android.support.v7.widget.CardView>
