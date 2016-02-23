@@ -3,6 +3,7 @@ package com.speakr.connorriley.speakr;
 import android.Manifest;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
+import android.content.ContentUris;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.media.AudioManager;
@@ -37,6 +38,7 @@ import android.content.ServiceConnection;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.MediaController.MediaPlayerControl;
+import android.widget.TextView;
 
 public class PlayerActivity extends HamburgerActivity implements View.OnClickListener, MediaPlayerControl {
     //-- Referenced the following websites:
@@ -109,7 +111,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
        // testPlayer.start();
 
         if(musicSrv != null && songPath != null) {          // musicSrv is always null - needs to not be null
-            Log.d("PlayerActivity","musicserv not null");
+            Log.d("PlayerActivity", "musicserv not null");
             musicSrv.playReceivedSong(songPath);
         }
         songPath = null;
@@ -259,13 +261,35 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         });
     }
 
+    public void transferQueueSongs(Song songToTransfer) {
+        Log.d("devicedetailfragment:", "onActivityResult");
+        // User has picked a song. Transfer it to group owner i.e peer using
+        // FileTransferService.
+        WifiSingleton wifiSingleton = WifiSingleton.getInstance();
+        if(wifiSingleton.getInfo() != null) {
+            //Uri uri = data.getData();
+            long currSong = songToTransfer.getID();        //get id
+            Uri uri = ContentUris.withAppendedId( //set uri
+                    android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                    currSong);
+            Log.d(WiFiDirectActivity.TAG, "Intent----------- " + uri);
+            Intent serviceIntent = new Intent(this, FileTransferService.class);
+            serviceIntent.setAction(FileTransferService.ACTION_SEND_FILE);
+            serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_PATH, uri.toString());
+            serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS,
+                    wifiSingleton.getInfo().groupOwnerAddress.getHostAddress());
+            serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, 8988);
+            Log.d("DeviceDetailFragment", "startService about to be called");
+            startService(serviceIntent);
+        }
+    }
     //-- Song Manipulation between queues - Mike - 12-6
     public void addToQueue(View view){
         Song songToAdd = songList.get(getListRowIndex(view));
         songList.remove(songToAdd);
         songQueue.add(songToAdd);
-
         updateSongAdapters();
+        transferQueueSongs(songToAdd);
     }
 
     public void removeFromQueue(View view){

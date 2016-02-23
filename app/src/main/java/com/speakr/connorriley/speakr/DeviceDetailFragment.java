@@ -125,6 +125,8 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 
     @Override
     public void onConnectionInfoAvailable(final WifiP2pInfo info) {
+        WifiSingleton instance = WifiSingleton.getInstance();
+        instance.setInfo(info);
         if (progressDialog != null && progressDialog.isShowing()) {
             progressDialog.dismiss();
         }
