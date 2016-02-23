@@ -8,6 +8,7 @@ import android.util.Log;
  */
 
 public class TimeSync {
+    private String TAG = "TimeSync";
     SntpClient client = new SntpClient();
 
     // Step 1: Get the time from the server (test by printing)
@@ -20,9 +21,24 @@ public class TimeSync {
         long now = -1;
         if (client.requestTime("0.north-america.pool.ntp.org", 5000)) // server path
         {
-            Log.e("Time Sync", "Entered If");
+            Log.d(TAG, "Entered If");
             now = client.getNtpTime() + SystemClock.elapsedRealtime() - client.getNtpTimeReference();
         }
         return now;
+    }
+    public long getNTPOffset() {
+        long offset = 0;
+        if (client.requestTime("0.north-america.pool.ntp.org", 5000)) // server path
+        {
+            Log.d(TAG, "Entered If");
+            offset = client.getNtpTime() + SystemClock.elapsedRealtime() - client.getNtpTimeReference() - System.currentTimeMillis();
+        }
+        Log.d(TAG, "Offset: " + offset);
+        return offset;
+    }
+
+    public long setServerPlayTime(long offset, long playtime) {
+        // systime + offset = servertime
+        return playtime + offset;
     }
 }

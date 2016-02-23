@@ -3,10 +3,12 @@ package com.speakr.connorriley.speakr;
 import android.Manifest;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
+import android.content.ContentUris;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.media.MediaScannerConnection;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.design.widget.CollapsingToolbarLayout;
@@ -19,6 +21,7 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -37,6 +40,7 @@ import android.content.ServiceConnection;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.MediaController.MediaPlayerControl;
+import android.widget.TextView;
 
 public class PlayerActivity extends HamburgerActivity implements View.OnClickListener, MediaPlayerControl {
     //-- Referenced the following websites:
@@ -54,7 +58,8 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     DrawerLayout drawerLayout;
     Toolbar toolbar;
     private String songPath;
-
+    private Uri songURI;
+    private String TAG = "PlayerActivity";
     // Broadcast receiver to determine when music player has been prepared
     private BroadcastReceiver onPrepareReceiver = new BroadcastReceiver() {
         @Override
@@ -83,7 +88,8 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         // to start playing a song
         Bundle bundle = getIntent().getExtras();
         if (bundle != null) {
-            songPath = bundle.getString("Song");
+            songPath = bundle.getString("SongPath");
+            songURI = Uri.parse(bundle.getString("SongURI"));
         }
     }
 
@@ -103,14 +109,18 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     }
 
     private void setUpReceivedSong() {
-        Log.d("PlayerActivity", "setupreceivedsong");
-       // MediaPlayer testPlayer = MediaPlayer.create(getApplicationContext(), Uri.parse(songPath));
-       // testPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-       // testPlayer.start();
-
-        if(musicSrv != null) {          // musicSrv is always null - needs to not be null
-            Log.d("PlayerActivity","musicserv not null");
+        Log.d(TAG, "setupreceivedsong");
+        /*if(musicSrv != null && songPath != null) {          // musicSrv is always null - needs to not be null
+            Log.d(TAG, "musicserv not null");
             musicSrv.playReceivedSong(songPath);
+        }*/
+        try {
+            //songPath = "content:/" + songPath;
+            addSongToQueue(songURI);
+            songPath = null;
+            songURI = null;
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
     // start UI set up -- Connor
@@ -216,7 +226,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     //-- TODO: Reorder the methods in this and MusicService.java to have a sensible ordering, to make it easier to find stuff
     public void getSongList() {
         //retrieve song info
-        Log.d("PlayerActivity", "Get Song List");
+        Log.d(TAG, "Get Song List");
         songList = new ArrayList<Song>();
         ContentResolver musicResolver = getContentResolver();
         Uri musicUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
@@ -258,13 +268,97 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         });
     }
 
+    public void transferQueueSongs(Song songToTransfer) {
+        Log.d("devicedetailfragment:", "onActivityResult");
+        // User has picked a song. Transfer it to group owner i.e peer using
+        // FileTransferService.
+        WifiSingleton wifiSingleton = WifiSingleton.getInstance();
+        if(wifiSingleton.getInfo() != null) {
+            //Uri uri = data.getData();
+            long currSong = songToTransfer.getID();        //get id
+            Uri uri = ContentUris.withAppendedId( //set uri
+                    android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                    currSong);
+            Log.d(WiFiDirectActivity.TAG, "Intent----------- " + uri);
+            Intent serviceIntent = new Intent(this, FileTransferService.class);
+            serviceIntent.setAction(FileTransferService.ACTION_SEND_FILE);
+            serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_PATH, uri.toString());
+            serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS,
+                    wifiSingleton.getInfo().groupOwnerAddress.getHostAddress());
+            serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, 8988);
+            Log.d("DeviceDetailFragment", "startService about to be called");
+            startService(serviceIntent);
+        }
+    }
     //-- Song Manipulation between queues - Mike - 12-6
     public void addToQueue(View view){
         Song songToAdd = songList.get(getListRowIndex(view));
-        songList.remove(songToAdd);
+        //songList.remove(songToAdd);
         songQueue.add(songToAdd);
-
         updateSongAdapters();
+        transferQueueSongs(songToAdd);
+    }
+
+
+    public void addSongToQueue(Uri musicUri) {
+        Log.d(TAG, "addsongtoqueue URI: " + musicUri);
+        try {
+
+            ContentResolver musicResolver = getContentResolver();
+            // TODO why is music cursor null? - Fix it
+            Cursor musicCursor = musicResolver.query(musicUri, null, null, null, null);
+            //String[] proj = { MediaStore.Audio.Media.TITLE };
+            //Cursor musicCursor = getApplicationContext().getContentResolver().query(musicUri,
+            //        proj, null, null, null);
+            Song song = null;
+            Log.d(TAG, "Music Cursor: " + musicCursor);
+            if (musicCursor != null && musicCursor.moveToFirst()) {
+                //get columns
+                int titleColumn = musicCursor.getColumnIndex
+                        (android.provider.MediaStore.Audio.Media.TITLE);
+                int idColumn = musicCursor.getColumnIndex
+                        (android.provider.MediaStore.Audio.Media._ID);
+                int artistColumn = musicCursor.getColumnIndex
+                        (android.provider.MediaStore.Audio.Media.ARTIST);
+                long thisId = musicCursor.getLong(idColumn);
+                String thisTitle = musicCursor.getString(titleColumn);
+                String thisArtist = musicCursor.getString(artistColumn);
+                song = new Song(thisId, thisTitle, thisArtist, 0);
+                Log.d(TAG, "SongID: " + thisId + "\tSongTitle: " + thisTitle + "\tSongArtist: " +
+                        thisArtist);
+            }
+            boolean addedSong = false;
+            if (song != null) {
+                Log.d(TAG, "Song is not null");
+                for (int i = 0; i < songList.size(); i++) {
+                    if (songCompare(song, songList.get(i))) {
+                        Log.d(TAG, "Song found in list, adding to queue");
+                        songQueue.add(songList.get(i));
+                        addedSong = true;
+                        break;
+                    }
+                }
+                if (!addedSong) {
+                    // couldn't find song in list, add to list and queue
+                    Log.d(TAG, "Couldn't find song in list, added to list and queue");
+                    songList.add(song);
+                    songQueue.add(song);
+                }
+                updateSongAdapters();
+            } else {
+                Log.d(TAG, "Song is null");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public boolean songCompare(Song song1, Song song2) {
+        if(song1.getArtist().equals(song2.getArtist()) && song1.getID() == song2.getID() &&
+                song1.getTitle().equals(song2.getTitle())) {
+            return true;
+        }
+        return false;
     }
 
     public void removeFromQueue(View view){
@@ -319,6 +413,15 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
 
     public void songPicked(View view){
         musicSrv.setSong(Integer.parseInt(view.getTag().toString()));
+        // get current time offset
+        // This doesn't work because of a network on main thread error
+        //TimeSync timeSync = new TimeSync();
+        //long offset = timeSync.getNTPOffset();
+        //long playtime = System.currentTimeMillis() + 30000; // play song in 30 system seconds
+        //long serverPlayTime = timeSync.setServerPlayTime(offset, playtime);
+        // send time for song to be played
+        //sendTimeStamp(serverPlayTime);
+        // TODO wait, and then play song
         musicSrv.playSong();
         if(playbackPaused){
             setController();
@@ -326,7 +429,10 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         }
         controller.show(0);
     }
+    private void sendTimeStamp(long serverPlayTime) {
+        // TODO: send the time stamp here
 
+    }
     private void setController(){
         //-- Method to set up the controller. This is the object controlling the playback options, of Skip, Play/Pause, and Seek.
         if(controller == null)
@@ -374,20 +480,17 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     @Override
     protected void onStart() {
         super.onStart();
-        if(playIntent==null){
+        if(playIntent==null) {
             playIntent = new Intent(this, MusicService.class);
             bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE);
             startService(playIntent);
-        }
-        if (songPath != null) {
-            Log.d("PlayerActivity", "SongURI: " + songPath);
-            setUpReceivedSong();
         }
     }
 
     @Override
     protected void onStop() {
         controller.hide();
+        unbindService(musicConnection);
         super.onStop();
     }
 
@@ -501,6 +604,10 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             //pass list
             musicSrv.setList(songList);
             musicBound = true;
+            if (songPath != null) {
+                Log.d(TAG, "SongURI: " + songPath);
+                setUpReceivedSong();
+            }
         }
 
         @Override

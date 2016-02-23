@@ -4,6 +4,7 @@ import android.app.Fragment;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.net.wifi.WpsInfo;
 import android.net.wifi.p2p.WifiP2pConfig;
@@ -43,7 +44,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
     private WifiP2pDevice device;
     private WifiP2pInfo info;
     ProgressDialog progressDialog = null;
-
+    private static String TAG = "DeviceDetialFragment";
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
@@ -125,6 +126,8 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 
     @Override
     public void onConnectionInfoAvailable(final WifiP2pInfo info) {
+        WifiSingleton instance = WifiSingleton.getInstance();
+        instance.setInfo(info);
         if (progressDialog != null && progressDialog.isShowing()) {
             progressDialog.dismiss();
         }
@@ -175,10 +178,10 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
     public void showDetails(WifiP2pDevice device) {
         this.device = device;
         this.getView().setVisibility(View.VISIBLE);
-        TextView view = (TextView) mContentView.findViewById(R.id.device_address);
-        view.setText(device.deviceAddress);
-        view = (TextView) mContentView.findViewById(R.id.device_info);
-        view.setText(device.toString());
+        //TextView view = (TextView) mContentView.findViewById(R.id.device_address);
+        //view.setText(device.deviceAddress);
+        //view = (TextView) mContentView.findViewById(R.id.device_info);
+        //view.setText(device.toString());
 
     }
 
@@ -224,7 +227,6 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                 Log.d(WiFiDirectActivity.TAG, "Server: Socket opened");
                 Socket client = serverSocket.accept();
                 Log.d(WiFiDirectActivity.TAG, "Server: connection done");
-
                 // receive mime type
                 DataInputStream is = new DataInputStream(client.getInputStream());
                 String mimeType = is.readUTF();
@@ -236,10 +238,13 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                     e.printStackTrace();
                 }
                 Log.d(WiFiDirectActivity.TAG, "File Extention: " + fileExtention);
-                final File f = new File(Environment.getExternalStorageDirectory() + "/"
+                /*final File f = new File(Environment.getExternalStorageDirectory() + "/"
                         + context.getPackageName() + "/wifip2pshared-" + System.currentTimeMillis()
                         + fileExtention);
-
+                */
+                final File f = new File(context.getFilesDir().getParent() + "/"
+                        + "/wifip2pshared-" + System.currentTimeMillis()
+                        + fileExtention);
                 File dirs = new File(f.getParent());
                 if (!dirs.exists())
                     dirs.mkdirs();
@@ -249,13 +254,6 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                 InputStream inputstream = client.getInputStream();
                 copyFile(inputstream, new FileOutputStream(f));
                 serverSocket.close();
-                Intent mediaIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-                mediaIntent.setData(Uri.fromFile(f));
-                try {
-                    context.sendBroadcast(mediaIntent);
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
                 return f.getAbsolutePath();
             } catch (IOException e) {
                 Log.e(WiFiDirectActivity.TAG, e.getMessage());
@@ -271,19 +269,35 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
         protected void onPostExecute(String result) {
             if (result != null) {
                 Log.d("DeviceDeatilFrag", "File copied - " + result);
-                /*Intent intent = new Intent();
-                intent.setAction(android.content.Intent.ACTION_VIEW);
-                intent.setDataAndType(Uri.parse("file://" + result), "audio/*");
-                context.startActivity(intent); */
-
-                Log.d("DeviceDetailFrag", "start music player intent");
-                Intent playerIntent = new Intent(context, PlayerActivity.class);
-                // this adds a flag to clear the intent if its running and create a new one
-                playerIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK|Intent.FLAG_ACTIVITY_NEW_TASK);
-                Bundle bundle = new Bundle();
-                bundle.putString("Song", result);
-                playerIntent.putExtras(bundle);
-                context.startActivity(playerIntent);
+                // send a broadcast to add the file to the media store
+                Intent mediaIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+                mediaIntent.setData(Uri.parse(result));
+                try {
+                    Log.d("DeviceDetailFragment", "Media Scanner Intent");
+                    context.sendBroadcast(mediaIntent);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+                // scan the media store for the file, return its path and uri
+                MediaScannerConnection.scanFile(context, new String[]{
+                        new File(result).getAbsolutePath()
+                }, null, new MediaScannerConnection.OnScanCompletedListener() {
+                    @Override
+                    public void onScanCompleted(String path, Uri uri) {
+                        // when scan completes, bundle the path and uri and launch player
+                        Log.v(TAG,
+                                "Scan completed: file " + path + " was scanned successfully: " + uri);
+                        Log.d("DeviceDetailFrag", "start music player intent");
+                        Intent playerIntent = new Intent(context, PlayerActivity.class);
+                        // this adds a flag to clear the intent if its running and create a new one
+                        playerIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                        Bundle bundle = new Bundle();
+                        bundle.putString("SongPath", path);
+                        bundle.putString("SongURI", uri.toString());
+                        playerIntent.putExtras(bundle);
+                        context.startActivity(playerIntent);
+                    }
+                });
             }
         }
 
@@ -332,4 +346,3 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
     }
 
 }
-

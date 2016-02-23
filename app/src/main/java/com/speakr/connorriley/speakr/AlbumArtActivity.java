@@ -50,7 +50,7 @@ public class AlbumArtActivity extends Activity
 
     }
 
-        // Fetch Id's form xml //
+        // Fetch Id's from xml //
 
         public void getInit() {
             album_art = (ImageView) findViewById(R.id.album_art);
