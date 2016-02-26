@@ -7,6 +7,7 @@ import android.content.ContentUris;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.media.AudioManager;
+import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.media.MediaScannerConnection;
 import android.os.Bundle;
@@ -58,7 +59,6 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     DrawerLayout drawerLayout;
     Toolbar toolbar;
     private String songPath;
-    private Uri songURI;
     private String TAG = "PlayerActivity";
     // Broadcast receiver to determine when music player has been prepared
     private BroadcastReceiver onPrepareReceiver = new BroadcastReceiver() {
@@ -89,7 +89,6 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         Bundle bundle = getIntent().getExtras();
         if (bundle != null) {
             songPath = bundle.getString("SongPath");
-            songURI = Uri.parse(bundle.getString("SongURI"));
         }
     }
 
@@ -116,9 +115,15 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         }*/
         try {
             //songPath = "content:/" + songPath;
-            addSongToQueue(songURI);
+            MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+            mmr.setDataSource(getApplicationContext(), Uri.parse(songPath));
+            String title = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
+            String artist = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
+            Log.d(TAG, "Title: " + title);
+            Log.d(TAG, "Artist: " + artist);
+            Song receivedSong = new Song(songPath, title, artist, 0);
+            addSongToQueue(receivedSong);
             songPath = null;
-            songURI = null;
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -300,54 +305,24 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     }
 
 
-    public void addSongToQueue(Uri musicUri) {
-        Log.d(TAG, "addsongtoqueue URI: " + musicUri);
+    public void addSongToQueue(Song receivedSong) {
         try {
-
-            ContentResolver musicResolver = getContentResolver();
-            // TODO why is music cursor null? - Fix it
-            Cursor musicCursor = musicResolver.query(musicUri, null, null, null, null);
-            //String[] proj = { MediaStore.Audio.Media.TITLE };
-            //Cursor musicCursor = getApplicationContext().getContentResolver().query(musicUri,
-            //        proj, null, null, null);
-            Song song = null;
-            Log.d(TAG, "Music Cursor: " + musicCursor);
-            if (musicCursor != null && musicCursor.moveToFirst()) {
-                //get columns
-                int titleColumn = musicCursor.getColumnIndex
-                        (android.provider.MediaStore.Audio.Media.TITLE);
-                int idColumn = musicCursor.getColumnIndex
-                        (android.provider.MediaStore.Audio.Media._ID);
-                int artistColumn = musicCursor.getColumnIndex
-                        (android.provider.MediaStore.Audio.Media.ARTIST);
-                long thisId = musicCursor.getLong(idColumn);
-                String thisTitle = musicCursor.getString(titleColumn);
-                String thisArtist = musicCursor.getString(artistColumn);
-                song = new Song(thisId, thisTitle, thisArtist, 0);
-                Log.d(TAG, "SongID: " + thisId + "\tSongTitle: " + thisTitle + "\tSongArtist: " +
-                        thisArtist);
-            }
             boolean addedSong = false;
-            if (song != null) {
-                Log.d(TAG, "Song is not null");
-                for (int i = 0; i < songList.size(); i++) {
-                    if (songCompare(song, songList.get(i))) {
-                        Log.d(TAG, "Song found in list, adding to queue");
-                        songQueue.add(songList.get(i));
-                        addedSong = true;
-                        break;
-                    }
+            for (int i = 0; i < songList.size(); i++) {
+                if (songCompare(receivedSong, songList.get(i))) {
+                    Log.d(TAG, "Song found in list, adding to queue");
+                    songQueue.add(songList.get(i));
+                    addedSong = true;
+                    break;
                 }
-                if (!addedSong) {
-                    // couldn't find song in list, add to list and queue
-                    Log.d(TAG, "Couldn't find song in list, added to list and queue");
-                    songList.add(song);
-                    songQueue.add(song);
-                }
-                updateSongAdapters();
-            } else {
-                Log.d(TAG, "Song is null");
             }
+            if (!addedSong) {
+                // couldn't find song in list, add to list and queue
+                Log.d(TAG, "Couldn't find song in list, added to list and queue");
+                songList.add(receivedSong);
+                songQueue.add(receivedSong);
+            }
+            updateSongAdapters();
         } catch (Exception e) {
             e.printStackTrace();
         }
