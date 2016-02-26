@@ -11,6 +11,7 @@ import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.media.MediaScannerConnection;
 import android.os.Bundle;
+import android.os.AsyncTask;
 import android.provider.MediaStore;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.FloatingActionButton;
@@ -82,8 +83,8 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         songListView = (ListView) findViewById(R.id.song_list);
         songQueue = new ArrayList<Song>();
         getPermissions();
-        TimeSyncTask timeSyncTask = new TimeSyncTask();
-        timeSyncTask.execute(new TimeSync());
+       //TimeSyncTask timeSyncTask = new TimeSyncTask();
+       //timeSyncTask.execute(new TimeSync());
         config();
         // to start playing a song
         Bundle bundle = getIntent().getExtras();
@@ -387,8 +388,10 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     }
 
     public void songPicked(View view){
+
         musicSrv.setSong(Integer.parseInt(view.getTag().toString()));
-        // get current time offset
+        new getOffsetClass().execute();
+        /*// get current time offset
         // This doesn't work because of a network on main thread error
         //TimeSync timeSync = new TimeSync();
         //long offset = timeSync.getNTPOffset();
@@ -402,7 +405,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             setController();
             playbackPaused=false;
         }
-        controller.show(0);
+        controller.show(0);*/
     }
     private void sendTimeStamp(long serverPlayTime) {
         // TODO: send the time stamp here
@@ -590,4 +593,56 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             musicBound = false;
         }
     };
+
+    // Async Task Class - time synch
+    class getOffsetClass extends AsyncTask<Void, Void, Long> {
+
+        //
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected Long doInBackground(Void... voids) {
+            long result = 0;
+            try {
+                // get current time offset
+                TimeSync timeSync = new TimeSync();
+                long offset = timeSync.getNTPOffset();
+                long playtime = System.currentTimeMillis() + 30000; // play song in 30 system seconds
+                long serverPlayTime = timeSync.setServerPlayTime(offset, playtime);
+                result = serverPlayTime;
+
+                Log.e("ServerPlayTime result: ", Long.toString(result));
+
+            } catch (Exception e) {
+                Log.e("Error: ", e.getMessage());
+            }
+            return result;
+        }
+
+        protected void onProgressUpdate() {
+        }
+
+        @Override
+        protected void onPostExecute(Long serverPlayTime) {
+
+            //error setting serverPlayTime
+            if (serverPlayTime == 0) {
+            }
+
+            else {
+                sendTimeStamp(serverPlayTime);
+                // TODO wait, and then play song
+                musicSrv.playSong();
+                if (playbackPaused) {
+                    setController();
+                    playbackPaused = false;
+                }
+
+                controller.show(0);
+            }
+        }
+    }
 }
