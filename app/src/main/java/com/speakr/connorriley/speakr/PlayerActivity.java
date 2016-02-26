@@ -341,7 +341,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         int index = getQueueRowIndex(view);
         if(index != -1) {
             Song songToRemove = songQueue.get(index);
-            songList.add(songToRemove);
+            //songList.add(songToRemove);
             songQueue.remove(songToRemove);
             updateSongAdapters();
         }
