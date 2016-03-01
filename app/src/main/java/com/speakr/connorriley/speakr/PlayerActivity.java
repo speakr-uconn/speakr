@@ -390,6 +390,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     public void songPicked(View view){
 
         musicSrv.setSong(Integer.parseInt(view.getTag().toString()));
+        Log.d(TAG, "execute offset class");
         new getOffsetClass().execute();
         // get current time offset
         // This doesn't work because of a network on main thread error
@@ -408,6 +409,8 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         controller.show(0);*/
     }
     private void sendTimeStamp(long serverPlayTime) {
+        Log.d(TAG, "SendTimeStamp");
+
         // TODO: send the time stamp here
 
     }
@@ -606,17 +609,18 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         @Override
         protected Long doInBackground(Void... voids) {
             long result = 0;
+            Log.d(TAG, "doInBackground");
             try {
                 // get current time offset
                 TimeSync timeSync = new TimeSync();
                 long offset = timeSync.getNTPOffset();
-                long playtime = System.currentTimeMillis() + 30000; // play song in 30 system seconds
-                long serverPlayTime = timeSync.setServerPlayTime(offset, playtime);
-                sendTimeStamp(serverPlayTime);
-                result = playtime;
-
-                Log.e("ServerPlayTime result: ", Long.toString(result));
-
+                Log.d(TAG, "Offset: " + offset);
+                long localPlayTime = System.currentTimeMillis() + 30000; // play song in 30 system seconds
+                Log.d(TAG, "LocalPlayTime: " + localPlayTime);
+                long internetPlayTime = timeSync.setServerPlayTime(offset, localPlayTime);
+                Log.d(TAG, "ServerPlayTime: " + internetPlayTime);
+                sendTimeStamp(internetPlayTime);
+                result = localPlayTime;
             } catch (Exception e) {
                 Log.e("Error: ", e.getMessage());
             }
@@ -629,7 +633,8 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         @Override
         protected void onPostExecute(Long localPlayTime) {
             // TODO wait, and then play song
-            SongTimer songtimer = new SongTimer(localPlayTime, musicSrv);
+            Log.d(TAG, "OnPostExecute");
+            SongTimer songtimer = new SongTimer(localPlayTime, musicSrv, controller);
             /*musicSrv.playSong();
             if (playbackPaused) {
                 setController();
