@@ -228,6 +228,8 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
                     public void run() {
                         if (!onConnection)
                             disconnect();
+                        Toast.makeText(JamListActivity.this, "No devices found.",
+                                Toast.LENGTH_SHORT).show();
                     }
                 },
                 10000);
