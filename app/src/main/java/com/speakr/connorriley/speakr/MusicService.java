@@ -82,14 +82,22 @@ public class MusicService extends Service implements
         player.prepareAsync();
 
     }
-    public void playSong(){ //play a song
+    public void playSong(){
+        //play a song
         player.reset();
         Song playSong = songs.get(songPosn);        //get song
         songTitle=playSong.getTitle();
-        long currSong = playSong.getID();        //get id
-        Uri trackUri = ContentUris.withAppendedId( //set uri
-                android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                currSong);
+        Uri trackUri = null;
+        if(playSong.getID() != -1) {
+            // song has ID
+            long currSong = playSong.getID();        //get id
+            trackUri = ContentUris.withAppendedId( //set uri
+                    android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                    currSong);
+        } else {
+            // song has path, not ID (Likely because song was sent over wifidirect
+            trackUri = Uri.parse(playSong.getPath());
+        }
         Log.d("PlayerActivity", "Uri: " + trackUri);
         try{
             player.setDataSource(getApplicationContext(), trackUri);

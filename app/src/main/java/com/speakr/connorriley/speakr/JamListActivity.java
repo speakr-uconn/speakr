@@ -373,4 +373,9 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
         super.onPause();
         unregisterReceiver(receiver);
     }
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        //unregisterReceiver(receiver);
+    }
 }
