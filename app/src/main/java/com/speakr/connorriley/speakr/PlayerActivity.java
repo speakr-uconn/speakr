@@ -391,7 +391,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
 
         musicSrv.setSong(Integer.parseInt(view.getTag().toString()));
         new getOffsetClass().execute();
-        /*// get current time offset
+        // get current time offset
         // This doesn't work because of a network on main thread error
         //TimeSync timeSync = new TimeSync();
         //long offset = timeSync.getNTPOffset();
@@ -400,7 +400,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         // send time for song to be played
         //sendTimeStamp(serverPlayTime);
         // TODO wait, and then play song
-        musicSrv.playSong();
+        /*musicSrv.playSong();
         if(playbackPaused){
             setController();
             playbackPaused=false;
@@ -612,7 +612,8 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                 long offset = timeSync.getNTPOffset();
                 long playtime = System.currentTimeMillis() + 30000; // play song in 30 system seconds
                 long serverPlayTime = timeSync.setServerPlayTime(offset, playtime);
-                result = serverPlayTime;
+                sendTimeStamp(serverPlayTime);
+                result = playtime;
 
                 Log.e("ServerPlayTime result: ", Long.toString(result));
 
@@ -626,23 +627,15 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         }
 
         @Override
-        protected void onPostExecute(Long serverPlayTime) {
-
-            //error setting serverPlayTime
-            if (serverPlayTime == 0) {
+        protected void onPostExecute(Long localPlayTime) {
+            // TODO wait, and then play song
+            SongTimer songtimer = new SongTimer(localPlayTime, musicSrv);
+            /*musicSrv.playSong();
+            if (playbackPaused) {
+                setController();
+                playbackPaused = false;
             }
-
-            else {
-                sendTimeStamp(serverPlayTime);
-                // TODO wait, and then play song
-                musicSrv.playSong();
-                if (playbackPaused) {
-                    setController();
-                    playbackPaused = false;
-                }
-
-                controller.show(0);
-            }
+            controller.show(0); */
         }
     }
 }
