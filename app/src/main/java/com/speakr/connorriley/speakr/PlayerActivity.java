@@ -7,6 +7,7 @@ import android.content.ContentUris;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.media.AudioManager;
+import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.media.MediaScannerConnection;
 import android.os.Bundle;
@@ -59,7 +60,6 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     DrawerLayout drawerLayout;
     Toolbar toolbar;
     private String songPath;
-    private Uri songURI;
     private String TAG = "PlayerActivity";
     // Broadcast receiver to determine when music player has been prepared
     private BroadcastReceiver onPrepareReceiver = new BroadcastReceiver() {
@@ -90,7 +90,6 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         Bundle bundle = getIntent().getExtras();
         if (bundle != null) {
             songPath = bundle.getString("SongPath");
-            songURI = Uri.parse(bundle.getString("SongURI"));
         }
     }
 
@@ -117,9 +116,15 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         }*/
         try {
             //songPath = "content:/" + songPath;
-            addSongToQueue(songURI);
+            MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+            mmr.setDataSource(getApplicationContext(), Uri.parse(songPath));
+            String title = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
+            String artist = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
+            Log.d(TAG, "Title: " + title);
+            Log.d(TAG, "Artist: " + artist);
+            Song receivedSong = new Song(songPath, title, artist, 0);
+            addSongToQueue(receivedSong);
             songPath = null;
-            songURI = null;
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -301,54 +306,24 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     }
 
 
-    public void addSongToQueue(Uri musicUri) {
-        Log.d(TAG, "addsongtoqueue URI: " + musicUri);
+    public void addSongToQueue(Song receivedSong) {
         try {
-
-            ContentResolver musicResolver = getContentResolver();
-            // TODO why is music cursor null? - Fix it
-            Cursor musicCursor = musicResolver.query(musicUri, null, null, null, null);
-            //String[] proj = { MediaStore.Audio.Media.TITLE };
-            //Cursor musicCursor = getApplicationContext().getContentResolver().query(musicUri,
-            //        proj, null, null, null);
-            Song song = null;
-            Log.d(TAG, "Music Cursor: " + musicCursor);
-            if (musicCursor != null && musicCursor.moveToFirst()) {
-                //get columns
-                int titleColumn = musicCursor.getColumnIndex
-                        (android.provider.MediaStore.Audio.Media.TITLE);
-                int idColumn = musicCursor.getColumnIndex
-                        (android.provider.MediaStore.Audio.Media._ID);
-                int artistColumn = musicCursor.getColumnIndex
-                        (android.provider.MediaStore.Audio.Media.ARTIST);
-                long thisId = musicCursor.getLong(idColumn);
-                String thisTitle = musicCursor.getString(titleColumn);
-                String thisArtist = musicCursor.getString(artistColumn);
-                song = new Song(thisId, thisTitle, thisArtist, 0);
-                Log.d(TAG, "SongID: " + thisId + "\tSongTitle: " + thisTitle + "\tSongArtist: " +
-                        thisArtist);
-            }
             boolean addedSong = false;
-            if (song != null) {
-                Log.d(TAG, "Song is not null");
-                for (int i = 0; i < songList.size(); i++) {
-                    if (songCompare(song, songList.get(i))) {
-                        Log.d(TAG, "Song found in list, adding to queue");
-                        songQueue.add(songList.get(i));
-                        addedSong = true;
-                        break;
-                    }
+            for (int i = 0; i < songList.size(); i++) {
+                if (songCompare(receivedSong, songList.get(i))) {
+                    Log.d(TAG, "Song found in list, adding to queue");
+                    songQueue.add(songList.get(i));
+                    addedSong = true;
+                    break;
                 }
-                if (!addedSong) {
-                    // couldn't find song in list, add to list and queue
-                    Log.d(TAG, "Couldn't find song in list, added to list and queue");
-                    songList.add(song);
-                    songQueue.add(song);
-                }
-                updateSongAdapters();
-            } else {
-                Log.d(TAG, "Song is null");
             }
+            if (!addedSong) {
+                // couldn't find song in list, add to list and queue
+                Log.d(TAG, "Couldn't find song in list, added to list and queue");
+                songList.add(receivedSong);
+                songQueue.add(receivedSong);
+            }
+            updateSongAdapters();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -366,7 +341,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         int index = getQueueRowIndex(view);
         if(index != -1) {
             Song songToRemove = songQueue.get(index);
-            songList.add(songToRemove);
+            //songList.add(songToRemove);
             songQueue.remove(songToRemove);
             updateSongAdapters();
         }
@@ -416,7 +391,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
 
         musicSrv.setSong(Integer.parseInt(view.getTag().toString()));
         new getOffsetClass().execute();
-        /*// get current time offset
+        // get current time offset
         // This doesn't work because of a network on main thread error
         //TimeSync timeSync = new TimeSync();
         //long offset = timeSync.getNTPOffset();
@@ -425,7 +400,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         // send time for song to be played
         //sendTimeStamp(serverPlayTime);
         // TODO wait, and then play song
-        musicSrv.playSong();
+        /*musicSrv.playSong();
         if(playbackPaused){
             setController();
             playbackPaused=false;
@@ -637,7 +612,8 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                 long offset = timeSync.getNTPOffset();
                 long playtime = System.currentTimeMillis() + 30000; // play song in 30 system seconds
                 long serverPlayTime = timeSync.setServerPlayTime(offset, playtime);
-                result = serverPlayTime;
+                sendTimeStamp(serverPlayTime);
+                result = playtime;
 
                 Log.e("ServerPlayTime result: ", Long.toString(result));
 
@@ -651,23 +627,15 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         }
 
         @Override
-        protected void onPostExecute(Long serverPlayTime) {
-
-            //error setting serverPlayTime
-            if (serverPlayTime == 0) {
+        protected void onPostExecute(Long localPlayTime) {
+            // TODO wait, and then play song
+            SongTimer songtimer = new SongTimer(localPlayTime, musicSrv);
+            /*musicSrv.playSong();
+            if (playbackPaused) {
+                setController();
+                playbackPaused = false;
             }
-
-            else {
-                sendTimeStamp(serverPlayTime);
-                // TODO wait, and then play song
-                musicSrv.playSong();
-                if (playbackPaused) {
-                    setController();
-                    playbackPaused = false;
-                }
-
-                controller.show(0);
-            }
+            controller.show(0); */
         }
     }
 }

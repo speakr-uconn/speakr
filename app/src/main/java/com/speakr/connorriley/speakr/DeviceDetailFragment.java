@@ -4,6 +4,7 @@ import android.app.Fragment;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.media.MediaMetadataRetriever;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.net.wifi.WpsInfo;
@@ -29,6 +30,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.URI;
 
 /**
  * Created by connorriley on 12/27/15.
@@ -270,17 +272,21 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
             if (result != null) {
                 Log.d("DeviceDeatilFrag", "File copied - " + result);
                 // send a broadcast to add the file to the media store
-                Intent mediaIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-                mediaIntent.setData(Uri.parse(result));
+                File resultFile = new File(result);
+                Uri resultUri = Uri.fromFile(resultFile);
+
+                Intent mediaIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, resultUri);
                 try {
-                    Log.d("DeviceDetailFragment", "Media Scanner Intent");
                     context.sendBroadcast(mediaIntent);
+                    //context.sendBroadcast(new Intent(Intent.ACTION_MEDIA_MOUNTED,
+                    //        resultUri));
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
                 // scan the media store for the file, return its path and uri
+                File file = new File(result);
                 MediaScannerConnection.scanFile(context, new String[]{
-                        new File(result).getAbsolutePath()
+                        file.getAbsolutePath()
                 }, null, new MediaScannerConnection.OnScanCompletedListener() {
                     @Override
                     public void onScanCompleted(String path, Uri uri) {
@@ -293,11 +299,23 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                         playerIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
                         Bundle bundle = new Bundle();
                         bundle.putString("SongPath", path);
-                        bundle.putString("SongURI", uri.toString());
                         playerIntent.putExtras(bundle);
                         context.startActivity(playerIntent);
                     }
                 });
+
+                /*Log.d("DeviceDetailFrag", "start music player intent");
+                Intent playerIntent = new Intent(context, PlayerActivity.class);
+                // this adds a flag to clear the intent if its running and create a new one
+                playerIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                Bundle bundle = new Bundle();
+                bundle.putString("SongPath", result);
+                bundle.putString("SongURI", resultUri.toString());
+                //Log.d(TAG, "URI PATH: " + uri.getEncodedPath());
+                //Log.d(TAG, "URI PATH: " + uri.getPath());
+
+                playerIntent.putExtras(bundle);
+                context.startActivity(playerIntent);*/
             }
         }
 
@@ -321,6 +339,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
             while ((len = inputStream.read(buf)) != -1) {
                 out.write(buf, 0, len);
             }
+            out.flush();
             out.close();
             inputStream.close();
             long endTime=System.currentTimeMillis()-startTime;
@@ -344,5 +363,4 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
         }
         throw new MimeTypeException("No Mime Type Found");
     }
-
 }
