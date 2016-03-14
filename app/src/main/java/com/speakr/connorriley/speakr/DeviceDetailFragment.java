@@ -231,32 +231,42 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                 Log.d(WiFiDirectActivity.TAG, "Server: connection done");
                 // receive mime type
                 DataInputStream is = new DataInputStream(client.getInputStream());
-                String mimeType = is.readUTF();
-                Log.d("String", "type: " + mimeType);
-                String fileExtention = null;
-                try {
-                    fileExtention = getFileExtention(mimeType);
-                } catch (MimeTypeException e) {
-                    e.printStackTrace();
-                }
-                Log.d(WiFiDirectActivity.TAG, "File Extention: " + fileExtention);
-                /*final File f = new File(Environment.getExternalStorageDirectory() + "/"
-                        + context.getPackageName() + "/wifip2pshared-" + System.currentTimeMillis()
-                        + fileExtention);
-                */
-                final File f = new File(context.getFilesDir().getParent() + "/"
-                        + "/wifip2pshared-" + System.currentTimeMillis()
-                        + fileExtention);
-                File dirs = new File(f.getParent());
-                if (!dirs.exists())
-                    dirs.mkdirs();
-                f.createNewFile();
 
-                Log.d(WiFiDirectActivity.TAG, "server: copying files " + f.toString());
-                InputStream inputstream = client.getInputStream();
-                copyFile(inputstream, new FileOutputStream(f));
-                serverSocket.close();
-                return f.getAbsolutePath();
+                String mimeType = is.readUTF();
+                //check if mimeType is all numbers or not
+
+                if(mimeType.matches("[0-9]+"))    /* mimetype is all numbers --> assume it's timestamp*/
+                {
+                    return mimeType;
+                }
+
+                else {  //mimteype is not only numbers - assume it's a mime type and get the file
+                    Log.d("String", "type: " + mimeType);
+                    String fileExtention = null;
+                    try {
+                        fileExtention = getFileExtention(mimeType);
+                    } catch (MimeTypeException e) {
+                        e.printStackTrace();
+                    }
+                    Log.d(WiFiDirectActivity.TAG, "File Extention: " + fileExtention);
+                        /*final File f = new File(Environment.getExternalStorageDirectory() + "/"
+                                + context.getPackageName() + "/wifip2pshared-" + System.currentTimeMillis()
+                                + fileExtention);
+                        */
+                    final File f = new File(context.getFilesDir().getParent() + "/"
+                            + "/wifip2pshared-" + System.currentTimeMillis()
+                            + fileExtention);
+                    File dirs = new File(f.getParent());
+                    if (!dirs.exists())
+                        dirs.mkdirs();
+                    f.createNewFile();
+
+                    Log.d(WiFiDirectActivity.TAG, "server: copying files " + f.toString());
+                    InputStream inputstream = client.getInputStream();
+                    copyFile(inputstream, new FileOutputStream(f));
+                    serverSocket.close();
+                    return f.getAbsolutePath();
+                }
             } catch (IOException e) {
                 Log.e(WiFiDirectActivity.TAG, e.getMessage());
                 return null;
@@ -269,7 +279,8 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
          */
         @Override
         protected void onPostExecute(String result) {
-            if (result != null) {
+            if (result != null && result.matches("[0-9]+") == false)    //result is not only numbers - assume it's a file path
+            {
                 Log.d("DeviceDeatilFrag", "File copied - " + result);
                 // send a broadcast to add the file to the media store
                 File resultFile = new File(result);
@@ -316,6 +327,12 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 
                 playerIntent.putExtras(bundle);
                 context.startActivity(playerIntent);*/
+            }
+
+            else if(result != null && result.matches("[0-9]+")) //result is a timestamp
+            {
+                WifiSingleton wifiSingleton = WifiSingleton.getInstance();
+                wifiSingleton.setTimestamp(Long.valueOf(result).longValue());
             }
         }
 

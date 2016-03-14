@@ -411,9 +411,21 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     private void sendTimeStamp(long serverPlayTime) {
         Log.d(TAG, "SendTimeStamp");
 
-        // TODO: send the time stamp here
-
+        //IT"S TIME TO SEND THE TIME
+        WifiSingleton wifiSingleton = WifiSingleton.getInstance();
+        if(wifiSingleton.getInfo() != null) {
+            Intent serviceIntent = new Intent(this, FileTransferService.class);
+            serviceIntent.setAction(FileTransferService.ACTION_SEND_TIMESTAMP);
+            serviceIntent.putExtra(FileTransferService.EXTRAS_TIMESTAMP, "" + serverPlayTime);
+            Log.d("PlayerActivity", "string version of long timestamp to be sent: " + serverPlayTime);
+            serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS,
+                    wifiSingleton.getInfo().groupOwnerAddress.getHostAddress());
+            serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, 8988);
+            Log.d("PlayerActivity", "startService about to be called for sending timestamp");
+            startService(serviceIntent);
+        }
     }
+
     private void setController(){
         //-- Method to set up the controller. This is the object controlling the playback options, of Skip, Play/Pause, and Seek.
         if(controller == null)
