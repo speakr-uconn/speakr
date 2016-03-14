@@ -28,7 +28,9 @@ import java.util.regex.Pattern;
 public class FileTransferService extends IntentService {
     private static final int SOCKET_TIMEOUT = 5000;
     public static final String ACTION_SEND_FILE = "com.example.android.wifidirect.SEND_FILE";
+    public static final String ACTION_SEND_TIMESTAMP = "send_timestamp";
     public static final String EXTRAS_FILE_PATH = "file.url";
+    public static final String EXTRAS_TIMESTAMP = "timestamp";
     public static final String EXTRAS_GROUP_OWNER_ADDRESS = "go_host";
     public static final String EXTRAS_GROUP_OWNER_PORT = "go_port";
 
@@ -70,6 +72,28 @@ public class FileTransferService extends IntentService {
                 }
                 DeviceDetailFragment.copyFile(is, stream);
                 Log.d(WiFiDirectActivity.TAG, "Client: Data written");
+            } catch(IOException e) {
+                Log.e(WiFiDirectActivity.TAG, e.getMessage());
+            }
+        }
+
+        else if(intent.getAction().equals(ACTION_SEND_TIMESTAMP)) {
+            String host = intent.getExtras().getString(EXTRAS_GROUP_OWNER_ADDRESS);
+            Socket socket = new Socket();
+            int port = intent.getExtras().getInt(EXTRAS_GROUP_OWNER_PORT);
+            try {
+                Log.d(WiFiDirectActivity.TAG, "Opening client socket for timestamp- ");
+                socket.bind(null);
+                socket.connect((new InetSocketAddress(host, port)), SOCKET_TIMEOUT);
+                Log.d(WiFiDirectActivity.TAG, "Client socket - " + socket.isConnected());
+
+                // send timestamp
+                DataOutputStream datastream = new DataOutputStream(socket.getOutputStream());
+                String timestamp = intent.getExtras().getString(EXTRAS_TIMESTAMP);
+
+                Log.e("String", "timestamp:  " + timestamp);
+                datastream.writeUTF(timestamp);
+
             } catch(IOException e) {
                 Log.e(WiFiDirectActivity.TAG, e.getMessage());
             }
