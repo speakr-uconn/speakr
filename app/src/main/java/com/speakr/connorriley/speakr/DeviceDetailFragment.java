@@ -331,8 +331,13 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 
             else if(result != null && result.matches("[0-9]+")) //result is a timestamp
             {
-                WifiSingleton wifiSingleton = WifiSingleton.getInstance();
-                wifiSingleton.setTimestamp(Long.valueOf(result).longValue());
+                Log.d(TAG, "Result is a timestamp");
+                Intent playerIntent = new Intent(context, PlayerActivity.class);
+                playerIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                Bundle bundle = new Bundle();
+                bundle.putString("TimeStamp", result);
+                playerIntent.putExtras(bundle);
+                context.startActivity(playerIntent);
             }
         }
 

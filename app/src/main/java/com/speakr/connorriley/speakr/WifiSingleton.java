@@ -9,7 +9,6 @@ public class WifiSingleton {
 
     private static WifiSingleton instance = null;
     private WifiP2pInfo info = null;
-    private long timestamp = 0;
     protected WifiSingleton() {
 
     }
@@ -26,6 +25,5 @@ public class WifiSingleton {
     public void setInfo(WifiP2pInfo info) {
         this.info = info;
     }
-    public long getTimestamp() {return timestamp;}
-    public void setTimestamp(long t) {timestamp = t;}
+
 }
