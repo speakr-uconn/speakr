@@ -656,7 +656,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                 TimeSync timeSync = new TimeSync();
                 long offset = timeSync.getNTPOffset();
                 Log.d(TAG, "Offset: " + offset);
-                long localPlayTime = System.currentTimeMillis() + 30000; // play song in 30 system seconds
+                long localPlayTime = System.currentTimeMillis() + 10000; // play song in 30 system seconds
                 Log.d(TAG, "LocalPlayTime: " + localPlayTime);
                 long internetPlayTime = timeSync.setServerPlayTime(offset, localPlayTime);
                 Log.d(TAG, "ServerPlayTime: " + internetPlayTime);
