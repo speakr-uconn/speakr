@@ -181,7 +181,7 @@ public class ServerAsyncTask extends AsyncTask<Void, Void, String> {
                 String localMusicControl = dataType;
                 dataType = null;
                 Long receivedTime = Long.parseLong(localtimeStamp);
-                setUpTimeStamp(receivedTime, localMusicControl);
+                //setUpTimeStamp(receivedTime, localMusicControl);
             }
         }
     }
