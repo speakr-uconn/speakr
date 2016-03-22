@@ -6,6 +6,7 @@ import android.content.ContentUris;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.media.MediaMetadataRetriever;
+import android.net.wifi.p2p.WifiP2pInfo;
 import android.os.Bundle;
 import android.os.AsyncTask;
 import android.provider.MediaStore;
@@ -63,7 +64,6 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             controller.show(0);
         }
     };
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         //-- TODO: Add useful items, such as the "Shuffle" icon, to the action bar ...
@@ -421,6 +421,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             Log.d("PlayerActivity", "string version of long timestamp to be sent: " + serverPlayTime);
             serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS,
                     wifiSingleton.getInfo().groupOwnerAddress.getHostAddress());
+
             serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, 8990);
             Log.d("PlayerActivity", "startService about to be called for sending timestamp");
             startService(serviceIntent);

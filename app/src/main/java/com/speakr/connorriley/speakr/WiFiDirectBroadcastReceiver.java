@@ -1,5 +1,7 @@
 package com.speakr.connorriley.speakr;
 
+// unused
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
