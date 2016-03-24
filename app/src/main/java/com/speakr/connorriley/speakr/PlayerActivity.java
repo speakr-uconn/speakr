@@ -137,6 +137,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             addSongToQueue(receivedSong);
             Log.d(TAG, "added song, executing server");
             //new PlayerServer().execute();
+            new ServerAsyncTask(getApplicationContext()).execute();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -736,8 +737,8 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                         timeStamp = receiveTimeStamp(client);
                         break;
                     case "File":
-                        String recievedPath = receiveFile(client);
-                        return recievedPath;
+                        String receivedPath = receiveFile(client);
+                        return receivedPath;
                     case "IP":
                         String receivedIP = receiveIP(client);
 

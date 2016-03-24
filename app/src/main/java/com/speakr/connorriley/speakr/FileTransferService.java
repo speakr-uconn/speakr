@@ -18,6 +18,7 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.regex.Pattern;
@@ -29,6 +30,7 @@ public class FileTransferService extends IntentService {
     private static final int SOCKET_TIMEOUT = 5000;
     public static final String ACTION_SEND_FILE = "com.example.android.wifidirect.SEND_FILE";
     public static final String ACTION_SEND_TIMESTAMP = "send_timestamp";
+    public static final String ACTION_SEND_ADDRESS = "send_address";
     public static final String EXTRAS_FILE_PATH = "file.url";
     public static final String EXTRAS_TIMESTAMP = "timestamp";
     public static final String EXTRAS_GROUP_OWNER_ADDRESS = "go_host";
@@ -56,9 +58,14 @@ public class FileTransferService extends IntentService {
                 socket.connect((new InetSocketAddress(host, port)), SOCKET_TIMEOUT);
                 Log.d(WiFiDirectActivity.TAG, "Client scoket - " + socket.isConnected());
 
-                // send mime type
+
                 DataOutputStream datastream = new DataOutputStream(socket.getOutputStream());
                 ContentResolver cr = context.getContentResolver();
+
+                //send "File" label
+                datastream.writeUTF("File");
+
+                // send mime type
                 String type = cr.getType(Uri.parse(fileUri));
                 Log.e("String", "type:  " + type);
                 datastream.writeUTF(type);
@@ -87,14 +94,47 @@ public class FileTransferService extends IntentService {
                 socket.connect((new InetSocketAddress(host, port)), SOCKET_TIMEOUT);
                 Log.d(WiFiDirectActivity.TAG, "Client socket - " + socket.isConnected());
 
-                // send timestamp
-                DataOutputStream datastream = new DataOutputStream(socket.getOutputStream());
-                String timestamp = intent.getExtras().getString(EXTRAS_TIMESTAMP);
 
+                DataOutputStream datastream = new DataOutputStream(socket.getOutputStream());
+
+                //send string so they know to expect timestamp
+                //right now assumes that we just want to play the song
+                datastream.writeUTF("Play");
+
+                // send timestamp
+                String timestamp = intent.getExtras().getString(EXTRAS_TIMESTAMP);
                 Log.e("String", "timestamp:  " + timestamp);
                 datastream.writeUTF(timestamp);
 
             } catch(IOException e) {
+                Log.e(WiFiDirectActivity.TAG, e.getMessage());
+            }
+        }
+
+        //send current device's address
+        else if(intent.getAction().equals(ACTION_SEND_ADDRESS)){
+            String host = intent.getExtras().getString(EXTRAS_GROUP_OWNER_ADDRESS);
+            Socket socket = new Socket();
+            int port = intent.getExtras().getInt(EXTRAS_GROUP_OWNER_PORT);
+            try {
+                Log.d(WiFiDirectActivity.TAG, "Opening client socket for address- ");
+
+                socket.bind(null);
+                socket.connect((new InetSocketAddress(host, port)), SOCKET_TIMEOUT);
+                Log.d(WiFiDirectActivity.TAG, "Client socket - " + socket.isConnected());
+
+                DataOutputStream datastream = new DataOutputStream(socket.getOutputStream());
+
+                //send "IP" label
+                datastream.writeUTF("IP");
+
+                //get address from socket and send it
+                InetAddress addy = socket.getInetAddress();
+                String remoteIP = addy.getHostAddress();
+                datastream.writeUTF(remoteIP);
+            }
+
+            catch(IOException e) {
                 Log.e(WiFiDirectActivity.TAG, e.getMessage());
             }
         }
