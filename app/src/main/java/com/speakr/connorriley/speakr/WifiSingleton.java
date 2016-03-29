@@ -1,6 +1,7 @@
 package com.speakr.connorriley.speakr;
 
 import android.net.wifi.p2p.WifiP2pInfo;
+import android.util.Log;
 
 /**
  * Created by connorriley on 2/22/16.
@@ -8,7 +9,9 @@ import android.net.wifi.p2p.WifiP2pInfo;
 public class WifiSingleton {
 
     private static WifiSingleton instance = null;
+    private String TAG = "WifiSingleton";
     private WifiP2pInfo info = null;
+    private String memberIP;
     protected WifiSingleton() {
 
     }
@@ -25,5 +28,8 @@ public class WifiSingleton {
     public void setInfo(WifiP2pInfo info) {
         this.info = info;
     }
-
+    public void setMemberIP(String ip) {
+        memberIP = ip;
+        Log.d(TAG, "member ip: " + memberIP);
+    }
 }

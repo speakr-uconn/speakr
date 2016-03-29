@@ -117,7 +117,18 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             Log.d(TAG, "setuptimestamp method issue");
         }
     }
-
+    private void sendIP() {
+        WifiSingleton wifiSingleton = WifiSingleton.getInstance();
+        if (wifiSingleton.getInfo() != null && !wifiSingleton.getInfo().isGroupOwner) {
+            Intent serviceIntent = new Intent(this, FileTransferService.class);
+            serviceIntent.setAction(FileTransferService.ACTION_SEND_ADDRESS);
+            serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS,
+                    wifiSingleton.getInfo().groupOwnerAddress.getHostAddress());
+            serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, 8990);
+            Log.d(TAG, "sending IP to group owner");
+            startService(serviceIntent);
+        }
+    }
     private void setUpReceivedSong(String songpath) {
         Log.d(TAG, "setupreceivedsong");
         try {
@@ -507,6 +518,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
 
     @Override
     public void start() {
+        // restart the music player after a pause.
         musicSrv.go();
     }
 
@@ -517,6 +529,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
 
     @Override
     public void pause() {
+        // Pause music player
         playbackPaused = true;
         musicSrv.pausePlayer();
     }
@@ -602,11 +615,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             //pass list
             musicSrv.setList(songList);
             musicBound = true;
-            /*if(timeStamp != null) {
-                long timestamp = Long.getLong(timeStamp);
-                timeStamp = null;
-                setUpTimeStamp(timestamp);
-            }*/
+            sendIP();
         }
 
         @Override
@@ -843,7 +852,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                         break;
                     case "IP":
                         dataType = null;
-                        // do stuff with IP
+                        WifiSingleton.getInstance().setMemberIP(result);
                         break;
                     case "Play":
                         musicaction = dataType;
