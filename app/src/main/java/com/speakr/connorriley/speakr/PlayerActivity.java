@@ -666,6 +666,16 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             this.context = c;
         }
 
+        private long getAverageNTPOffset(TimeSync timeSync, int n) {
+            long offsetAcc = 0;
+            for (int i = 0; i < n; i++) {
+                long offset = timeSync.getNTPOffset();
+                Log.d(TAG, "Offset " + i + ": " + offset);
+                offsetAcc += offset;
+            }
+            return  (offsetAcc/n);  //NOTE: this will round the value
+        }
+
         @Override
         protected Long doInBackground(String... voids) {
             actionstring = voids[0];
@@ -674,8 +684,9 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             try {
                 // get current time offset
                 TimeSync timeSync = new TimeSync();
-                long offset = timeSync.getNTPOffset();
-                Log.d(TAG, "Offset: " + offset);
+                //long offset = timeSync.getNTPOffset();
+                long offset = getAverageNTPOffset(timeSync, 5); //get 5 offset values
+                Log.d(TAG, "Average Offset: " + offset);
                 long localPlayTime = System.currentTimeMillis() + 10000; // play song in 30 system seconds
                 Log.d(TAG, "LocalPlayTime: " + localPlayTime);
                 long internetPlayTime = timeSync.setServerPlayTime(offset, localPlayTime);
