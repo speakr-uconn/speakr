@@ -9,6 +9,7 @@ import android.media.MediaMetadataRetriever;
 import android.media.MediaScannerConnection;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.AsyncTask;
 import android.provider.MediaStore;
 import android.support.design.widget.NavigationView;
@@ -122,8 +123,14 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             String artist = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
             Log.d(TAG, "Title: " + title);
             Log.d(TAG, "Artist: " + artist);
-            Song receivedSong = new Song(songpath, title, artist, 0);
-            addSongToQueue(receivedSong);
+            final Song receivedSong = new Song(songpath, title, artist, 0);
+            Handler mainHandler = new Handler(getApplicationContext().getMainLooper());
+            mainHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    addSongToQueue(receivedSong);
+                }
+            });
         } catch (Exception e) {
             e.printStackTrace();
         }
