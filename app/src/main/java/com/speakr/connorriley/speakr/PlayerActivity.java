@@ -626,6 +626,17 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         public SongActionAtTimeStamp(Context c) {
             context = c;
         }
+
+        private long getAverageNTPOffset(TimeSync timeSync, int n) {
+            long offsetAcc = 0;
+            for (int i = 0; i < n; i++) {
+                long offset = timeSync.getNTPOffset();
+                Log.d(TAG, "Offset " + i + ": " + offset);
+                offsetAcc += offset;
+            }
+            return  (offsetAcc/n);  //NOTE: this will round the value
+        }
+
         @Override
         protected Long doInBackground(String... voids) {
             try {
@@ -634,7 +645,8 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                 actionstring = voids[1];
                 // get current time offset
                 TimeSync timeSync = new TimeSync();
-                long offset = timeSync.getNTPOffset();
+                //long offset = timeSync.getNTPOffset();
+                long offset = getAverageNTPOffset(timeSync, 5);
                 Log.d(TAG, "Offset: " + offset);
                 long localPlayTime = receivedtimestamp - offset; // play song in 30 system seconds
                 Log.d(TAG, "LocalPlayTime: " + localPlayTime);
