@@ -84,8 +84,8 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         songListView = (ListView) findViewById(R.id.song_list);
         songQueue = new ArrayList<Song>();
         getPermissions();
-        ServerThread serverThread = new ServerThread(getApplicationContext());
-        Thread thread = new Thread(serverThread);
+        ServerRunnable serverRunnable = new ServerRunnable(getApplicationContext());
+        Thread thread = new Thread(serverRunnable);
         thread.start();
         config();
     }
@@ -685,7 +685,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         }
     }
 
-    public class ServerThread implements Runnable {
+    public class ServerRunnable implements Runnable {
 
         private Context context;
         private String TAG = "ServerThread";
@@ -694,7 +694,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         /**
          * @param context
          */
-        public ServerThread(Context context) {
+        public ServerRunnable(Context context) {
             this.context = context;
         }
         @Override
@@ -703,42 +703,40 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                 ServerSocket serverSocket = null;
                 serverSocket = new ServerSocket(8990);
                 Log.d(WiFiDirectActivity.TAG, "Server: Socket opened");
-                Socket client = serverSocket.accept();
-                Log.d(WiFiDirectActivity.TAG, "Server: connection done");
-                // receive data type string
-                DataInputStream is = new DataInputStream(client.getInputStream());
-                dataType = is.readUTF();
-                //check if mimeType is all numbers or not
-                String timestamp;
-                Log.d(TAG, dataType);
-                switch (dataType) {
-                    case "Play":
-                        timestamp = receiveTimeStamp(client);
-                        receivedCommunication(timestamp);
-                    case "Pause":
-                        timestamp = receiveTimeStamp(client);
-                        receivedCommunication(timestamp);
-                    case "File":
-                        String receivedPath = receiveFile(client);
-                        receivedCommunication(receivedPath);
-                    case "IP":
-                        String receivedIP = receiveIP(client);
-                        receivedCommunication(receivedIP);
-                    default:
-                        Log.e(TAG, "No case match");
+                while(true) {
+                    Socket client = serverSocket.accept();
+                    Log.d(WiFiDirectActivity.TAG, "Server: connection done");
+                    // receive data type string
+                    DataInputStream is = new DataInputStream(client.getInputStream());
+                    dataType = is.readUTF();
+                    //check if mimeType is all numbers or not
+                    String timestamp;
+                    Log.d(TAG, "datatype: " + dataType);
+                    switch (dataType) {
+                        case "Play":
+                            timestamp = receiveTimeStamp(client);
+                            receivedCommunication(timestamp);
+                        case "Pause":
+                            timestamp = receiveTimeStamp(client);
+                            receivedCommunication(timestamp);
+                        case "File":
+                            String receivedPath = receiveFile(client);
+                            receivedCommunication(receivedPath);
+                        case "IP":
+                            String receivedIP = receiveIP(client);
+                            receivedCommunication(receivedIP);
+                        default:
+                            Log.e(TAG, "No case match");
+                    }
                 }
-            } catch (
-                    IOException e
-                    )
-
-            {
+            } catch (IOException e) {
                 e.printStackTrace();
             }
         }
 
 
         private String receiveIP(Socket client) {
-            Log.d(TAG, "recieveIP");
+            Log.d(TAG, "receiveIPMethod");
             DataInputStream is = null;
             try {
                 is = new DataInputStream(client.getInputStream());
@@ -795,56 +793,58 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
 
         public void receivedCommunication(String result) {
             String musicaction;
-            switch (dataType) {
-                case "File":
-                    dataType = null;
-                    Log.d("DeviceDeatilFrag", "File copied - " + result);
-                    // send a broadcast to add the file to the media store
-                    File resultFile = new File(result);
-                    Uri resultUri = Uri.fromFile(resultFile);
-                    Intent mediaIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, resultUri);
-                    try {
-                        context.sendBroadcast(mediaIntent);
-                        //context.sendBroadcast(new Intent(Intent.ACTION_MEDIA_MOUNTED,
-                        //        resultUri));
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
-                    }
-                    // scan the media store for the file, return its path and uri
-                    File file = new File(result);
-                    MediaScannerConnection.scanFile(context, new String[]{
-                            file.getAbsolutePath()
-                    }, null, new MediaScannerConnection.OnScanCompletedListener() {
-                        @Override
-                        public void onScanCompleted(String path, Uri uri) {
-                            // when scan completes, bundle the path and uri and launch player
-                            Log.v(TAG,
-                                    "Scan completed: file " + path + " was scanned successfully: " + uri);
-                            Log.d("DeviceDetailFrag", "start music player intent");
-                            setUpReceivedSong(path);
+            if(dataType != null) {
+                switch (dataType) {
+                    case "File":
+                        dataType = null;
+                        Log.d("DeviceDeatilFrag", "File copied - " + result);
+                        // send a broadcast to add the file to the media store
+                        File resultFile = new File(result);
+                        Uri resultUri = Uri.fromFile(resultFile);
+                        Intent mediaIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, resultUri);
+                        try {
+                            context.sendBroadcast(mediaIntent);
+                            //context.sendBroadcast(new Intent(Intent.ACTION_MEDIA_MOUNTED,
+                            //        resultUri));
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
                         }
-                    });
-                    break;
-                case "IP":
-                    dataType = null;
-                    // do stuff with IP
-                    break;
-                case "Play":
-                    musicaction = dataType;
-                    dataType = null;
-                    Long playtime = Long.parseLong(result);
-                    //create
-                    setUpTimeStamp(playtime, musicaction);
-                    break;
-                case "Pause":
-                    musicaction = dataType;
-                    dataType = null;
-                    Long pausetime = Long.parseLong(result);
-                    setUpTimeStamp(pausetime, musicaction);
-                    break;
-                default:
-                    Log.e(TAG, "No case match");
-                    break;
+                        // scan the media store for the file, return its path and uri
+                        File file = new File(result);
+                        MediaScannerConnection.scanFile(context, new String[]{
+                                file.getAbsolutePath()
+                        }, null, new MediaScannerConnection.OnScanCompletedListener() {
+                            @Override
+                            public void onScanCompleted(String path, Uri uri) {
+                                // when scan completes, bundle the path and uri and launch player
+                                Log.v(TAG,
+                                        "Scan completed: file " + path + " was scanned successfully: " + uri);
+                                Log.d("DeviceDetailFrag", "start music player intent");
+                                setUpReceivedSong(path);
+                            }
+                        });
+                        break;
+                    case "IP":
+                        dataType = null;
+                        // do stuff with IP
+                        break;
+                    case "Play":
+                        musicaction = dataType;
+                        dataType = null;
+                        Long playtime = Long.parseLong(result);
+                        //create
+                        setUpTimeStamp(playtime, musicaction);
+                        break;
+                    case "Pause":
+                        musicaction = dataType;
+                        dataType = null;
+                        Long pausetime = Long.parseLong(result);
+                        setUpTimeStamp(pausetime, musicaction);
+                        break;
+                    default:
+                        Log.e(TAG, "No case match");
+                        break;
+                }
             }
         }
 
