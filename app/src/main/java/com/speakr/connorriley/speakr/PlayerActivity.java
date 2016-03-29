@@ -29,6 +29,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+
 import android.net.Uri;
 import android.content.ContentResolver;
 import android.database.Cursor;
@@ -69,6 +70,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             controller.show(0);
         }
     };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         //-- TODO: Add useful items, such as the "Shuffle" icon, to the action bar ...
@@ -103,15 +105,11 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
 
     private void setUpTimeStamp(Long receivedTime, String action) {
         Log.d(TAG, "timeStampReceived: " + receivedTime);
-        if(action.equals("Play")){
+        if (action.equals("Play")) {
             new SongActionAtTimeStamp().execute(receivedTime.toString(), "Play");
-        }
-
-        else if(action.equals("Pause")){
+        } else if (action.equals("Pause")) {
             new SongActionAtTimeStamp().execute(receivedTime.toString(), "Pause");
-        }
-
-        else{   //problem
+        } else {   //problem
             Log.d(TAG, "setuptimestamp method issue");
         }
     }
@@ -627,6 +625,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
      */
     class SongActionAtTimeStamp extends AsyncTask<String, Void, Long> {
         private String actionstring = null;
+
         @Override
         protected Long doInBackground(String... voids) {
             try {
@@ -645,6 +644,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             }
             return Long.valueOf(-1);
         }
+
         @Override
         protected void onPostExecute(Long localPlayTime) {
             // TODO wait, and then play song
@@ -659,6 +659,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
      */
     class SendTimeStamp extends AsyncTask<String, Void, Long> {
         private String actionstring = null;
+
         //
         @Override
         protected void onPreExecute() {
@@ -743,7 +744,6 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             return null;
         }
 
-
         private String receiveIP(Socket client) {
             DataInputStream is = null;
             try {
@@ -799,9 +799,9 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         }
 
         /*
-         * (non-Javadoc)
-         * @see android.os.AsyncTask#onPostExecute(java.lang.Object)
-         */
+        * (non-Javadoc)
+        * @see android.os.AsyncTask#onPostExecute(java.lang.Object)
+        */
         @Override
         protected void onPostExecute(String result) {
             String musicaction;
@@ -869,6 +869,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             }
             throw new MimeTypeException("No Mime Type Found");
         }
+
         public boolean copyFile(InputStream inputStream, OutputStream out) {
             byte buf[] = new byte[1024];
             int len;
