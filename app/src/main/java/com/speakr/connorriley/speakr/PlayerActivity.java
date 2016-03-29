@@ -108,9 +108,11 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     private void setUpTimeStamp(Long receivedTime, String action) {
         Log.d(TAG, "timeStampReceived: " + receivedTime);
         if (action.equals("Play")) {
-            new SongActionAtTimeStamp().execute(receivedTime.toString(), "Play");
+            new SongActionAtTimeStamp(getApplicationContext()).execute(
+                    receivedTime.toString(), "Play");
         } else if (action.equals("Pause")) {
-            new SongActionAtTimeStamp().execute(receivedTime.toString(), "Pause");
+            new SongActionAtTimeStamp(getApplicationContext()).execute(
+                    receivedTime.toString(), "Pause");
         } else {   //problem
             Log.d(TAG, "setuptimestamp method issue");
         }
@@ -404,7 +406,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         musicSrv.setSong(Integer.parseInt(view.getTag().toString()));
         Log.d(TAG, "execute offset class");
         try {
-            new SendTimeStamp().execute("Play");
+            new SendTimeStamp(getApplicationContext()).execute("Play");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -619,7 +621,11 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
      */
     class SongActionAtTimeStamp extends AsyncTask<String, Void, Long> {
         private String actionstring = null;
+        private Context context;
 
+        public SongActionAtTimeStamp(Context c) {
+            context = c;
+        }
         @Override
         protected Long doInBackground(String... voids) {
             try {
@@ -643,7 +649,8 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         protected void onPostExecute(Long localPlayTime) {
             // TODO wait, and then play song
             Log.d(TAG, "OnPostExecute");
-            SongTimer songtimer = new SongTimer(localPlayTime, musicSrv, controller, actionstring);
+            SongTimer songtimer = new SongTimer(localPlayTime, musicSrv, controller, actionstring,
+                    context);
         }
     }
 
@@ -654,6 +661,10 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     class SendTimeStamp extends AsyncTask<String, Void, Long> {
         private String actionstring = null;
         private String TAG = "SendTimeStamp";
+        private Context context;
+        public SendTimeStamp(Context c) {
+            this.context = c;
+        }
 
         @Override
         protected Long doInBackground(String... voids) {
@@ -681,7 +692,8 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         protected void onPostExecute(Long localPlayTime) {
             // TODO wait, and then play song
             Log.d(TAG, "OnPostExecute");
-            SongTimer songtimer = new SongTimer(localPlayTime, musicSrv, controller, actionstring);
+            SongTimer songtimer = new SongTimer(localPlayTime, musicSrv, controller, actionstring,
+                    context);
         }
     }
 
