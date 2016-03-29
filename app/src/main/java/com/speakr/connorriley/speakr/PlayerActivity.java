@@ -122,9 +122,9 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         if (wifiSingleton.getInfo() != null && !wifiSingleton.getInfo().isGroupOwner) {
             Intent serviceIntent = new Intent(this, FileTransferService.class);
             serviceIntent.setAction(FileTransferService.ACTION_SEND_ADDRESS);
-            serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS,
+            serviceIntent.putExtra(FileTransferService.EXTRAS_ADDRESS,
                     wifiSingleton.getInfo().groupOwnerAddress.getHostAddress());
-            serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, 8990);
+            serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, 8990);
             Log.d(TAG, "sending IP to group owner");
             startService(serviceIntent);
         }
@@ -313,9 +313,17 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             Intent serviceIntent = new Intent(this, FileTransferService.class);
             serviceIntent.setAction(FileTransferService.ACTION_SEND_FILE);
             serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_PATH, uri.toString());
-            serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS,
-                    wifiSingleton.getInfo().groupOwnerAddress.getHostAddress());
-            serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, 8990);
+            if(!wifiSingleton.getInfo().isGroupOwner){
+                serviceIntent.putExtra(FileTransferService.EXTRAS_ADDRESS,
+                        wifiSingleton.getInfo().groupOwnerAddress.getHostAddress());
+            }
+
+            else{
+                serviceIntent.putExtra(FileTransferService.EXTRAS_ADDRESS,
+                        wifiSingleton.getMemberIP());
+            }
+
+            serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, 8990);
             Log.d("DeviceDetailFragment", "startService about to be called");
             startService(serviceIntent);
         }
@@ -433,10 +441,17 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             serviceIntent.setAction(FileTransferService.ACTION_SEND_TIMESTAMP);
             serviceIntent.putExtra(FileTransferService.EXTRAS_TIMESTAMP, "" + serverPlayTime);
             Log.d("PlayerActivity", "string version of long timestamp to be sent: " + serverPlayTime);
-            serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS,
-                    wifiSingleton.getInfo().groupOwnerAddress.getHostAddress());
+            if(!wifiSingleton.getInfo().isGroupOwner){
+                serviceIntent.putExtra(FileTransferService.EXTRAS_ADDRESS,
+                        wifiSingleton.getInfo().groupOwnerAddress.getHostAddress());
+            }
 
-            serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, 8990);
+            else{
+                serviceIntent.putExtra(FileTransferService.EXTRAS_ADDRESS,
+                        wifiSingleton.getMemberIP());
+            }
+
+            serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, 8990);
             Log.d("PlayerActivity", "startService about to be called for sending timestamp");
             startService(serviceIntent);
         }

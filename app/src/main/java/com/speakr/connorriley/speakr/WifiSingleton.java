@@ -32,4 +32,8 @@ public class WifiSingleton {
         memberIP = ip;
         Log.d(TAG, "member ip: " + memberIP);
     }
+
+    public String getMemberIP(){
+        return memberIP;
+    }
 }
