@@ -84,7 +84,9 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         songListView = (ListView) findViewById(R.id.song_list);
         songQueue = new ArrayList<Song>();
         getPermissions();
-        new ServerAsyncTask(getApplicationContext()).execute();
+        ServerThread serverThread = new ServerThread(getApplicationContext());
+        Thread thread = new Thread(serverThread);
+        thread.start();
         config();
     }
 
@@ -401,22 +403,11 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
 
         musicSrv.setSong(Integer.parseInt(view.getTag().toString()));
         Log.d(TAG, "execute offset class");
-        new SendTimeStamp().execute();
-        // get current time offset
-        // This doesn't work because of a network on main thread error
-        //TimeSync timeSync = new TimeSync();
-        //long offset = timeSync.getNTPOffset();
-        //long playtime = System.currentTimeMillis() + 30000; // play song in 30 system seconds
-        //long serverPlayTime = timeSync.setServerPlayTime(offset, playtime);
-        // send time for song to be played
-        //sendTimeStamp(serverPlayTime);
-        // TODO wait, and then play song
-        /*musicSrv.playSong();
-        if(playbackPaused){
-            setController();
-            playbackPaused=false;
+        try {
+            new SendTimeStamp().execute();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        controller.show(0);*/
     }
 
     private void sendTimeStamp(long serverPlayTime) {
@@ -662,12 +653,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
      */
     class SendTimeStamp extends AsyncTask<String, Void, Long> {
         private String actionstring = null;
-
-        //
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-        }
+        private String TAG = "SendTimeStamp";
 
         @Override
         protected Long doInBackground(String... voids) {
@@ -699,21 +685,20 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         }
     }
 
-    public class ServerAsyncTask extends AsyncTask<Void, Void, String> {
+    public class ServerThread implements Runnable {
 
         private Context context;
-        private String TAG = "ServerAsyncTask";
+        private String TAG = "ServerThread";
         private String dataType = null;
 
         /**
          * @param context
          */
-        public ServerAsyncTask(Context context) {
+        public ServerThread(Context context) {
             this.context = context;
         }
-
         @Override
-        protected String doInBackground(Void... params) {
+        public void run() {
             try {
                 ServerSocket serverSocket = null;
                 serverSocket = new ServerSocket(8990);
@@ -725,29 +710,35 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                 dataType = is.readUTF();
                 //check if mimeType is all numbers or not
                 String timestamp;
+                Log.d(TAG, dataType);
                 switch (dataType) {
                     case "Play":
                         timestamp = receiveTimeStamp(client);
-                        return timestamp;
+                        receivedCommunication(timestamp);
                     case "Pause":
                         timestamp = receiveTimeStamp(client);
-                        return timestamp;
+                        receivedCommunication(timestamp);
                     case "File":
                         String receivedPath = receiveFile(client);
-                        return receivedPath;
+                        receivedCommunication(receivedPath);
                     case "IP":
                         String receivedIP = receiveIP(client);
-                        return receivedIP;
+                        receivedCommunication(receivedIP);
                     default:
                         Log.e(TAG, "No case match");
                 }
-            } catch (IOException e) {
+            } catch (
+                    IOException e
+                    )
+
+            {
                 e.printStackTrace();
             }
-            return null;
         }
 
+
         private String receiveIP(Socket client) {
+            Log.d(TAG, "recieveIP");
             DataInputStream is = null;
             try {
                 is = new DataInputStream(client.getInputStream());
@@ -760,6 +751,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         }
 
         private String receiveTimeStamp(Socket client) {
+            Log.d(TAG, "recieveTimeStamp");
             DataInputStream is = null;
             try {
                 is = new DataInputStream(client.getInputStream());
@@ -801,12 +793,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             return null;
         }
 
-        /*
-        * (non-Javadoc)
-        * @see android.os.AsyncTask#onPostExecute(java.lang.Object)
-        */
-        @Override
-        protected void onPostExecute(String result) {
+        public void receivedCommunication(String result) {
             String musicaction;
             switch (dataType) {
                 case "File":
