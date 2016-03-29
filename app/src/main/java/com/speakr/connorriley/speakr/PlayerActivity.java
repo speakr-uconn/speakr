@@ -83,8 +83,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         songListView = (ListView) findViewById(R.id.song_list);
         songQueue = new ArrayList<Song>();
         getPermissions();
-        //TimeSyncTask timeSyncTask = new TimeSyncTask();
-        //timeSyncTask.execute(new TimeSync());
+        new ServerAsyncTask(getApplicationContext()).execute();
         config();
     }
 
@@ -125,9 +124,6 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             Log.d(TAG, "Artist: " + artist);
             Song receivedSong = new Song(songpath, title, artist, 0);
             addSongToQueue(receivedSong);
-            Log.d(TAG, "added song, executing server");
-            //new PlayerServer().execute();
-            new ServerAsyncTask(getApplicationContext()).execute();
         } catch (Exception e) {
             e.printStackTrace();
         }
