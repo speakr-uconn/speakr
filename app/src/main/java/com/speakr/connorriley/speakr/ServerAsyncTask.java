@@ -2,6 +2,8 @@ package com.speakr.connorriley.speakr;
 
 /**
  * Created by connorriley on 3/22/16.
+ *
+ * can be ignored now
  */
 
 import android.content.Context;
@@ -181,7 +183,7 @@ public class ServerAsyncTask extends AsyncTask<Void, Void, String> {
                 String localMusicControl = dataType;
                 dataType = null;
                 Long receivedTime = Long.parseLong(localtimeStamp);
-                setUpTimeStamp(receivedTime, localMusicControl);
+                //setUpTimeStamp(receivedTime, localMusicControl);
             }
         }
     }

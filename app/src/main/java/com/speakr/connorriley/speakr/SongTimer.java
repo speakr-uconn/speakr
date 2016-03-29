@@ -16,7 +16,7 @@ public class SongTimer {
     MusicService musicSrv;
     MusicController controller;
     String TAG = "SongTimer";
-    public SongTimer(long localPlayTime, MusicService m, MusicController c) {
+    public SongTimer(long localPlayTime, MusicService m, MusicController c, String action) {
         Log.d(TAG, "New SongTimer");
         controller = c;
         musicSrv = m;
@@ -24,14 +24,22 @@ public class SongTimer {
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(localPlayTime);
         Date time = calendar.getTime();
-        timer.schedule(new SongTask(), time);
+        timer.schedule(new SongTask(action), time);
     }
 
     class SongTask extends TimerTask {
+        private String action;
+        public SongTask(String action) {
+            this.action = action;
+        }
         public void run() {
-            Log.d(TAG, "PlaySong");
+            Log.d(TAG, action);
             Looper.prepare();
-            musicSrv.playSong();
+            if(action.equals("Play")) {
+                musicSrv.playSong();
+            } else if (action.equals("Pause")) {
+                musicSrv.pausePlayer();
+            }
             controller.show(0);
         }
     }

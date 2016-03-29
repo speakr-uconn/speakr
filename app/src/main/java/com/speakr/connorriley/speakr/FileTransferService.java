@@ -70,7 +70,7 @@ public class FileTransferService extends IntentService {
                 } catch (FileNotFoundException e) {
                     Log.d(WiFiDirectActivity.TAG, e.toString());
                 }
-                DeviceDetailFragment.copyFile(is, stream);
+                copyFile(is, stream);
                 Log.d(WiFiDirectActivity.TAG, "Client: Data written");
             } catch(IOException e) {
                 Log.e(WiFiDirectActivity.TAG, e.getMessage());
@@ -98,5 +98,27 @@ public class FileTransferService extends IntentService {
                 Log.e(WiFiDirectActivity.TAG, e.getMessage());
             }
         }
+    }
+
+    public boolean copyFile(InputStream inputStream, OutputStream out) {
+        byte buf[] = new byte[1024];
+        int len;
+        long startTime = System.currentTimeMillis();
+        Log.d(WiFiDirectActivity.TAG, "starting tranfser of file in copy file");
+        try {
+            while ((len = inputStream.read(buf)) != -1) {
+                out.write(buf, 0, len);
+            }
+            out.flush();
+            out.close();
+            inputStream.close();
+            long endTime = System.currentTimeMillis() - startTime;
+            Log.v("", "Time taken to transfer all bytes is : " + endTime);
+
+        } catch (IOException e) {
+            Log.d(WiFiDirectActivity.TAG, e.toString());
+            return false;
+        }
+        return true;
     }
 }
