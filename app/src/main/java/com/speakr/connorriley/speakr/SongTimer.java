@@ -3,6 +3,8 @@ package com.speakr.connorriley.speakr;
 /**
  * Created by connorriley on 3/1/16.
  */
+import android.content.Context;
+import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
@@ -12,13 +14,16 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class SongTimer {
-    Timer timer;
-    MusicService musicSrv;
-    MusicController controller;
-    String TAG = "SongTimer";
-    public SongTimer(long localPlayTime, MusicService m, MusicController c, String action) {
+    private Timer timer;
+    private MusicService musicSrv;
+    private Context context;
+    private MusicController controller;
+    private String TAG = "SongTimer";
+    public SongTimer(long localPlayTime, MusicService m, MusicController c, String action,
+                     Context context1) {
         Log.d(TAG, "New SongTimer");
         controller = c;
+        context = context1;
         musicSrv = m;
         timer = new Timer();
         Calendar calendar = Calendar.getInstance();
@@ -40,7 +45,13 @@ public class SongTimer {
             } else if (action.equals("Pause")) {
                 musicSrv.pausePlayer();
             }
-            controller.show(0);
+            Handler mainHandler = new Handler(context.getMainLooper());
+            mainHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    controller.show(0);
+                }
+            });
         }
     }
 }
