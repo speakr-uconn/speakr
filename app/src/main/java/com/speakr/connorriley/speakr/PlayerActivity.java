@@ -404,7 +404,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         musicSrv.setSong(Integer.parseInt(view.getTag().toString()));
         Log.d(TAG, "execute offset class");
         try {
-            new SendTimeStamp().execute();
+            new SendTimeStamp().execute("Play");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -716,17 +716,22 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                         case "Play":
                             timestamp = receiveTimeStamp(client);
                             receivedCommunication(timestamp);
+                            break;
                         case "Pause":
                             timestamp = receiveTimeStamp(client);
                             receivedCommunication(timestamp);
+                            break;
                         case "File":
                             String receivedPath = receiveFile(client);
                             receivedCommunication(receivedPath);
+                            break;
                         case "IP":
                             String receivedIP = receiveIP(client);
                             receivedCommunication(receivedIP);
+                            break;
                         default:
                             Log.e(TAG, "No case match");
+                            break;
                     }
                 }
             } catch (IOException e) {
