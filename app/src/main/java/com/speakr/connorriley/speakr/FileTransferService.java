@@ -92,6 +92,7 @@ public class FileTransferService extends IntentService {
                 Log.e(WiFiDirectActivity.TAG, e.getMessage());
             }
         } else if (intent.getAction().equals(ACTION_SEND_TIMESTAMP)) {
+            String actionString = intent.getExtras().getString("Action");
             String host = intent.getExtras().getString(EXTRAS_ADDRESS);
             Socket socket = new Socket();
             int port = intent.getExtras().getInt(EXTRAS_PORT);
@@ -106,7 +107,7 @@ public class FileTransferService extends IntentService {
 
                 //send string so they know to expect timestamp
                 //right now assumes that we just want to play the song
-                datastream.writeUTF("Play");
+                datastream.writeUTF(actionString);
 
                 // send timestamp
                 String timestamp = intent.getExtras().getString(EXTRAS_TIMESTAMP);

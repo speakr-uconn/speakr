@@ -433,14 +433,15 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         }
     }
 
-    private void sendTimeStamp(long serverPlayTime) {
+    private void sendTimeStamp(long serverPlayTime, String actionString) {
         Log.d(TAG, "SendTimeStamp");
 
-        //IT"S TIME TO SEND THE TIME
+        //IT"S TIME TO SEND THE TIME :)
         WifiSingleton wifiSingleton = WifiSingleton.getInstance();
         if (wifiSingleton.getInfo() != null) {
             Intent serviceIntent = new Intent(this, FileTransferService.class);
             serviceIntent.setAction(FileTransferService.ACTION_SEND_TIMESTAMP);
+            serviceIntent.putExtra("Action", actionString);
             serviceIntent.putExtra(FileTransferService.EXTRAS_TIMESTAMP, "" + serverPlayTime);
             Log.d("PlayerActivity", "string version of long timestamp to be sent: " + serverPlayTime);
             if(!wifiSingleton.getInfo().isGroupOwner){
@@ -547,8 +548,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     @Override
     public void pause() {
         // Pause music player
-        playbackPaused = true;
-        musicSrv.pausePlayer();
+        new SendTimeStamp(getApplicationContext()).execute("Pause");
     }
 
     @Override
@@ -729,7 +729,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                 Log.d(TAG, "LocalPlayTime: " + localPlayTime);
                 long internetPlayTime = timeSync.setServerPlayTime(offset, localPlayTime);
                 Log.d(TAG, "ServerPlayTime: " + internetPlayTime);
-                sendTimeStamp(internetPlayTime);
+                sendTimeStamp(internetPlayTime, actionstring);
                 result = localPlayTime;
             } catch (Exception e) {
                 Log.e("Error: ", e.getMessage());
