@@ -317,12 +317,14 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                 serviceIntent.putExtra(FileTransferService.EXTRAS_ADDRESS,
                         wifiSingleton.getInfo().groupOwnerAddress.getHostAddress());
             }
-
             else{
+                Log.d(TAG, "This device is a group owner.");
+
+                Log.d(TAG, "MemberIP: " + WifiSingleton.getInstance().getMemberIP());
+                Log.d(TAG, "Host Address:  " + WifiSingleton.getInstance().getInfo().groupOwnerAddress.getHostAddress());
                 serviceIntent.putExtra(FileTransferService.EXTRAS_ADDRESS,
                         wifiSingleton.getMemberIP());
             }
-
             serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, 8990);
             Log.d("DeviceDetailFragment", "startService about to be called");
             startService(serviceIntent);

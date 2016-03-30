@@ -18,9 +18,14 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.lang.reflect.Array;
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.NetworkInterface;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.regex.Pattern;
 
 /**
@@ -35,10 +40,12 @@ public class FileTransferService extends IntentService {
     public static final String EXTRAS_TIMESTAMP = "timestamp";
     public static final String EXTRAS_ADDRESS = "go_host";
     public static final String EXTRAS_PORT = "go_port";
+    private final String TAG = FileTransferService.class.getSimpleName();
 
     public FileTransferService(String name) {
         super(name);
     }
+
     public FileTransferService() {
         super("FileTransferService");
     }
@@ -47,16 +54,18 @@ public class FileTransferService extends IntentService {
     protected void onHandleIntent(Intent intent) {
         Log.d("FileTransferService", "onHandleIntent Started");
         Context context = getApplicationContext();
-        if(intent.getAction().equals(ACTION_SEND_FILE)) {
+        if (intent.getAction().equals(ACTION_SEND_FILE)) {
             String fileUri = intent.getExtras().getString(EXTRAS_FILE_PATH);
             String host = intent.getExtras().getString(EXTRAS_ADDRESS);
+            // check this address
+            Log.d(TAG, "host: " + host);
             Socket socket = new Socket();
             int port = intent.getExtras().getInt(EXTRAS_PORT);
             try {
                 Log.d(WiFiDirectActivity.TAG, "Opening client socket - ");
                 socket.bind(null);
                 socket.connect((new InetSocketAddress(host, port)), SOCKET_TIMEOUT);
-                Log.d(WiFiDirectActivity.TAG, "Client scoket - " + socket.isConnected());
+                Log.d(WiFiDirectActivity.TAG, "Client socket - " + socket.isConnected());
 
 
                 DataOutputStream datastream = new DataOutputStream(socket.getOutputStream());
@@ -79,12 +88,10 @@ public class FileTransferService extends IntentService {
                 }
                 copyFile(is, stream);
                 Log.d(WiFiDirectActivity.TAG, "Client: Data written");
-            } catch(IOException e) {
+            } catch (IOException e) {
                 Log.e(WiFiDirectActivity.TAG, e.getMessage());
             }
-        }
-
-        else if(intent.getAction().equals(ACTION_SEND_TIMESTAMP)) {
+        } else if (intent.getAction().equals(ACTION_SEND_TIMESTAMP)) {
             String host = intent.getExtras().getString(EXTRAS_ADDRESS);
             Socket socket = new Socket();
             int port = intent.getExtras().getInt(EXTRAS_PORT);
@@ -106,14 +113,15 @@ public class FileTransferService extends IntentService {
                 Log.e("String", "timestamp:  " + timestamp);
                 datastream.writeUTF(timestamp);
 
-            } catch(IOException e) {
+            } catch (IOException e) {
                 Log.e(WiFiDirectActivity.TAG, e.getMessage());
             }
         }
 
         //send current device's address
-        else if(intent.getAction().equals(ACTION_SEND_ADDRESS)){
+        else if (intent.getAction().equals(ACTION_SEND_ADDRESS)) {
             String host = intent.getExtras().getString(EXTRAS_ADDRESS);
+            Log.d(TAG, "send address: " + host);
             Socket socket = new Socket();
             int port = intent.getExtras().getInt(EXTRAS_PORT);
             try {
@@ -128,18 +136,24 @@ public class FileTransferService extends IntentService {
                 //send "IP" label
                 datastream.writeUTF("IP");
 
-                //get address from socket and send it
-                InetAddress addy = socket.getInetAddress();
-                String remoteIP = addy.getHostAddress();
-                datastream.writeUTF(remoteIP);
-            }
-
-            catch(IOException e) {
+                ArrayList<String> localIPArray = getDottedDecimalIP(getLocalIPAddress());
+                String localIP = getWifiDirectIP(localIPArray);
+                Log.d(TAG, "Local IP: " + localIP);
+                datastream.writeUTF(localIP);
+            } catch (IOException e) {
                 Log.e(WiFiDirectActivity.TAG, e.getMessage());
             }
         }
     }
-
+    private String getWifiDirectIP(ArrayList<String> localIPArray) {
+        for(int i = 0; i < localIPArray.size(); i++) {
+            String tempLocalIP = localIPArray.get(i);
+            if(tempLocalIP.startsWith("192.168.49.",0)) {
+                return tempLocalIP;
+            }
+        }
+        return null;
+    }
     public boolean copyFile(InputStream inputStream, OutputStream out) {
         byte buf[] = new byte[1024];
         int len;
@@ -161,4 +175,48 @@ public class FileTransferService extends IntentService {
         }
         return true;
     }
+
+    private ArrayList<byte[]> getLocalIPAddress() {
+        ArrayList<byte[]> inetAddressArray = new ArrayList<byte[]>();
+        try {
+            for (Enumeration<NetworkInterface> en = NetworkInterface
+                    .getNetworkInterfaces(); en.hasMoreElements(); ) {
+                NetworkInterface intf = en.nextElement();
+                for (Enumeration<InetAddress> enumIpAddr = intf
+                        .getInetAddresses(); enumIpAddr.hasMoreElements(); ) {
+                    InetAddress inetAddress = enumIpAddr.nextElement();
+                    if (!inetAddress.isLoopbackAddress()) {
+                        if (inetAddress instanceof Inet4Address) {
+                            inetAddressArray.add(inetAddress.getAddress());
+                        }
+                    }
+                }
+            }
+        } catch (Exception ex) {
+            // Log.e("AndroidNetworkAddressFactory", "getLocalIPAddress()", ex);
+        }
+        return inetAddressArray;
+    }
+
+    private ArrayList<String> getDottedDecimalIP(ArrayList<byte[]> inetAddressArray) {
+        ArrayList<String> strAddr = new ArrayList<String>();
+        for (int j = 0; j < inetAddressArray.size(); j++) {
+            byte[] ipAddr = inetAddressArray.get(j);
+            if (ipAddr != null) {
+                String ipAddrStr = "";
+                for (int i = 0; i < ipAddr.length; i++) {
+                    if (i > 0) {
+                        ipAddrStr += ".";
+                    }
+                    ipAddrStr += ipAddr[i] & 0xFF;
+                }
+                strAddr.add(ipAddrStr);
+                Log.d(TAG, ipAddrStr);
+            } //else {
+            //return "null";
+            //}
+        }
+        return strAddr;
+    }
+
 }
