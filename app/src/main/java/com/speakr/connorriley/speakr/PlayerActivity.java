@@ -59,7 +59,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     private Intent playIntent;
     private boolean musicBound = false;
     private MusicController controller;
-    private boolean paused = false, playbackPaused = false;
+    private boolean paused = false, playbackPaused = false;     // playbackpuased is not updated correctly
     DrawerLayout drawerLayout;
     Toolbar toolbar;
     private String TAG = "PlayerActivity";
@@ -105,17 +105,10 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         }
     }
 
-    private void setUpTimeStamp(Long receivedTime, String action) {
+    private void setUpTimeStamp(Long receivedTime, String actionstring) {
         Log.d(TAG, "timeStampReceived: " + receivedTime);
-        if (action.equals("Play")) {
-            new SongActionAtTimeStamp(getApplicationContext()).execute(
-                    receivedTime.toString(), "Play");
-        } else if (action.equals("Pause")) {
-            new SongActionAtTimeStamp(getApplicationContext()).execute(
-                    receivedTime.toString(), "Pause");
-        } else {   //problem
-            Log.d(TAG, "setuptimestamp method issue");
-        }
+        new SongActionAtTimeStamp(getApplicationContext()).execute(
+                receivedTime.toString(), actionstring);
     }
     private void sendIP() {
         WifiSingleton wifiSingleton = WifiSingleton.getInstance();
@@ -537,7 +530,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     @Override
     public void start() {
         // restart the music player after a pause.
-        musicSrv.go();
+        new SendTimeStamp(getApplicationContext()).execute("Resume");
     }
 
     @Override
@@ -548,6 +541,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     @Override
     public void pause() {
         // Pause music player
+        playbackPaused = true;
         new SendTimeStamp(getApplicationContext()).execute("Pause");
     }
 
@@ -790,6 +784,10 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                             String receivedIP = receiveIP(client);
                             receivedCommunication(receivedIP);
                             break;
+                        case "Resume":
+                            timestamp = receiveTimeStamp(client);
+                            receivedCommunication(timestamp);
+                            break;
                         default:
                             Log.e(TAG, "No case match");
                             break;
@@ -906,6 +904,12 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                         dataType = null;
                         Long pausetime = Long.parseLong(result);
                         setUpTimeStamp(pausetime, musicaction);
+                        break;
+                    case "Resume":
+                        musicaction = dataType;
+                        dataType = null;
+                        Long resumetime = Long.parseLong(result);
+                        setUpTimeStamp(resumetime, musicaction);
                         break;
                     default:
                         Log.e(TAG, "No case match");

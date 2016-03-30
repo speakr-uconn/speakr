@@ -44,6 +44,8 @@ public class SongTimer {
                 musicSrv.playSong();
             } else if (action.equals("Pause")) {
                 musicSrv.pausePlayer();
+            } else if (action.equals("Resume")) {
+                musicSrv.go();
             }
             Handler mainHandler = new Handler(context.getMainLooper());
             mainHandler.post(new Runnable() {
