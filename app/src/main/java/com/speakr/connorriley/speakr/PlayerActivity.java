@@ -1,6 +1,7 @@
 package com.speakr.connorriley.speakr;
 
 import android.Manifest;
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.ContentUris;
 import android.content.IntentFilter;
@@ -37,6 +38,7 @@ import android.database.Cursor;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.WindowManager;
 import android.widget.ListView;
 import android.os.IBinder;
 import android.content.ComponentName;
@@ -46,6 +48,7 @@ import android.content.ServiceConnection;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.MediaController.MediaPlayerControl;
+import android.widget.Toast;
 
 public class PlayerActivity extends HamburgerActivity implements View.OnClickListener, MediaPlayerControl {
     //-- Referenced the following websites:
@@ -59,7 +62,9 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     private Intent playIntent;
     private boolean musicBound = false;
     private MusicController controller;
+    private PlayerActivityReceiver receiver;
     private boolean paused = false, playbackPaused = false;     // playbackpuased is not updated correctly
+    ProgressDialog progressDialog = null;
     DrawerLayout drawerLayout;
     Toolbar toolbar;
     private String TAG = "PlayerActivity";
@@ -83,11 +88,16 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         songQueueView = (ListView) findViewById(R.id.song_queue);
         songListView = (ListView) findViewById(R.id.song_list);
         songQueue = new ArrayList<Song>();
+        IntentFilter filter = new IntentFilter(PlayerActivityReceiver.ACTION_RESP);
+        filter.addCategory(Intent.CATEGORY_DEFAULT);
+        receiver = new PlayerActivityReceiver();
+        registerReceiver(receiver, filter);
         getPermissions();
         ServerRunnable serverRunnable = new ServerRunnable(getApplicationContext());
         Thread thread = new Thread(serverRunnable);
         thread.start();
         config();
+
     }
 
     @Override
@@ -110,6 +120,16 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         new SongActionAtTimeStamp(getApplicationContext()).execute(
                 receivedTime.toString(), actionstring);
     }
+
+    private void showProgressDialog(String s){
+        if (progressDialog != null && progressDialog.isShowing()) {
+            progressDialog.dismiss();
+        }
+
+        progressDialog = ProgressDialog.show(this, s,
+                "Please wait");
+    }
+
     private void sendIP() {
         WifiSingleton wifiSingleton = WifiSingleton.getInstance();
         if (wifiSingleton.getInfo() != null && !wifiSingleton.getInfo().isGroupOwner) {
@@ -119,6 +139,9 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                     wifiSingleton.getInfo().groupOwnerAddress.getHostAddress());
             serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, 8990);
             Log.d(TAG, "sending IP to group owner");
+            getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                    WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+            showProgressDialog("Sending IP");
             startService(serviceIntent);
         }
     }
@@ -311,6 +334,9 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             }
             serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, 8990);
             Log.d("DeviceDetailFragment", "startService about to be called");
+            getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                    WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+            showProgressDialog("Sending Music file");
             startService(serviceIntent);
         }
     }
@@ -440,6 +466,8 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
 
             serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, 8990);
             Log.d("PlayerActivity", "startService about to be called for sending timestamp");
+            getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                    WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
             startService(serviceIntent);
         }
     }
@@ -959,6 +987,32 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                 return false;
             }
             return true;
+        }
+    }
+
+    public class PlayerActivityReceiver extends BroadcastReceiver {
+        public static final String ACTION_RESP =
+                "idk";
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String text = intent.getStringExtra(FileTransferService.PARAM_OUT_MSG);
+            Log.d("BROADCAST RECEIVER", "BROADCAST RECEIVED");
+            progressDialog.dismiss();
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+            if(text.equals("Sent IP")){
+                Toast.makeText(PlayerActivity.this, "IP successfully sent",
+                        Toast.LENGTH_SHORT).show();
+            }
+
+            else if(text.equals("Sent File")){
+                Toast.makeText(PlayerActivity.this, "File successfully sent",
+                        Toast.LENGTH_SHORT).show();
+            }
+
+            else if(text.equals("Sent request")){
+                Toast.makeText(PlayerActivity.this, "Play/Pause request successfully sent",
+                        Toast.LENGTH_SHORT).show();
+            }
         }
     }
 }
