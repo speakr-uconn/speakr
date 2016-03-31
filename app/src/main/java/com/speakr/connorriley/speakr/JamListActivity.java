@@ -174,12 +174,6 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
         startActivity(intent);
     }
 
-    public void openWifiActivity(){
-        //-- Mike 1/6/16
-        Intent intent = new Intent(this, WiFiDirectActivity.class);
-        startActivity(intent);
-    }
-
     public void startNetwork(){
         onConnection = false;
         isDiscovering = true;
@@ -243,9 +237,6 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
                 break;
             case R.id.nav_music_player:
                 openPlayerActivity();
-                break;
-            case R.id.nav_wifi:
-                openWifiActivity();
                 break;
         }
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);

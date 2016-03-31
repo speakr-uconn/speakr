@@ -15,6 +15,8 @@ public class JamListBroadcastReceiver extends BroadcastReceiver {
     private WifiP2pManager mManager;
     private WifiP2pManager.Channel mChannel;
     private JamListActivity mActivity;
+    private String TAG = JamListBroadcastReceiver.class.getSimpleName();
+
     public JamListBroadcastReceiver(WifiP2pManager manager, WifiP2pManager.Channel channel,
                                        JamListActivity activity) {
         super();
@@ -38,7 +40,7 @@ public class JamListBroadcastReceiver extends BroadcastReceiver {
                     mActivity.resetData();
 
                 }
-                Log.d(WiFiDirectActivity.TAG, "P2P state changed - " + state);
+                Log.d(TAG, "P2P state changed - " + state);
                 break;
             case WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION:
                 // request available peers from the wifi p2p manager. This is an
@@ -47,7 +49,7 @@ public class JamListBroadcastReceiver extends BroadcastReceiver {
                 // call wifip2pmanager to request a list of current peers
                 mManager.requestPeers(mChannel, (WifiP2pManager.PeerListListener) mActivity.getFragmentManager()
                         .findFragmentById(R.id.frag_list));     // not sure what frag_list is supposed to be
-                Log.d(WiFiDirectActivity.TAG, "P2P peers changed");
+                Log.d(TAG, "P2P peers changed");
                 break;
             case WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION:
                 if (mManager == null) {

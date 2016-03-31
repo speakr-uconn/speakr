@@ -62,10 +62,10 @@ public class FileTransferService extends IntentService {
             Socket socket = new Socket();
             int port = intent.getExtras().getInt(EXTRAS_PORT);
             try {
-                Log.d(WiFiDirectActivity.TAG, "Opening client socket - ");
+                Log.d(TAG, "Opening client socket - ");
                 socket.bind(null);
                 socket.connect((new InetSocketAddress(host, port)), SOCKET_TIMEOUT);
-                Log.d(WiFiDirectActivity.TAG, "Client socket - " + socket.isConnected());
+                Log.d(TAG, "Client socket - " + socket.isConnected());
 
 
                 DataOutputStream datastream = new DataOutputStream(socket.getOutputStream());
@@ -84,12 +84,12 @@ public class FileTransferService extends IntentService {
                 try {
                     is = cr.openInputStream(Uri.parse(fileUri));
                 } catch (FileNotFoundException e) {
-                    Log.d(WiFiDirectActivity.TAG, e.toString());
+                    Log.d(TAG, e.toString());
                 }
                 copyFile(is, stream);
-                Log.d(WiFiDirectActivity.TAG, "Client: Data written");
+                Log.d(TAG, "Client: Data written");
             } catch (IOException e) {
-                Log.e(WiFiDirectActivity.TAG, e.getMessage());
+                Log.e(TAG, e.getMessage());
             }
         } else if (intent.getAction().equals(ACTION_SEND_TIMESTAMP)) {
             String actionString = intent.getExtras().getString("Action");
@@ -97,10 +97,10 @@ public class FileTransferService extends IntentService {
             Socket socket = new Socket();
             int port = intent.getExtras().getInt(EXTRAS_PORT);
             try {
-                Log.d(WiFiDirectActivity.TAG, "Opening client socket for timestamp- ");
+                Log.d(TAG, "Opening client socket for timestamp- ");
                 socket.bind(null);
                 socket.connect((new InetSocketAddress(host, port)), SOCKET_TIMEOUT);
-                Log.d(WiFiDirectActivity.TAG, "Client socket - " + socket.isConnected());
+                Log.d(TAG, "Client socket - " + socket.isConnected());
 
 
                 DataOutputStream datastream = new DataOutputStream(socket.getOutputStream());
@@ -115,7 +115,7 @@ public class FileTransferService extends IntentService {
                 datastream.writeUTF(timestamp);
 
             } catch (IOException e) {
-                Log.e(WiFiDirectActivity.TAG, e.getMessage());
+                Log.e(TAG, e.getMessage());
             }
         }
 
@@ -126,11 +126,11 @@ public class FileTransferService extends IntentService {
             Socket socket = new Socket();
             int port = intent.getExtras().getInt(EXTRAS_PORT);
             try {
-                Log.d(WiFiDirectActivity.TAG, "Opening client socket for address- ");
+                Log.d(TAG, "Opening client socket for address- ");
 
                 socket.bind(null);
                 socket.connect((new InetSocketAddress(host, port)), SOCKET_TIMEOUT);
-                Log.d(WiFiDirectActivity.TAG, "Client socket - " + socket.isConnected());
+                Log.d(TAG, "Client socket - " + socket.isConnected());
 
                 DataOutputStream datastream = new DataOutputStream(socket.getOutputStream());
 
@@ -142,7 +142,7 @@ public class FileTransferService extends IntentService {
                 Log.d(TAG, "Local IP: " + localIP);
                 datastream.writeUTF(localIP);
             } catch (IOException e) {
-                Log.e(WiFiDirectActivity.TAG, e.getMessage());
+                Log.e(TAG, e.getMessage());
             }
         }
     }
@@ -159,7 +159,7 @@ public class FileTransferService extends IntentService {
         byte buf[] = new byte[1024];
         int len;
         long startTime = System.currentTimeMillis();
-        Log.d(WiFiDirectActivity.TAG, "starting tranfser of file in copy file");
+        Log.d(TAG, "starting tranfser of file in copy file");
         try {
             while ((len = inputStream.read(buf)) != -1) {
                 out.write(buf, 0, len);
@@ -171,7 +171,7 @@ public class FileTransferService extends IntentService {
             Log.v("", "Time taken to transfer all bytes is : " + endTime);
 
         } catch (IOException e) {
-            Log.d(WiFiDirectActivity.TAG, e.toString());
+            Log.d(TAG, e.toString());
             return false;
         }
         return true;

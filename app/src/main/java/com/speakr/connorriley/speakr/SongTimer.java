@@ -40,13 +40,24 @@ public class SongTimer {
         public void run() {
             Log.d(TAG, action);
             Looper.prepare();
-            if(action.equals("Play")) {
-                musicSrv.playSong();
-            } else if (action.equals("Pause")) {
-                musicSrv.pausePlayer();
-            } else if (action.equals("Resume")) {
-                musicSrv.go();
+            switch (action) {
+                case "Play":
+                    musicSrv.playSong();
+                    break;
+                case "Pause":
+                    musicSrv.pausePlayer();
+                    break;
+                case "Resume":
+                    musicSrv.go();
+                    break;
+                case "Next":
+                    musicSrv.playNext();
+                    break;
+                case "Previous":
+                    musicSrv.playPrev();
+                    break;
             }
+
             Handler mainHandler = new Handler(context.getMainLooper());
             mainHandler.post(new Runnable() {
                 @Override

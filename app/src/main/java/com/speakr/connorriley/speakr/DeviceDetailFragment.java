@@ -115,7 +115,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
         Uri uri = data.getData();
         TextView statusText = (TextView) mContentView.findViewById(R.id.status_text);
         statusText.setText("Sending: " + uri);
-        Log.d(WiFiDirectActivity.TAG, "Intent----------- " + uri);
+        Log.d(TAG, "Intent----------- " + uri);
         Intent serviceIntent = new Intent(getActivity(), FileTransferService.class);
         serviceIntent.setAction(FileTransferService.ACTION_SEND_FILE);
         serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_PATH, uri.toString());
@@ -213,7 +213,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
         byte buf[] = new byte[1024];
         int len;
         long startTime = System.currentTimeMillis();
-        Log.d(WiFiDirectActivity.TAG, "starting tranfser of file in copy file");
+        Log.d(TAG, "starting tranfser of file in copy file");
         try {
             while ((len = inputStream.read(buf)) != -1) {
                 out.write(buf, 0, len);
@@ -225,7 +225,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
             Log.v("", "Time taken to transfer all bytes is : " + endTime);
 
         } catch (IOException e) {
-            Log.d(WiFiDirectActivity.TAG, e.toString());
+            Log.d(TAG, e.toString());
             return false;
         }
         return true;

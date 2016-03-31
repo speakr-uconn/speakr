@@ -177,12 +177,6 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         startActivity(intent);
     }
 
-    public void openWifiActivity() {
-        //-- Mike 1/6/16
-        Intent intent = new Intent(this, WiFiDirectActivity.class);
-        startActivity(intent);
-    }
-
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
@@ -193,9 +187,6 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                 openJamsActivity();
                 break;
             case R.id.nav_music_player:
-                break;
-            case R.id.nav_wifi:
-                openWifiActivity();
                 break;
         }
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -302,7 +293,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             Uri uri = ContentUris.withAppendedId( //set uri
                     android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                     currSong);
-            Log.d(WiFiDirectActivity.TAG, "Intent----------- " + uri);
+            Log.d(TAG, "Intent----------- " + uri);
             Intent serviceIntent = new Intent(this, FileTransferService.class);
             serviceIntent.setAction(FileTransferService.ACTION_SEND_FILE);
             serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_PATH, uri.toString());
@@ -480,21 +471,19 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     }
 
     private void playNext() {
-        musicSrv.playNext();
+        new SendTimeStamp(getApplicationContext()).execute("Next");
         if (playbackPaused) {
             setController();
             playbackPaused = false;
         }
-        controller.show(1);
     }
 
     private void playPrev() {
-        musicSrv.playPrev();
+        new SendTimeStamp(getApplicationContext()).execute("Previous");
         if (playbackPaused) {
             setController();
             playbackPaused = false;
         }
-        controller.show(0);
     }
 
     @Override
@@ -719,7 +708,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                 //long offset = timeSync.getNTPOffset();
                 long offset = getAverageNTPOffset(timeSync, 5); //get 5 offset values
                 Log.d(TAG, "Average Offset: " + offset);
-                long localPlayTime = System.currentTimeMillis() + 10000; // play song in 30 system seconds
+                long localPlayTime = System.currentTimeMillis() + 20000; // take action in 15 seconds
                 Log.d(TAG, "LocalPlayTime: " + localPlayTime);
                 long internetPlayTime = timeSync.setServerPlayTime(offset, localPlayTime);
                 Log.d(TAG, "ServerPlayTime: " + internetPlayTime);
@@ -757,10 +746,10 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             try {
                 ServerSocket serverSocket = null;
                 serverSocket = new ServerSocket(8990);
-                Log.d(WiFiDirectActivity.TAG, "Server: Socket opened");
+                Log.d(TAG, "Server: Socket opened");
                 while(true) {
                     Socket client = serverSocket.accept();
-                    Log.d(WiFiDirectActivity.TAG, "Server: connection done");
+                    Log.d(TAG, "Server: connection done");
                     // receive data type string
                     DataInputStream is = new DataInputStream(client.getInputStream());
                     dataType = is.readUTF();
@@ -785,6 +774,14 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                             receivedCommunication(receivedIP);
                             break;
                         case "Resume":
+                            timestamp = receiveTimeStamp(client);
+                            receivedCommunication(timestamp);
+                            break;
+                        case "Next":
+                            timestamp = receiveTimeStamp(client);
+                            receivedCommunication(timestamp);
+                            break;
+                        case "Previous":
                             timestamp = receiveTimeStamp(client);
                             receivedCommunication(timestamp);
                             break;
@@ -836,7 +833,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                 } catch (MimeTypeException e) {
                     e.printStackTrace();
                 }
-                Log.d(WiFiDirectActivity.TAG, "File Extention: " + fileExtention);
+                Log.d(TAG, "File Extention: " + fileExtention);
                 final File f = new File(context.getFilesDir().getParent() + "/"
                         + "/wifip2pshared-" + System.currentTimeMillis()
                         + fileExtention);
@@ -845,7 +842,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                     dirs.mkdirs();
                 f.createNewFile();
 
-                Log.d(WiFiDirectActivity.TAG, "server: copying files " + f.toString());
+                Log.d(TAG, "server: copying files " + f.toString());
                 InputStream inputstream = client.getInputStream();
                 copyFile(inputstream, new FileOutputStream(f));
                 return f.getAbsolutePath();
@@ -911,6 +908,18 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                         Long resumetime = Long.parseLong(result);
                         setUpTimeStamp(resumetime, musicaction);
                         break;
+                    case "Next":
+                        musicaction = dataType;
+                        dataType = null;
+                        Long nextPlayTime = Long.parseLong(result);
+                        setUpTimeStamp(nextPlayTime, musicaction);
+                        break;
+                    case "Previous":
+                        musicaction = dataType;
+                        dataType = null;
+                        Long previousPlayTime = Long.parseLong(result);
+                        setUpTimeStamp(previousPlayTime, musicaction);
+                        break;
                     default:
                         Log.e(TAG, "No case match");
                         break;
@@ -934,7 +943,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             byte buf[] = new byte[1024];
             int len;
             long startTime = System.currentTimeMillis();
-            Log.d(WiFiDirectActivity.TAG, "starting tranfser of file in copy file");
+            Log.d(TAG, "starting tranfser of file in copy file");
             try {
                 while ((len = inputStream.read(buf)) != -1) {
                     out.write(buf, 0, len);
@@ -946,7 +955,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                 Log.v("", "Time taken to transfer all bytes is : " + endTime);
 
             } catch (IOException e) {
-                Log.d(WiFiDirectActivity.TAG, e.toString());
+                Log.d(TAG, e.toString());
                 return false;
             }
             return true;
