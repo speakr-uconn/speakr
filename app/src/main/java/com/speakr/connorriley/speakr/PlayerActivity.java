@@ -10,6 +10,7 @@ import android.media.MediaMetadataRetriever;
 import android.media.MediaScannerConnection;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.AsyncTask;
 import android.provider.MediaStore;
@@ -23,9 +24,11 @@ import android.support.v4.widget.DrawerLayout;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Array;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -711,17 +714,50 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         private String actionstring = null;
         private String TAG = "SendTimeStamp";
         private Context context;
+        private ArrayList<Long> offsetArray;    //for the writeOffsetToFile method
+
         public SendTimeStamp(Context c) {
             this.context = c;
         }
 
+        //check if we can read and write to external files
+        public boolean isExternalStorageWritable() {
+            String state = Environment.getExternalStorageState();
+            if (Environment.MEDIA_MOUNTED.equals(state)) {
+                return true;
+            }
+            return false;
+        }
+
+        //write every value in offsetArray to the file and then clear the array
+        public void writeOffsetsToFile() {
+            File file = new File(getExternalFilesDir(null), "OffsetValues.txt");
+            try {
+                if (!file.exists()) {
+                    file.createNewFile();
+                }
+                FileWriter writer = new FileWriter(file);
+                for (int i = 0; i < offsetArray.size(); i++) {
+                    writer.write(Long.toString(offsetArray.get(i)) + "\n");
+                }
+                writer.close();
+                offsetArray.clear();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        //ping the NTP server n times for an offset and calculate the
+        //average of those values
         private long getAverageNTPOffset(TimeSync timeSync, int n) {
             long offsetAcc = 0;
             for (int i = 0; i < n; i++) {
                 long offset = timeSync.getNTPOffset();
                 Log.d(TAG, "Offset " + i + ": " + offset);
+                offsetArray.add(offset);
                 offsetAcc += offset;
             }
+            writeOffsetsToFile();
             return  (offsetAcc/n);  //NOTE: this will round the value
         }
 
