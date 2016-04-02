@@ -41,6 +41,8 @@ public class FileTransferService extends IntentService {
     public static final String EXTRAS_ADDRESS = "go_host";
     public static final String EXTRAS_PORT = "go_port";
     public static final String PARAM_OUT_MSG = "output";
+    public static final String ACTION_SEND_IP_ACK = "send_ip_ack";
+
     private final String TAG = FileTransferService.class.getSimpleName();
 
     public FileTransferService(String name) {
@@ -159,6 +161,27 @@ public class FileTransferService extends IntentService {
                 broadcastIntent.putExtra(PARAM_OUT_MSG, "Sent IP");
                 sendBroadcast(broadcastIntent);
 
+            } catch (IOException e) {
+                Log.e(TAG, e.getMessage());
+            }
+        } else if (intent.getAction().equals(ACTION_SEND_IP_ACK)) {
+            String host = intent.getExtras().getString(EXTRAS_ADDRESS);
+            Log.d(TAG, "send address: " + host);
+            Socket socket = new Socket();
+            int port = intent.getExtras().getInt(EXTRAS_PORT);
+            try {
+                Log.d(TAG, "Opening client socket for address- ");
+
+                socket.bind(null);
+                socket.connect((new InetSocketAddress(host, port)), SOCKET_TIMEOUT);
+                Log.d(TAG, "Client socket - " + socket.isConnected());
+
+                DataOutputStream datastream = new DataOutputStream(socket.getOutputStream());
+
+                //send "IP" label
+                datastream.writeUTF("IP_ACK");
+                String member_ip = intent.getExtras().getString("IP_Address");
+                datastream.writeUTF(member_ip);
             } catch (IOException e) {
                 Log.e(TAG, e.getMessage());
             }

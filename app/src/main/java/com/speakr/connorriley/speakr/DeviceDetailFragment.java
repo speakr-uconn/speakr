@@ -19,6 +19,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.TextView;
 
 
@@ -106,7 +107,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
         return mContentView;
     }
 
-    @Override
+    @Deprecated
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         Log.d("devicedetailfragment:", "onActivityResult");
 
@@ -158,23 +159,30 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
         // socket.
 
         if (info.groupFormed && info.isGroupOwner) {
-            Intent intent = new Intent(getActivity(), PlayerActivity.class);
-            startActivity(intent);
-
-            //new FileServerAsyncTask(getActivity(), mContentView.findViewById(R.id.status_text))
-            //        .execute();
+            Log.d(TAG, "Group Formed and is group owner");
+            // wait for ip address of member
         } else if (info.groupFormed) {
-            Intent intent = new Intent(getActivity(), PlayerActivity.class);
-            startActivity(intent);
-            // The other device acts as the client. In this case, we enable the
-            // get file button.
-            //mContentView.findViewById(R.id.btn_start_client).setVisibility(View.VISIBLE);
-            //((TextView) mContentView.findViewById(R.id.status_text)).setText(getResources()
-            //        .getString(R.string.client_text));
+            Log.d(TAG, "Group formed and is member, sending IP");
+            // send the ip address
+            sendIP();
+
         }
 
         // hide the connect button
         //mContentView.findViewById(R.id.btn_connect).setVisibility(View.GONE);
+    }
+
+    private void sendIP() {
+        WifiSingleton wifiSingleton = WifiSingleton.getInstance();
+        if (wifiSingleton.getInfo() != null && !wifiSingleton.getInfo().isGroupOwner) {
+            Intent serviceIntent = new Intent(getActivity(), FileTransferService.class);
+            serviceIntent.setAction(FileTransferService.ACTION_SEND_ADDRESS);
+            serviceIntent.putExtra(FileTransferService.EXTRAS_ADDRESS,
+                    wifiSingleton.getInfo().groupOwnerAddress.getHostAddress());
+            serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, 8988);
+            Log.d(TAG, "sending IP to group owner");
+            getActivity().startService(serviceIntent);
+        }
     }
 
     /**
@@ -207,27 +215,5 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
         view.setText(R.string.empty);
         mContentView.findViewById(R.id.btn_start_client).setVisibility(View.GONE);
         this.getView().setVisibility(View.GONE);
-    }
-
-    public static boolean copyFile(InputStream inputStream, OutputStream out) {
-        byte buf[] = new byte[1024];
-        int len;
-        long startTime = System.currentTimeMillis();
-        Log.d(TAG, "starting tranfser of file in copy file");
-        try {
-            while ((len = inputStream.read(buf)) != -1) {
-                out.write(buf, 0, len);
-            }
-            out.flush();
-            out.close();
-            inputStream.close();
-            long endTime = System.currentTimeMillis() - startTime;
-            Log.v("", "Time taken to transfer all bytes is : " + endTime);
-
-        } catch (IOException e) {
-            Log.d(TAG, e.toString());
-            return false;
-        }
-        return true;
     }
 }

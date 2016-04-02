@@ -24,6 +24,11 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Toast;
 
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
+
 
 public class JamListActivity extends HamburgerActivity implements OnClickListener, WifiP2pManager.ChannelListener, DeviceActionListener{
 
@@ -69,6 +74,11 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
         //setupTablayout();
         //setupCollapsingToolbarLayout();
         setupFab();
+
+        IPServerRunnable ipserverRunnable = new IPServerRunnable(getApplicationContext());
+        Thread thread = new Thread(ipserverRunnable);
+        thread.start();
+
         //enable_atn_direct();
         startNetwork();
         //addDrawerItems();
@@ -368,5 +378,93 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
     public void onDestroy() {
         super.onDestroy();
         //unregisterReceiver(receiver);
+    }
+
+
+    public class IPServerRunnable implements Runnable {
+
+        private Context context;
+        private String TAG = "ServerThread";
+        private String dataType = null;
+
+        /**
+         * @param context
+         */
+        public IPServerRunnable(Context context) {
+            this.context = context;
+        }
+        @Override
+        public void run() {
+            try {
+                ServerSocket serverSocket = null;
+                serverSocket = new ServerSocket(8988);
+                Log.d(TAG, "Server: Socket opened");
+                while(true) {
+                    Socket client = serverSocket.accept();
+                    Log.d(TAG, "Server: connection done");
+                    // receive data type string
+                    DataInputStream is = new DataInputStream(client.getInputStream());
+                    dataType = is.readUTF();
+                    //check if mimeType is all numbers or not
+                    String timestamp;
+                    Log.d(TAG, "datatype: " + dataType);
+                    switch (dataType) {
+                        case "IP":
+                            String receivedIP = receiveIP(client);
+                            receivedCommunication(receivedIP);
+                            break;
+                        case "IP_ACK":
+                            Intent intent = new Intent(context, PlayerActivity.class);
+                            startActivity(intent);
+                        default:
+                            Log.e(TAG, "No case match");
+                            break;
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+
+        private String receiveIP(Socket client) {
+            Log.d(TAG, "receiveIPMethod");
+            DataInputStream is = null;
+            try {
+                is = new DataInputStream(client.getInputStream());
+                String ip = is.readUTF();
+                return ip;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        public void receivedCommunication(String result) {
+            if(dataType != null) {
+                switch (dataType) {
+                    case "IP":
+                        dataType = null;
+                        WifiSingleton.getInstance().setMemberIP(result);
+                        sendIPACK(result);
+                        break;
+                    default:
+                        Log.e(TAG, "No case match");
+                        break;
+                }
+            }
+        }
+        private void sendIPACK(String ip) {
+            Intent serviceIntent = new Intent(context, FileTransferService.class);
+            serviceIntent.setAction(FileTransferService.ACTION_SEND_IP_ACK);
+            serviceIntent.putExtra(FileTransferService.EXTRAS_ADDRESS,
+                    WifiSingleton.getInstance().getMemberIP());
+            serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, 8988);
+            serviceIntent.putExtra("IP_Address", ip);
+            Log.d(TAG, "sending ACKIP group to member");
+            context.startService(serviceIntent);
+            Intent playerIntent = new Intent(context, PlayerActivity.class);
+            startActivity(playerIntent);
+        }
     }
 }
