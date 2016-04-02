@@ -130,21 +130,6 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                 "Please wait");
     }
 
-    private void sendIP() {
-        WifiSingleton wifiSingleton = WifiSingleton.getInstance();
-        if (wifiSingleton.getInfo() != null && !wifiSingleton.getInfo().isGroupOwner) {
-            Intent serviceIntent = new Intent(this, FileTransferService.class);
-            serviceIntent.setAction(FileTransferService.ACTION_SEND_ADDRESS);
-            serviceIntent.putExtra(FileTransferService.EXTRAS_ADDRESS,
-                    wifiSingleton.getInfo().groupOwnerAddress.getHostAddress());
-            serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, 8990);
-            Log.d(TAG, "sending IP to group owner");
-            getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
-                    WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
-            showProgressDialog("Sending IP");
-            startService(serviceIntent);
-        }
-    }
     private void setUpReceivedSong(String songpath) {
         Log.d(TAG, "setupreceivedsong");
         try {
@@ -643,7 +628,6 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             //pass list
             musicSrv.setList(songList);
             musicBound = true;
-            sendIP();
         }
 
         @Override
