@@ -6,7 +6,10 @@ import android.content.ContentUris;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.media.MediaMetadataRetriever;
+import android.media.MediaScannerConnection;
+import android.net.wifi.p2p.WifiP2pInfo;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.AsyncTask;
 import android.provider.MediaStore;
 import android.support.design.widget.NavigationView;
@@ -17,11 +20,17 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 
 import java.io.DataInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+
 import android.net.Uri;
 import android.content.ContentResolver;
 import android.database.Cursor;
@@ -50,10 +59,9 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     private Intent playIntent;
     private boolean musicBound = false;
     private MusicController controller;
-    private boolean paused = false, playbackPaused = false;
+    private boolean paused = false, playbackPaused = false;     // playbackpuased is not updated correctly
     DrawerLayout drawerLayout;
     Toolbar toolbar;
-    private String songPath;
     private String TAG = "PlayerActivity";
     // Broadcast receiver to determine when music player has been prepared
     private BroadcastReceiver onPrepareReceiver = new BroadcastReceiver() {
@@ -69,7 +77,6 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         //-- TODO: Add useful items, such as the "Shuffle" icon, to the action bar ...
         //-- In menu_main.xml I had several app:showAsAction="always" calls, but it didn't fix it. Haven't gone back to fix that yet.
         super.onCreate(savedInstanceState);
-        songPath = null;
         setContentView(R.layout.activity_player);
         setupNavigationView();
         setupToolbar();
@@ -77,14 +84,10 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         songListView = (ListView) findViewById(R.id.song_list);
         songQueue = new ArrayList<Song>();
         getPermissions();
-        //TimeSyncTask timeSyncTask = new TimeSyncTask();
-        //timeSyncTask.execute(new TimeSync());
+        ServerRunnable serverRunnable = new ServerRunnable(getApplicationContext());
+        Thread thread = new Thread(serverRunnable);
+        thread.start();
         config();
-        // to start playing a song
-        Bundle bundle = getIntent().getExtras();
-        if (bundle != null) {
-            songPath = bundle.getString("SongPath");
-        }
     }
 
     @Override
@@ -102,13 +105,24 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         }
     }
 
-    private void setUpTimeStamp(Long receivedTime) {
+    private void setUpTimeStamp(Long receivedTime, String actionstring) {
         Log.d(TAG, "timeStampReceived: " + receivedTime);
-        new PlaySongAtTimeStamp().execute(receivedTime);
+        new SongActionAtTimeStamp(getApplicationContext()).execute(
+                receivedTime.toString(), actionstring);
     }
-
+    private void sendIP() {
+        WifiSingleton wifiSingleton = WifiSingleton.getInstance();
+        if (wifiSingleton.getInfo() != null && !wifiSingleton.getInfo().isGroupOwner) {
+            Intent serviceIntent = new Intent(this, FileTransferService.class);
+            serviceIntent.setAction(FileTransferService.ACTION_SEND_ADDRESS);
+            serviceIntent.putExtra(FileTransferService.EXTRAS_ADDRESS,
+                    wifiSingleton.getInfo().groupOwnerAddress.getHostAddress());
+            serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, 8990);
+            Log.d(TAG, "sending IP to group owner");
+            startService(serviceIntent);
+        }
+    }
     private void setUpReceivedSong(String songpath) {
-        songPath = null;
         Log.d(TAG, "setupreceivedsong");
         try {
             MediaMetadataRetriever mmr = new MediaMetadataRetriever();
@@ -117,10 +131,14 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             String artist = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
             Log.d(TAG, "Title: " + title);
             Log.d(TAG, "Artist: " + artist);
-            Song receivedSong = new Song(songpath, title, artist, 0);
-            addSongToQueue(receivedSong);
-            Log.d(TAG, "added song, executing server");
-            new PlayerServer().execute();
+            final Song receivedSong = new Song(songpath, title, artist, 0);
+            Handler mainHandler = new Handler(getApplicationContext().getMainLooper());
+            mainHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    addSongToQueue(receivedSong);
+                }
+            });
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -159,12 +177,6 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         startActivity(intent);
     }
 
-    public void openWifiActivity() {
-        //-- Mike 1/6/16
-        Intent intent = new Intent(this, WiFiDirectActivity.class);
-        startActivity(intent);
-    }
-
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
@@ -175,9 +187,6 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                 openJamsActivity();
                 break;
             case R.id.nav_music_player:
-                break;
-            case R.id.nav_wifi:
-                openWifiActivity();
                 break;
         }
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -284,13 +293,23 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             Uri uri = ContentUris.withAppendedId( //set uri
                     android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                     currSong);
-            Log.d(WiFiDirectActivity.TAG, "Intent----------- " + uri);
+            Log.d(TAG, "Intent----------- " + uri);
             Intent serviceIntent = new Intent(this, FileTransferService.class);
             serviceIntent.setAction(FileTransferService.ACTION_SEND_FILE);
             serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_PATH, uri.toString());
-            serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS,
-                    wifiSingleton.getInfo().groupOwnerAddress.getHostAddress());
-            serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, 8988);
+            if(!wifiSingleton.getInfo().isGroupOwner){
+                serviceIntent.putExtra(FileTransferService.EXTRAS_ADDRESS,
+                        wifiSingleton.getInfo().groupOwnerAddress.getHostAddress());
+            }
+            else{
+                Log.d(TAG, "This device is a group owner.");
+
+                Log.d(TAG, "MemberIP: " + WifiSingleton.getInstance().getMemberIP());
+                Log.d(TAG, "Host Address:  " + WifiSingleton.getInstance().getInfo().groupOwnerAddress.getHostAddress());
+                serviceIntent.putExtra(FileTransferService.EXTRAS_ADDRESS,
+                        wifiSingleton.getMemberIP());
+            }
+            serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, 8990);
             Log.d("DeviceDetailFragment", "startService about to be called");
             startService(serviceIntent);
         }
@@ -391,37 +410,35 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
 
         musicSrv.setSong(Integer.parseInt(view.getTag().toString()));
         Log.d(TAG, "execute offset class");
-        new SendTimeStamp().execute();
-        // get current time offset
-        // This doesn't work because of a network on main thread error
-        //TimeSync timeSync = new TimeSync();
-        //long offset = timeSync.getNTPOffset();
-        //long playtime = System.currentTimeMillis() + 30000; // play song in 30 system seconds
-        //long serverPlayTime = timeSync.setServerPlayTime(offset, playtime);
-        // send time for song to be played
-        //sendTimeStamp(serverPlayTime);
-        // TODO wait, and then play song
-        /*musicSrv.playSong();
-        if(playbackPaused){
-            setController();
-            playbackPaused=false;
+        try {
+            new SendTimeStamp(getApplicationContext()).execute("Play");
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        controller.show(0);*/
     }
 
-    private void sendTimeStamp(long serverPlayTime) {
+    private void sendTimeStamp(long serverPlayTime, String actionString) {
         Log.d(TAG, "SendTimeStamp");
 
-        //IT"S TIME TO SEND THE TIME
+        //IT"S TIME TO SEND THE TIME :)
         WifiSingleton wifiSingleton = WifiSingleton.getInstance();
         if (wifiSingleton.getInfo() != null) {
             Intent serviceIntent = new Intent(this, FileTransferService.class);
             serviceIntent.setAction(FileTransferService.ACTION_SEND_TIMESTAMP);
+            serviceIntent.putExtra("Action", actionString);
             serviceIntent.putExtra(FileTransferService.EXTRAS_TIMESTAMP, "" + serverPlayTime);
             Log.d("PlayerActivity", "string version of long timestamp to be sent: " + serverPlayTime);
-            serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS,
-                    wifiSingleton.getInfo().groupOwnerAddress.getHostAddress());
-            serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, 8990);
+            if(!wifiSingleton.getInfo().isGroupOwner){
+                serviceIntent.putExtra(FileTransferService.EXTRAS_ADDRESS,
+                        wifiSingleton.getInfo().groupOwnerAddress.getHostAddress());
+            }
+
+            else{
+                serviceIntent.putExtra(FileTransferService.EXTRAS_ADDRESS,
+                        wifiSingleton.getMemberIP());
+            }
+
+            serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, 8990);
             Log.d("PlayerActivity", "startService about to be called for sending timestamp");
             startService(serviceIntent);
         }
@@ -454,21 +471,19 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     }
 
     private void playNext() {
-        musicSrv.playNext();
+        new SendTimeStamp(getApplicationContext()).execute("Next");
         if (playbackPaused) {
             setController();
             playbackPaused = false;
         }
-        controller.show(1);
     }
 
     private void playPrev() {
-        musicSrv.playPrev();
+        new SendTimeStamp(getApplicationContext()).execute("Previous");
         if (playbackPaused) {
             setController();
             playbackPaused = false;
         }
-        controller.show(0);
     }
 
     @Override
@@ -503,7 +518,8 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
 
     @Override
     public void start() {
-        musicSrv.go();
+        // restart the music player after a pause.
+        new SendTimeStamp(getApplicationContext()).execute("Resume");
     }
 
     @Override
@@ -513,8 +529,9 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
 
     @Override
     public void pause() {
+        // Pause music player
         playbackPaused = true;
-        musicSrv.pausePlayer();
+        new SendTimeStamp(getApplicationContext()).execute("Pause");
     }
 
     @Override
@@ -598,15 +615,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             //pass list
             musicSrv.setList(songList);
             musicBound = true;
-            if (songPath != null) {
-                Log.d(TAG, "SongURI: " + songPath);
-                setUpReceivedSong(songPath);
-            }
-            /*if(timeStamp != null) {
-                long timestamp = Long.getLong(timeStamp);
-                timeStamp = null;
-                setUpTimeStamp(timestamp);
-            }*/
+            sendIP();
         }
 
         @Override
@@ -614,14 +623,39 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             musicBound = false;
         }
     };
-    class PlaySongAtTimeStamp extends AsyncTask<Long, Void, Long> {
+
+    /*
+    This class is used on the receiving end. After the song and time stamp have been received,
+    set the receiving device to play or pause the song at a certain time.
+     */
+    class SongActionAtTimeStamp extends AsyncTask<String, Void, Long> {
+        private String actionstring = null;
+        private Context context;
+
+        public SongActionAtTimeStamp(Context c) {
+            context = c;
+        }
+
+        private long getAverageNTPOffset(TimeSync timeSync, int n) {
+            long offsetAcc = 0;
+            for (int i = 0; i < n; i++) {
+                long offset = timeSync.getNTPOffset();
+                Log.d(TAG, "Offset " + i + ": " + offset);
+                offsetAcc += offset;
+            }
+            return  (offsetAcc/n);  //NOTE: this will round the value
+        }
+
         @Override
-        protected Long doInBackground(Long... voids) {
+        protected Long doInBackground(String... voids) {
             try {
-                Long receivedtimestamp = voids[0];
+                String receivedtimestampstring = voids[0];
+                Long receivedtimestamp = Long.parseLong(receivedtimestampstring);
+                actionstring = voids[1];
                 // get current time offset
                 TimeSync timeSync = new TimeSync();
-                long offset = timeSync.getNTPOffset();
+                //long offset = timeSync.getNTPOffset();
+                long offset = getAverageNTPOffset(timeSync, 5);
                 Log.d(TAG, "Offset: " + offset);
                 long localPlayTime = receivedtimestamp - offset; // play song in 30 system seconds
                 Log.d(TAG, "LocalPlayTime: " + localPlayTime);
@@ -631,36 +665,54 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             }
             return Long.valueOf(-1);
         }
+
         @Override
         protected void onPostExecute(Long localPlayTime) {
             // TODO wait, and then play song
             Log.d(TAG, "OnPostExecute");
-            SongTimer songtimer = new SongTimer(localPlayTime, musicSrv, controller);
+            SongTimer songtimer = new SongTimer(localPlayTime, musicSrv, controller, actionstring,
+                    context);
         }
     }
-    // Async Task Class - time synch
-    class SendTimeStamp extends AsyncTask<Void, Void, Long> {
 
-        //
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
+    /*
+    This class is used after a play or pause command has been issued and sends a time stamp to
+     another device and then sets a timer for the action.
+     */
+    class SendTimeStamp extends AsyncTask<String, Void, Long> {
+        private String actionstring = null;
+        private String TAG = "SendTimeStamp";
+        private Context context;
+        public SendTimeStamp(Context c) {
+            this.context = c;
+        }
+
+        private long getAverageNTPOffset(TimeSync timeSync, int n) {
+            long offsetAcc = 0;
+            for (int i = 0; i < n; i++) {
+                long offset = timeSync.getNTPOffset();
+                Log.d(TAG, "Offset " + i + ": " + offset);
+                offsetAcc += offset;
+            }
+            return  (offsetAcc/n);  //NOTE: this will round the value
         }
 
         @Override
-        protected Long doInBackground(Void... voids) {
+        protected Long doInBackground(String... voids) {
+            actionstring = voids[0];
             long result = 0;
             Log.d(TAG, "doInBackground");
             try {
                 // get current time offset
                 TimeSync timeSync = new TimeSync();
-                long offset = timeSync.getNTPOffset();
-                Log.d(TAG, "Offset: " + offset);
-                long localPlayTime = System.currentTimeMillis() + 10000; // play song in 30 system seconds
+                //long offset = timeSync.getNTPOffset();
+                long offset = getAverageNTPOffset(timeSync, 5); //get 5 offset values
+                Log.d(TAG, "Average Offset: " + offset);
+                long localPlayTime = System.currentTimeMillis() + 20000; // take action in 15 seconds
                 Log.d(TAG, "LocalPlayTime: " + localPlayTime);
                 long internetPlayTime = timeSync.setServerPlayTime(offset, localPlayTime);
                 Log.d(TAG, "ServerPlayTime: " + internetPlayTime);
-                sendTimeStamp(internetPlayTime);
+                sendTimeStamp(internetPlayTime, actionstring);
                 result = localPlayTime;
             } catch (Exception e) {
                 Log.e("Error: ", e.getMessage());
@@ -668,52 +720,245 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             return result;
         }
 
-        protected void onProgressUpdate() {
-        }
-
         @Override
         protected void onPostExecute(Long localPlayTime) {
             // TODO wait, and then play song
             Log.d(TAG, "OnPostExecute");
-            SongTimer songtimer = new SongTimer(localPlayTime, musicSrv, controller);
-            /*musicSrv.playSong();
-            if (playbackPaused) {
-                setController();
-                playbackPaused = false;
-            }
-            controller.show(0); */
+            SongTimer songtimer = new SongTimer(localPlayTime, musicSrv, controller, actionstring,
+                    context);
         }
     }
 
-    class PlayerServer extends AsyncTask<Void, Void, String> {
-        @Override
-        protected String doInBackground(Void... params) {
-            try {
-                ServerSocket serverSocket = new ServerSocket(8990);
-                Log.d(TAG, "Server: Socket opened");
-                Socket client = serverSocket.accept();
-                Log.d(TAG, "Server: connection done");
-                // receive mime type
-                DataInputStream is = new DataInputStream(client.getInputStream());
-                String receivedtime = is.readUTF();
+    public class ServerRunnable implements Runnable {
 
-                if (receivedtime.matches("[0-9]+"))    /* mimetype is all numbers --> assume it's timestamp*/ {
-                    return receivedtime;
+        private Context context;
+        private String TAG = "ServerThread";
+        private String dataType = null;
+
+        /**
+         * @param context
+         */
+        public ServerRunnable(Context context) {
+            this.context = context;
+        }
+        @Override
+        public void run() {
+            try {
+                ServerSocket serverSocket = null;
+                serverSocket = new ServerSocket(8990);
+                Log.d(TAG, "Server: Socket opened");
+                while(true) {
+                    Socket client = serverSocket.accept();
+                    Log.d(TAG, "Server: connection done");
+                    // receive data type string
+                    DataInputStream is = new DataInputStream(client.getInputStream());
+                    dataType = is.readUTF();
+                    //check if mimeType is all numbers or not
+                    String timestamp;
+                    Log.d(TAG, "datatype: " + dataType);
+                    switch (dataType) {
+                        case "Play":
+                            timestamp = receiveTimeStamp(client);
+                            receivedCommunication(timestamp);
+                            break;
+                        case "Pause":
+                            timestamp = receiveTimeStamp(client);
+                            receivedCommunication(timestamp);
+                            break;
+                        case "File":
+                            String receivedPath = receiveFile(client);
+                            receivedCommunication(receivedPath);
+                            break;
+                        case "IP":
+                            String receivedIP = receiveIP(client);
+                            receivedCommunication(receivedIP);
+                            break;
+                        case "Resume":
+                            timestamp = receiveTimeStamp(client);
+                            receivedCommunication(timestamp);
+                            break;
+                        case "Next":
+                            timestamp = receiveTimeStamp(client);
+                            receivedCommunication(timestamp);
+                            break;
+                        case "Previous":
+                            timestamp = receiveTimeStamp(client);
+                            receivedCommunication(timestamp);
+                            break;
+                        default:
+                            Log.e(TAG, "No case match");
+                            break;
+                    }
                 }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+
+        private String receiveIP(Socket client) {
+            Log.d(TAG, "receiveIPMethod");
+            DataInputStream is = null;
+            try {
+                is = new DataInputStream(client.getInputStream());
+                String ip = is.readUTF();
+                return ip;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        private String receiveTimeStamp(Socket client) {
+            Log.d(TAG, "recieveTimeStamp");
+            DataInputStream is = null;
+            try {
+                is = new DataInputStream(client.getInputStream());
+                String timeStamp = is.readUTF();
+                return timeStamp;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        private String receiveFile(Socket client) {
+            try {
+                DataInputStream is = new DataInputStream(client.getInputStream());
+                String mimeType = is.readUTF();
+                Log.d("String", "type: " + mimeType);
+                String fileExtention = null;
+                try {
+                    fileExtention = getFileExtention(mimeType);
+                } catch (MimeTypeException e) {
+                    e.printStackTrace();
+                }
+                Log.d(TAG, "File Extention: " + fileExtention);
+                final File f = new File(context.getFilesDir().getParent() + "/"
+                        + "/wifip2pshared-" + System.currentTimeMillis()
+                        + fileExtention);
+                File dirs = new File(f.getParent());
+                if (!dirs.exists())
+                    dirs.mkdirs();
+                f.createNewFile();
+
+                Log.d(TAG, "server: copying files " + f.toString());
+                InputStream inputstream = client.getInputStream();
+                copyFile(inputstream, new FileOutputStream(f));
+                return f.getAbsolutePath();
             } catch (Exception e) {
                 e.printStackTrace();
             }
             return null;
         }
 
-        @Override
-        protected void onPostExecute(String result) {
-            if (result != null && result.matches("[0-9]+")) {
-                if (result != null) {
-                    Long receivedTime = Long.parseLong(result);
-                    setUpTimeStamp(receivedTime);
+        public void receivedCommunication(String result) {
+            String musicaction;
+            if(dataType != null) {
+                switch (dataType) {
+                    case "File":
+                        dataType = null;
+                        Log.d("DeviceDeatilFrag", "File copied - " + result);
+                        // send a broadcast to add the file to the media store
+                        File resultFile = new File(result);
+                        Uri resultUri = Uri.fromFile(resultFile);
+                        Intent mediaIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, resultUri);
+                        try {
+                            context.sendBroadcast(mediaIntent);
+                            //context.sendBroadcast(new Intent(Intent.ACTION_MEDIA_MOUNTED,
+                            //        resultUri));
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                        }
+                        // scan the media store for the file, return its path and uri
+                        File file = new File(result);
+                        MediaScannerConnection.scanFile(context, new String[]{
+                                file.getAbsolutePath()
+                        }, null, new MediaScannerConnection.OnScanCompletedListener() {
+                            @Override
+                            public void onScanCompleted(String path, Uri uri) {
+                                // when scan completes, bundle the path and uri and launch player
+                                Log.v(TAG,
+                                        "Scan completed: file " + path + " was scanned successfully: " + uri);
+                                Log.d("DeviceDetailFrag", "start music player intent");
+                                setUpReceivedSong(path);
+                            }
+                        });
+                        break;
+                    case "IP":
+                        dataType = null;
+                        WifiSingleton.getInstance().setMemberIP(result);
+                        break;
+                    case "Play":
+                        musicaction = dataType;
+                        dataType = null;
+                        Long playtime = Long.parseLong(result);
+                        //create
+                        setUpTimeStamp(playtime, musicaction);
+                        break;
+                    case "Pause":
+                        musicaction = dataType;
+                        dataType = null;
+                        Long pausetime = Long.parseLong(result);
+                        setUpTimeStamp(pausetime, musicaction);
+                        break;
+                    case "Resume":
+                        musicaction = dataType;
+                        dataType = null;
+                        Long resumetime = Long.parseLong(result);
+                        setUpTimeStamp(resumetime, musicaction);
+                        break;
+                    case "Next":
+                        musicaction = dataType;
+                        dataType = null;
+                        Long nextPlayTime = Long.parseLong(result);
+                        setUpTimeStamp(nextPlayTime, musicaction);
+                        break;
+                    case "Previous":
+                        musicaction = dataType;
+                        dataType = null;
+                        Long previousPlayTime = Long.parseLong(result);
+                        setUpTimeStamp(previousPlayTime, musicaction);
+                        break;
+                    default:
+                        Log.e(TAG, "No case match");
+                        break;
                 }
             }
+        }
+
+        public String getFileExtention(String mime) throws MimeTypeException {
+            switch (mime) {
+                case "audio/mpeg":
+                    return ".mp3";
+                case "audio/mp4":
+                    return ".m4a";
+                case "audio/flac":
+                    return ".flac";
+            }
+            throw new MimeTypeException("No Mime Type Found");
+        }
+
+        public boolean copyFile(InputStream inputStream, OutputStream out) {
+            byte buf[] = new byte[1024];
+            int len;
+            long startTime = System.currentTimeMillis();
+            Log.d(TAG, "starting tranfser of file in copy file");
+            try {
+                while ((len = inputStream.read(buf)) != -1) {
+                    out.write(buf, 0, len);
+                }
+                out.flush();
+                out.close();
+                inputStream.close();
+                long endTime = System.currentTimeMillis() - startTime;
+                Log.v("", "Time taken to transfer all bytes is : " + endTime);
+
+            } catch (IOException e) {
+                Log.d(TAG, e.toString());
+                return false;
+            }
+            return true;
         }
     }
 }

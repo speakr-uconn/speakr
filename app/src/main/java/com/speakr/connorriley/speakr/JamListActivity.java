@@ -12,11 +12,9 @@ import android.provider.Settings;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
-import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -176,12 +174,6 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
         startActivity(intent);
     }
 
-    public void openWifiActivity(){
-        //-- Mike 1/6/16
-        Intent intent = new Intent(this, WiFiDirectActivity.class);
-        startActivity(intent);
-    }
-
     public void startNetwork(){
         onConnection = false;
         isDiscovering = true;
@@ -245,9 +237,6 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
                 break;
             case R.id.nav_music_player:
                 openPlayerActivity();
-                break;
-            case R.id.nav_wifi:
-                openWifiActivity();
                 break;
         }
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);

@@ -127,7 +127,6 @@ public class CreateJamActivity extends HamburgerActivity {
         }
     }
 
-
     public void openPlayerActivity(){
         //-- Mike 10/28/15
         Intent intent = new Intent(this, PlayerActivity.class);
@@ -135,11 +134,6 @@ public class CreateJamActivity extends HamburgerActivity {
     }
     public void openHomeAcitivity() {
         Intent intent = new Intent(this, JamListActivity.class);
-        startActivity(intent);
-    }
-    public void openWifiActivity(){
-        //-- Mike 1/6/16
-        Intent intent = new Intent(this, WiFiDirectActivity.class);
         startActivity(intent);
     }
     @Override
@@ -151,9 +145,6 @@ public class CreateJamActivity extends HamburgerActivity {
                 break;
             case R.id.nav_music_player:
                 openPlayerActivity();
-                break;
-            case R.id.nav_wifi:
-                openWifiActivity();
                 break;
         }
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);

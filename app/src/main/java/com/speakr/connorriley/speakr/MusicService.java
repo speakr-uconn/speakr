@@ -69,6 +69,8 @@ public class MusicService extends Service implements
         player.setOnCompletionListener(this);
         player.setOnErrorListener(this);
     }
+
+    @Deprecated
     public void playReceivedSong(String songUri) {
         player.reset();
 

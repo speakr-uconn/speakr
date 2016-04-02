@@ -54,10 +54,7 @@
                 <data android:mimeType="audio/*" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".WiFiDirectActivity"
-            android:label="@string/title_activity_wifi" >
-        </activity>
+
         <service android:name=".MusicService" />
         <service android:name=".FileTransferService"/>
     </application>
