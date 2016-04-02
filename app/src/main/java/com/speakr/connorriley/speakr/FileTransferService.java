@@ -157,7 +157,7 @@ public class FileTransferService extends IntentService {
 
                 Intent broadcastIntent = new Intent();
                 broadcastIntent.addCategory(Intent.CATEGORY_DEFAULT);
-                broadcastIntent.setAction(PlayerActivity.PlayerActivityReceiver.ACTION_RESP);
+                broadcastIntent.setAction(JamListActivity.JamListActivityReceiver.ACTION_RESP);
                 broadcastIntent.putExtra(PARAM_OUT_MSG, "Sent IP");
                 sendBroadcast(broadcastIntent);
 

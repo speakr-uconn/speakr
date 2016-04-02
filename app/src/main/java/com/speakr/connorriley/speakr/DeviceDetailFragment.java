@@ -181,6 +181,9 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                     wifiSingleton.getInfo().groupOwnerAddress.getHostAddress());
             serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, 8988);
             Log.d(TAG, "sending IP to group owner");
+            getActivity().getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                    WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+            showProgressDialog("Sending IP");
             getActivity().startService(serviceIntent);
         }
     }
@@ -215,5 +218,14 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
         view.setText(R.string.empty);
         mContentView.findViewById(R.id.btn_start_client).setVisibility(View.GONE);
         this.getView().setVisibility(View.GONE);
+    }
+
+    private void showProgressDialog(String s){
+        if (progressDialog != null && progressDialog.isShowing()) {
+            progressDialog.dismiss();
+        }
+
+        progressDialog = ProgressDialog.show(getActivity().getApplicationContext(), s,
+                "Please wait");
     }
 }

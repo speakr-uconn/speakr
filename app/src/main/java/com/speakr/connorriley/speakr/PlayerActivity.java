@@ -980,7 +980,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         @Override
         public void onReceive(Context context, Intent intent) {
             String text = intent.getStringExtra(FileTransferService.PARAM_OUT_MSG);
-            Log.d("BROADCAST RECEIVER", "BROADCAST RECEIVED");
+            Log.d("player activity", "BROADCAST RECEIVED");
             progressDialog.dismiss();
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
             if(text.equals("Sent IP")){
