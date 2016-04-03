@@ -67,7 +67,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     ProgressDialog progressDialog = null;
     DrawerLayout drawerLayout;
     Toolbar toolbar;
-    private String TAG = "PlayerActivity";
+    private String TAG = PlayerActivity.class.getSimpleName();
     // Broadcast receiver to determine when music player has been prepared
     private BroadcastReceiver onPrepareReceiver = new BroadcastReceiver() {
         @Override
@@ -513,19 +513,25 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     protected void onStop() {
         controller.hide();
         unbindService(musicConnection);
+        try {
+            stopService(playIntent);
+        } catch(IllegalArgumentException e) {
+            e.printStackTrace();
+        }
+        musicSrv = null;
+        WifiSingleton.getInstance().disconnect();
         super.onStop();
     }
 
     @Override
     protected void onPause() {
+        Log.d(TAG, "On Pause");
         super.onPause();
         paused = true;
     }
 
     @Override
     protected void onDestroy() {
-        stopService(playIntent);
-        musicSrv = null;
         super.onDestroy();
     }
 

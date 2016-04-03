@@ -42,7 +42,8 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
     DeviceDetailFragment frag_detail;
     boolean isDiscovering = false;
 
-    public static final String TAG = "wifidrect";
+    public static final String TAG = JamListActivity.class.getSimpleName();
+
     private WifiP2pManager manager;
     private WifiP2pManager.Channel channel;
     private BroadcastReceiver receiver;
@@ -62,6 +63,7 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d(TAG, "OnCreate");
         setContentView(R.layout.activity_jamlist);
 
         frag_list = (DeviceListFragment) getFragmentManager()
@@ -363,6 +365,8 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
 
     @Override
     public void onResume() {
+        Log.d(TAG, "OnResume");
+        WifiSingleton.getInstance().disconnect();
         super.onResume();
         receiver = new JamListBroadcastReceiver(manager, channel, this);
         registerReceiver(receiver, intentFilter);
@@ -371,11 +375,19 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
 
     @Override
     public void onPause() {
-        super.onPause();
+        Log.d(TAG, "OnPause");
         unregisterReceiver(receiver);
+        super.onPause();
+    }
+
+    @Override
+    public void onStop() {
+        Log.d(TAG, "OnStop");
+        super.onStop();
     }
     @Override
     public void onDestroy() {
+        Log.d(TAG, "OnDestroy");
         super.onDestroy();
         //unregisterReceiver(receiver);
     }
