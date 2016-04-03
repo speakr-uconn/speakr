@@ -483,7 +483,9 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
         public void onReceive(Context context, Intent intent) {
             String text = intent.getStringExtra(FileTransferService.PARAM_OUT_MSG);
             Log.d("Jam list activity", "BROADCAST RECEIVED");
-            progressDialog.dismiss();
+            if (progressDialog != null && progressDialog.isShowing()) {
+                progressDialog.dismiss();
+            }
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
             if(text.equals("Sent IP")){
                 Toast.makeText(JamListActivity.this, "IP successfully sent",

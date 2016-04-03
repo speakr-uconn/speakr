@@ -225,7 +225,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
             progressDialog.dismiss();
         }
 
-        progressDialog = ProgressDialog.show(getActivity().getApplicationContext(), s,
+        progressDialog = ProgressDialog.show(getActivity(), s,
                 "Please wait");
     }
 }
