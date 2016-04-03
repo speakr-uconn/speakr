@@ -1,5 +1,6 @@
 package com.speakr.connorriley.speakr;
 
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -22,6 +23,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.WindowManager;
 import android.widget.Toast;
 
 import java.io.DataInputStream;
@@ -51,6 +53,7 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
     private boolean retryChannel = false;
     private boolean isWifiP2pEnabled = false;
     private boolean onConnection = false;
+    ProgressDialog progressDialog = null;
 
     public void setIsWifiP2pEnabled(boolean isWifiP2pEnabled) {
         this.isWifiP2pEnabled = isWifiP2pEnabled;
@@ -76,6 +79,11 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
         //setupTablayout();
         //setupCollapsingToolbarLayout();
         setupFab();
+
+        IntentFilter filter = new IntentFilter(JamListActivityReceiver.ACTION_RESP);
+        filter.addCategory(Intent.CATEGORY_DEFAULT);
+        receiver = new JamListActivityReceiver();
+        registerReceiver(receiver, filter);
 
         IPServerRunnable ipserverRunnable = new IPServerRunnable(getApplicationContext());
         Thread thread = new Thread(ipserverRunnable);
@@ -477,6 +485,24 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
             context.startService(serviceIntent);
             Intent playerIntent = new Intent(context, PlayerActivity.class);
             startActivity(playerIntent);
+        }
+    }
+
+    public class JamListActivityReceiver extends BroadcastReceiver {
+        public static final String ACTION_RESP =
+                "idk";
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String text = intent.getStringExtra(FileTransferService.PARAM_OUT_MSG);
+            Log.d("Jam list activity", "BROADCAST RECEIVED");
+            if (progressDialog != null && progressDialog.isShowing()) {
+                progressDialog.dismiss();
+            }
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+            if(text.equals("Sent IP")){
+                Toast.makeText(JamListActivity.this, "IP successfully sent",
+                        Toast.LENGTH_SHORT).show();
+            }
         }
     }
 }
