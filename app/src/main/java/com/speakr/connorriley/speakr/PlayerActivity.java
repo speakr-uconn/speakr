@@ -67,6 +67,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     ProgressDialog progressDialog = null;
     DrawerLayout drawerLayout;
     Toolbar toolbar;
+    private Thread serverthread;
     private String TAG = PlayerActivity.class.getSimpleName();
     // Broadcast receiver to determine when music player has been prepared
     private BroadcastReceiver onPrepareReceiver = new BroadcastReceiver() {
@@ -88,14 +89,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         songQueueView = (ListView) findViewById(R.id.song_queue);
         songListView = (ListView) findViewById(R.id.song_list);
         songQueue = new ArrayList<Song>();
-        IntentFilter filter = new IntentFilter(PlayerActivityReceiver.ACTION_RESP);
-        filter.addCategory(Intent.CATEGORY_DEFAULT);
-        receiver = new PlayerActivityReceiver();
-        registerReceiver(receiver, filter);
         getPermissions();
-        ServerRunnable serverRunnable = new ServerRunnable(getApplicationContext());
-        Thread thread = new Thread(serverRunnable);
-        thread.start();
         config();
 
     }
@@ -103,7 +97,18 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     @Override
     protected void onResume() {
         super.onResume();
-
+        ServerRunnable serverRunnable = new ServerRunnable(getApplicationContext());
+        serverthread = new Thread(serverRunnable);
+        serverthread.start();
+        IntentFilter filter = new IntentFilter(PlayerActivityReceiver.ACTION_RESP);
+        filter.addCategory(Intent.CATEGORY_DEFAULT);
+        receiver = new PlayerActivityReceiver();
+        registerReceiver(receiver, filter);
+        if (playIntent == null) {
+            playIntent = new Intent(this, MusicService.class);
+            bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE);
+            startService(playIntent);
+        }
         // Set up receiver for media player onPrepared broadcast
         LocalBroadcastManager.getInstance(this).registerReceiver(onPrepareReceiver,
                 new IntentFilter("MEDIA_PLAYER_PREPARED"));
@@ -113,6 +118,23 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             setController();
             paused = false;
         }
+    }
+
+    @Override
+    protected void onPause() {
+        Log.d(TAG, "On Pause");
+        try {
+            unbindService(musicConnection);
+            unregisterReceiver(receiver);
+            stopService(playIntent);
+            WifiSingleton.getInstance().disconnect();
+        } catch(IllegalArgumentException e) {
+            e.printStackTrace();
+        }
+        controller.hide();
+        musicSrv = null;
+        super.onPause();
+        paused = true;
     }
 
     private void setUpTimeStamp(Long receivedTime, String actionstring) {
@@ -497,42 +519,6 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             setController();
             playbackPaused = false;
         }
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        if (playIntent == null) {
-            playIntent = new Intent(this, MusicService.class);
-            bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE);
-            startService(playIntent);
-        }
-    }
-
-    @Override
-    protected void onStop() {
-        controller.hide();
-        unbindService(musicConnection);
-        try {
-            stopService(playIntent);
-        } catch(IllegalArgumentException e) {
-            e.printStackTrace();
-        }
-        musicSrv = null;
-        WifiSingleton.getInstance().disconnect();
-        super.onStop();
-    }
-
-    @Override
-    protected void onPause() {
-        Log.d(TAG, "On Pause");
-        super.onPause();
-        paused = true;
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
     }
 
     @Override

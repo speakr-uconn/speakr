@@ -66,6 +66,7 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        WifiSingleton.getInstance().disconnect();
         Log.d(TAG, "OnCreate");
         setContentView(R.layout.activity_jamlist);
 
@@ -208,9 +209,6 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
         if (!isWifiP2pEnabled) {
             //Toast.makeText(JamListActivity.this, R.string.p2p_off_warning,
             //        Toast.LENGTH_SHORT).show();
-
-            //startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS)); //-- enable p2p on/off
-            //return;
         }
 
         frag_list.onInitiateDiscovery();
@@ -374,7 +372,6 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
     @Override
     public void onResume() {
         Log.d(TAG, "OnResume");
-        WifiSingleton.getInstance().disconnect();
         super.onResume();
         receiver = new JamListBroadcastReceiver(manager, channel, this);
         registerReceiver(receiver, intentFilter);
