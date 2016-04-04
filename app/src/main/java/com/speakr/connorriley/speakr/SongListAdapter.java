@@ -57,7 +57,7 @@ public class SongListAdapter extends BaseAdapter {
         Song currSong = songs.get(position);
         //get title and artist strings
 
-        if(currSong.getTitle().length() > 25) {
+        if(currSong.getTitle() != null && currSong.getTitle().length() > 25) {
             songView.setText(currSong.getTitle().substring(0, 24) + "...");
         }
         else{

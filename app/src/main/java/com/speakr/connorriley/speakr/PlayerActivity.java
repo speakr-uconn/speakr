@@ -162,6 +162,12 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             mmr.setDataSource(getApplicationContext(), Uri.parse(songpath));
             String title = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
             String artist = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
+            if(title == null) {
+                title = "NULL";
+            }
+            if(artist == null) {
+                artist = "NULL";
+            }
             Log.d(TAG, "Title: " + title);
             Log.d(TAG, "Artist: " + artist);
             final Song receivedSong = new Song(songpath, title, artist, 0);
@@ -342,7 +348,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                 serviceIntent.putExtra(FileTransferService.EXTRAS_ADDRESS,
                         wifiSingleton.getMemberIP());
             }
-            serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, 8990);
+            serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, 8991);
             Log.d("DeviceDetailFragment", "startService about to be called");
             getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
                     WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
@@ -365,7 +371,8 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         try {
             boolean addedSong = false;
             for (int i = 0; i < songList.size(); i++) {
-                if (songCompare(receivedSong, songList.get(i))) {
+                if (receivedSong != null && songList.get(i) != null &&
+                        songCompare(receivedSong, songList.get(i))) {
                     Log.d(TAG, "Song found in list, adding to queue");
                     songQueue.add(songList.get(i));
                     addedSong = true;
@@ -474,7 +481,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                         wifiSingleton.getMemberIP());
             }
 
-            serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, 8990);
+            serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, 8991);
             Log.d("PlayerActivity", "startService about to be called for sending timestamp");
             //getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
             //        WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
@@ -694,6 +701,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
 
         public SendTimeStamp(Context c) {
             this.context = c;
+            offsetArray = new ArrayList<>();
         }
 
         //check if we can read and write to external files
@@ -785,7 +793,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         public void run() {
             try {
                 ServerSocket serverSocket = null;
-                serverSocket = new ServerSocket(8990);
+                serverSocket = new ServerSocket(8991);
                 Log.d(TAG, "Server: Socket opened");
                 while(true) {
                     Socket client = serverSocket.accept();
