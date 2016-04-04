@@ -53,7 +53,10 @@ public class MusicService extends Service implements
 
     @Override
     public boolean onUnbind(Intent intent){
-        player.stop();
+        if(player.isPlaying()) {
+            player.stop();
+        }
+
         player.release();
         return false;
     }
