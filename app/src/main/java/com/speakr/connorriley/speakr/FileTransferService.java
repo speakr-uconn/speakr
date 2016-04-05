@@ -32,7 +32,7 @@ import java.util.regex.Pattern;
  * Created by connorriley on 12/27/15.
  */
 public class FileTransferService extends IntentService {
-    private static final int SOCKET_TIMEOUT = 30000;
+    private static final int SOCKET_TIMEOUT = 5000;
     public static final String ACTION_SEND_FILE = "com.example.android.wifidirect.SEND_FILE";
     public static final String ACTION_SEND_TIMESTAMP = "send_timestamp";
     public static final String ACTION_SEND_ADDRESS = "send_address";
