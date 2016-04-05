@@ -65,6 +65,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     private ListView songQueueView, songListView;
     private MusicService musicSrv;
     private Intent playIntent;
+    final private long ACTION_DELAY = 5000;
     private boolean musicBound = false;
     private MusicController controller;
     private PlayerActivityReceiver receiver;
@@ -740,7 +741,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                 //long offset = timeSync.getNTPOffset();
                 long offset = getAverageNTPOffset(timeSync, 10); //get 5 offset values
                 Log.d(TAG, "Average Offset: " + offset);
-                long localPlayTime = System.currentTimeMillis() + 5000; // take action in 15 seconds
+                long localPlayTime = System.currentTimeMillis() + ACTION_DELAY; // take action in 15 seconds
                 Log.d(TAG, "LocalPlayTime: " + localPlayTime);
                 long internetPlayTime = timeSync.setServerPlayTime(offset, localPlayTime);
                 Log.d(TAG, "ServerPlayTime: " + internetPlayTime);
