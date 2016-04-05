@@ -711,38 +711,9 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         private String actionstring = null;
         private String TAG = "SendTimeStamp";
         private Context context;
-        private ArrayList<Long> offsetArray;    //for the writeOffsetToFile method
 
         public SendTimeStamp(Context c) {
             this.context = c;
-            offsetArray = new ArrayList<>();
-        }
-
-        //check if we can read and write to external files
-        public boolean isExternalStorageWritable() {
-            String state = Environment.getExternalStorageState();
-            if (Environment.MEDIA_MOUNTED.equals(state)) {
-                return true;
-            }
-            return false;
-        }
-
-        //write every value in offsetArray to the file and then clear the array
-        public void writeOffsetsToFile() {
-            File file = new File(getExternalFilesDir(null), "OffsetValues.txt");
-            try {
-                if (!file.exists()) {
-                    file.createNewFile();
-                }
-                FileWriter writer = new FileWriter(file);
-                for (int i = 0; i < offsetArray.size(); i++) {
-                    writer.write(Long.toString(offsetArray.get(i)) + "\n");
-                }
-                writer.close();
-                offsetArray.clear();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
 
         //ping the NTP server n times for an offset and calculate the
@@ -752,10 +723,8 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             for (int i = 0; i < n; i++) {
                 long offset = timeSync.getNTPOffset();
                 Log.d(TAG, "Offset " + i + ": " + offset);
-                offsetArray.add(offset);
                 offsetAcc += offset;
             }
-            writeOffsetsToFile();
             return  (offsetAcc/n);  //NOTE: this will round the value
         }
 
@@ -769,9 +738,9 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                 // get current time offset
                 TimeSync timeSync = new TimeSync();
                 //long offset = timeSync.getNTPOffset();
-                long offset = getAverageNTPOffset(timeSync, 5); //get 5 offset values
+                long offset = getAverageNTPOffset(timeSync, 10); //get 5 offset values
                 Log.d(TAG, "Average Offset: " + offset);
-                long localPlayTime = System.currentTimeMillis() + 20000; // take action in 15 seconds
+                long localPlayTime = System.currentTimeMillis() + 5000; // take action in 15 seconds
                 Log.d(TAG, "LocalPlayTime: " + localPlayTime);
                 long internetPlayTime = timeSync.setServerPlayTime(offset, localPlayTime);
                 Log.d(TAG, "ServerPlayTime: " + internetPlayTime);
