@@ -25,15 +25,15 @@
                     class="com.speakr.connorriley.speakr.DeviceListFragment"
                     android:id="@+id/frag_list"
                     android:layout_width="match_parent"
-                    android:layout_height="321dp">
-                    <!-- Preview: layout=@layout/row_devices -->
+                    android:layout_height="321dp"
+                    tools:layout="@layout/device_list">
                 </fragment>
                 <fragment
                     class="com.speakr.connorriley.speakr.DeviceDetailFragment"
                     android:id="@+id/frag_detail"
                     android:layout_width="match_parent"
-                    android:layout_height="141dp">
-                    <!-- Preview: layout=@layout/device_detail -->
+                    android:layout_height="141dp"
+                    tools:layout="@layout/device_detail">
                 </fragment>
             </LinearLayout>
     </LinearLayout>

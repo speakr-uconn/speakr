@@ -19,6 +19,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import java.util.ArrayList;
@@ -31,6 +34,7 @@ import java.util.List;
 public class DeviceListFragment extends ListFragment implements PeerListListener {
     private List<WifiP2pDevice> peers = new ArrayList<WifiP2pDevice>();
     private static String TAG = DeviceListFragment.class.getSimpleName();
+    private WiFiPeerListAdapter listAdapter;
 
     ProgressDialog progressDialog = null;
     View mContentView = null;
@@ -39,7 +43,8 @@ public class DeviceListFragment extends ListFragment implements PeerListListener
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        this.setListAdapter(new WiFiPeerListAdapter(getActivity(), R.layout.row_devices, peers));
+        listAdapter = new WiFiPeerListAdapter(getActivity(), R.layout.row_devices, peers);
+        this.setListAdapter(listAdapter);
     }
 
     @Override
@@ -81,6 +86,25 @@ public class DeviceListFragment extends ListFragment implements PeerListListener
     public void onListItemClick(ListView l, View v, int position, long id) {
         WifiP2pDevice device = (WifiP2pDevice) getListAdapter().getItem(position);
         ((DeviceActionListener) getActivity()).showDetails(device);
+        toggleVisibility(position);
+    }
+
+    public void toggleVisibility(int pos){
+        //-- Now we need to show/hide our "fake" layout, while hiding the other ones
+        //-- Hide all other connect/disconnect button layouts
+        List<LinearLayout> proxies = listAdapter.getProxies();
+        Log.d(TAG, "Number of layouts: " + Integer.toString(pos));
+        for(int i = 0; i < proxies.size(); i++) {
+            if(i != pos)
+                proxies.get(i).setVisibility(View.GONE);
+            else {
+                LinearLayout curLayout = proxies.get(i);
+                if(curLayout.getVisibility() == View.VISIBLE)
+                    curLayout.setVisibility(View.GONE);
+                else
+                    curLayout.setVisibility(View.VISIBLE);
+            }
+        }
     }
 
     /**
@@ -88,6 +112,7 @@ public class DeviceListFragment extends ListFragment implements PeerListListener
      */
     private class WiFiPeerListAdapter extends ArrayAdapter<WifiP2pDevice> {
         private List<WifiP2pDevice> items;
+        private List<LinearLayout> proxies = new ArrayList<>();
 
         /**
          * @param context
@@ -101,6 +126,10 @@ public class DeviceListFragment extends ListFragment implements PeerListListener
 
         }
 
+        public List<LinearLayout> getProxies(){
+            return proxies;
+        }
+
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             View v = convertView;
@@ -108,7 +137,13 @@ public class DeviceListFragment extends ListFragment implements PeerListListener
                 LayoutInflater vi = (LayoutInflater) getActivity().getSystemService(
                         Context.LAYOUT_INFLATER_SERVICE);
                 v = vi.inflate(R.layout.row_devices, null);
+                setActionListeners(v);
+
+                //-- Keep our list of proxies so that we can show/hide them as necessary
+                LinearLayout proxy = (LinearLayout) v.findViewById(R.id.ddf_proxy);
+                proxies.add(proxy);
             }
+
             WifiP2pDevice device = items.get(position);
             if (device != null) {
                 TextView top = (TextView) v.findViewById(R.id.device_name);
@@ -122,6 +157,35 @@ public class DeviceListFragment extends ListFragment implements PeerListListener
             }
             return v;
         }
+    }
+
+    public void setActionListeners(View v){
+        Button connect = (Button) v.findViewById(R.id.btn_connect);
+        Button disconnect = (Button) v.findViewById(R.id.btn_disconnect);
+        Button start_client = (Button) v.findViewById(R.id.btn_start_client);
+
+        connect.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ((JamListActivity) getActivity()).ddf_connect();
+            }
+        });
+
+        disconnect.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        ((JamListActivity) getActivity()).ddf_disconnect();
+                    }
+                });
+
+        start_client.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        ((JamListActivity) getActivity()).ddf_start_client();
+                    }
+                });
     }
 
     /**

@@ -47,7 +47,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
     private WifiP2pDevice device;
     private WifiP2pInfo info;
     ProgressDialog progressDialog = null;
-    private static String TAG = "DeviceDetialFragment";
+    private static String TAG = "DeviceDetailFragment";
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
@@ -57,28 +57,12 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         mContentView = inflater.inflate(R.layout.device_detail, null);
+        /*
         mContentView.findViewById(R.id.btn_connect).setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View v) {
-                WifiP2pConfig config = new WifiP2pConfig();
-                config.deviceAddress = device.deviceAddress;
-                config.wps.setup = WpsInfo.PBC;
-                if (progressDialog != null && progressDialog.isShowing()) {
-                    progressDialog.dismiss();
-                }
-                progressDialog = ProgressDialog.show(getActivity(), "Press back to cancel",
-                        "Connecting to :" + device.deviceAddress, true, true
-//                        new DialogInterface.OnCancelListener() {
-//
-//                            @Override
-//                            public void onCancel(DialogInterface dialog) {
-//                                ((DeviceActionListener) getActivity()).cancelDisconnect();
-//                            }
-//                        }
-                );
-                ((DeviceActionListener) getActivity()).connect(config);
-
+                ddf_connect();
             }
         });
 
@@ -87,7 +71,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 
                     @Override
                     public void onClick(View v) {
-                        ((DeviceActionListener) getActivity()).disconnect();
+                        ddf_disconnect();
                     }
                 });
 
@@ -96,20 +80,49 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 
                     @Override
                     public void onClick(View v) {
-                        // Allow user to pick an image from Gallery or other
-                        // registered apps
-                        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                        intent.setType("audio/*");
-                        startActivityForResult(intent, CHOOSE_FILE_RESULT_CODE);
+                        ddf_start_client();
                     }
                 });
+                */
 
         return mContentView;
     }
 
+    public void ddf_connect(){
+        WifiP2pConfig config = new WifiP2pConfig();
+        config.deviceAddress = device.deviceAddress;
+        config.wps.setup = WpsInfo.PBC;
+        if (progressDialog != null && progressDialog.isShowing()) {
+            progressDialog.dismiss();
+        }
+        progressDialog = ProgressDialog.show(getActivity(), "Press back to cancel",
+                "Connecting to :" + device.deviceAddress, true, true
+//                        new DialogInterface.OnCancelListener() {
+//
+//                            @Override
+//                            public void onCancel(DialogInterface dialog) {
+//                                ((DeviceActionListener) getActivity()).cancelDisconnect();
+//                            }
+//                        }
+        );
+        ((DeviceActionListener) getActivity()).connect(config);
+    }
+
+    public void ddf_disconnect(){
+        ((DeviceActionListener) getActivity()).disconnect();
+    }
+
+    public void ddf_start_client(){
+        // Allow user to pick an image from Gallery or other
+        // registered apps
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("audio/*");
+        startActivityForResult(intent, CHOOSE_FILE_RESULT_CODE);
+    }
+
     @Deprecated
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Log.d("devicedetailfragment:", "onActivityResult");
+        Log.d(TAG, "onActivityResult");
 
         // User has picked a song. Transfer it to group owner i.e peer using
         // FileTransferService.
@@ -135,7 +148,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
             progressDialog.dismiss();
         }
         this.info = info;
-        this.getView().setVisibility(View.VISIBLE);
+        //this.getView().setVisibility(View.VISIBLE);
 
         // The owner IP is now known.
         TextView view = (TextView) mContentView.findViewById(R.id.group_owner);
@@ -195,7 +208,8 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
      */
     public void showDetails(WifiP2pDevice device) {
         this.device = device;
-        this.getView().setVisibility(View.VISIBLE);
+        //this.getView().setVisibility(View.VISIBLE);
+
         //TextView view = (TextView) mContentView.findViewById(R.id.device_address);
         //view.setText(device.deviceAddress);
         //view = (TextView) mContentView.findViewById(R.id.device_info);
@@ -217,7 +231,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
         view = (TextView) mContentView.findViewById(R.id.status_text);
         view.setText(R.string.empty);
         mContentView.findViewById(R.id.btn_start_client).setVisibility(View.GONE);
-        this.getView().setVisibility(View.GONE);
+        //this.getView().setVisibility(View.GONE);
     }
 
     private void showProgressDialog(String s){

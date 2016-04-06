@@ -268,6 +268,21 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
             frag_detail.showDetails(device);
     }
 
+    public void ddf_connect(){
+        if(frag_detail != null)
+            frag_detail.ddf_connect();
+    }
+
+    public void ddf_disconnect(){
+        if(frag_detail != null)
+            frag_detail.ddf_disconnect();
+    }
+
+    public void ddf_start_client(){
+        if(frag_detail != null)
+            frag_detail.ddf_start_client();
+    }
+
     @Override
     public void connect(WifiP2pConfig config) {
         manager.connect(channel, config, new WifiP2pManager.ActionListener() {
