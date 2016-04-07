@@ -6,6 +6,8 @@ import android.content.BroadcastReceiver;
 import android.content.ContentUris;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaScannerConnection;
 import android.net.wifi.p2p.WifiP2pInfo;
@@ -14,6 +16,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.AsyncTask;
+import android.os.ParcelFileDescriptor;
 import android.provider.MediaStore;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
@@ -24,6 +27,7 @@ import android.support.v4.widget.DrawerLayout;
 
 import java.io.DataInputStream;
 import java.io.File;
+import java.io.FileDescriptor;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -44,6 +48,7 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.os.IBinder;
 import android.content.ComponentName;
@@ -63,6 +68,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
 
     private ArrayList<Song> songList, songQueue;
     private ListView songQueueView, songListView;
+    ImageView album_art;
     private MusicService musicSrv;
     private Intent playIntent;
     final private long ACTION_DELAY = 5000;
@@ -165,6 +171,15 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             mmr.setDataSource(getApplicationContext(), Uri.parse(songpath));
             String title = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
             String artist = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
+            byte[] art = mmr.getEmbeddedPicture();
+            Bitmap albumArt;
+            if( art != null ){
+                albumArt = BitmapFactory.decodeByteArray(art, 0,art.length);
+            }
+            else{
+                albumArt = null;
+            }
+
             if(title == null) {
                 title = "NULL";
             }
@@ -173,7 +188,8 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             }
             Log.d(TAG, "Title: " + title);
             Log.d(TAG, "Artist: " + artist);
-            final Song receivedSong = new Song(songpath, title, artist, 0);
+
+            final Song receivedSong = new Song(songpath, title, artist, 0, albumArt);
             Handler mainHandler = new Handler(getApplicationContext().getMainLooper());
             mainHandler.post(new Runnable() {
                 @Override
@@ -288,6 +304,8 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         Uri musicUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
         Cursor musicCursor = musicResolver.query(musicUri, null, null, null, null);
 
+
+
         if (musicCursor != null && musicCursor.moveToFirst()) {
             //get columns
             int titleColumn = musicCursor.getColumnIndex
@@ -296,6 +314,8 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                     (android.provider.MediaStore.Audio.Media._ID);
             int artistColumn = musicCursor.getColumnIndex
                     (android.provider.MediaStore.Audio.Media.ARTIST);
+            int albumColumn = musicCursor.getColumnIndex
+                    (MediaStore.Audio.Albums.ALBUM_ID);
 
             //add songs to list
 
@@ -307,9 +327,28 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                 long thisId = musicCursor.getLong(idColumn);
                 String thisTitle = musicCursor.getString(titleColumn);
                 String thisArtist = musicCursor.getString(artistColumn);
+                long albumID = musicCursor.getLong(albumColumn);
+                Bitmap bm = null;
+                try
+                {
+                    final Uri sArtworkUri = Uri
+                            .parse("content://media/external/audio/albumart");
+
+                    Uri uri = ContentUris.withAppendedId(sArtworkUri, albumID);
+
+                    ParcelFileDescriptor pfd = getContentResolver()
+                            .openFileDescriptor(uri, "r");
+
+                    if (pfd != null)
+                    {
+                        FileDescriptor fd = pfd.getFileDescriptor();
+                        bm = BitmapFactory.decodeFileDescriptor(fd);
+                    }
+                } catch (Exception e) {
+                }
                 if (thisArtist.contains("<unknown>") || thisTitle.contains("<unknown>")) //-- Temporary fix to some unwanted items coming up as songs
                     continue;
-                songList.add(new Song(thisId, thisTitle, thisArtist, 0));
+                songList.add(new Song(thisId, thisTitle, thisArtist, 0, bm));
                 //-- TODO: The last parameter corresponds to the ID of the owner
                 //-- We will want to update this 0 to something useful, so we can list songs by person
             }

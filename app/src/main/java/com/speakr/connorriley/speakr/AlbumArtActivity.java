@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.media.MediaMetadataRetriever;
 import android.os.Bundle;
+import android.os.Environment;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -32,7 +33,7 @@ public class AlbumArtActivity extends Activity
         // Ablum_art retrieval code //
         metaRetriver = new MediaMetadataRetriever();
         //different source for this?
-        metaRetriver.setDataSource("/sdcard/audio.mp3");
+        metaRetriver.setDataSource(Environment.getExternalStorageDirectory().getPath());
 
         try {
             art = metaRetriver.getEmbeddedPicture();

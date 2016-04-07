@@ -7,21 +7,33 @@
     android:orientation="horizontal"
     android:padding="1sp" >
 
+    <ImageView
+        android:id="@+id/album_art"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_alignParentLeft="true"
+        />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_centerHorizontal="true">
     <TextView
         android:id="@+id/song_title"
-        android:layout_width="fill_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textColor="#FFFFFF99"
         android:textSize="20sp"
-        android:textStyle="bold" />
+        android:textStyle="bold"/>
 
     <TextView
         android:id="@+id/song_artist"
-        android:layout_width="fill_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textColor="#FFFFFF99"
-        android:layout_alignParentBottom="true"
-        android:textSize="18sp" />
+        android:textSize="18sp"/>
+    </LinearLayout>
 
     <Button
         android:id="@+id/add"
