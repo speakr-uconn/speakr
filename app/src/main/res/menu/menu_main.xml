@@ -3,6 +3,12 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context=".PlayerActivity">
 
+    <item
+        android:id="@+id/action_disconnect"
+        android:orderInCategory="1"
+        app:showAsAction="never"
+        android:title="Disconnect"/>
+    <!--
     <item android:id="@+id/action_settings"
         android:title="@string/action_settings"
         android:orderInCategory="100"
@@ -27,6 +33,7 @@
         android:icon="@mipmap/play"
         android:orderInCategory="2"
         app:showAsAction="never"
-        android:title="End"/>
+        android:title="Play"/>
+     -->
 
 </menu>

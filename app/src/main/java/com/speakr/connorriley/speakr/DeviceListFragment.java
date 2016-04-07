@@ -95,10 +95,10 @@ public class DeviceListFragment extends ListFragment implements PeerListListener
         List<LinearLayout> proxies = listAdapter.getProxies();
         Log.d(TAG, "Number of layouts: " + Integer.toString(pos));
         for(int i = 0; i < proxies.size(); i++) {
+            LinearLayout curLayout = proxies.get(i);
             if(i != pos)
-                proxies.get(i).setVisibility(View.GONE);
+                curLayout.setVisibility(View.GONE);
             else {
-                LinearLayout curLayout = proxies.get(i);
                 if(curLayout.getVisibility() == View.VISIBLE)
                     curLayout.setVisibility(View.GONE);
                 else
