@@ -4,7 +4,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
-    android:background="#FFFFFF"
+    android:background="@color/primaryLight"
     android:paddingTop="20px">
 
     <android.support.v7.widget.CardView
@@ -36,7 +36,7 @@
                     android:src="@drawable/machine" />
                 <LinearLayout
                     android:orientation="vertical"
-                    android:background="#2EFEF7"
+                    android:background="#FFFFFF"
                     android:layout_width="match_parent"
                     android:layout_weight="1"
                     android:layout_height="wrap_content">

@@ -46,6 +46,7 @@ import android.database.Cursor;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageView;
@@ -104,6 +105,13 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         getPermissions();
         config();
 
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
     }
 
     @Override
@@ -648,6 +656,11 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     public boolean onOptionsItemSelected(MenuItem item) {
         //menu item selected
         switch (item.getItemId()) {
+            case R.id.action_disconnect:
+                //openJamsActivity();
+                //((JamListActivity) getActivity()).ddf_disconnect();
+                break;
+            /*
             case R.id.action_shuffle:
                 musicSrv.setShuffle();
                 break;
@@ -656,6 +669,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                 musicSrv = null;
                 System.exit(0);
                 break;
+            */
 
         }
         return super.onOptionsItemSelected(item);

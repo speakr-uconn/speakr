@@ -141,10 +141,12 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
     }
 
     private void setupFab(){
+        /*
         fab = (FloatingActionButton) findViewById(R.id.fab);
         if(fab != null) {
             fab.setOnClickListener(this);
         }
+        */
         setupRefresh();
     }
 
@@ -178,12 +180,15 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
     @Override
     public void onClick(View view) {
 
+        /*
         if(view.getId() == R.id.fab){
 
             Intent intent = new Intent(JamListActivity.this, CreateJamActivity.class);
             startActivity(intent);
         }
-        else if(view.getId() == R.id.refresh_jams){
+        else
+         */
+        if(view.getId() == R.id.refresh_jams){
             if(!isDiscovering)
                 discoverPeers();
         }
