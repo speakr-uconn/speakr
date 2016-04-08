@@ -19,6 +19,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.TextView;
 
 
@@ -46,7 +47,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
     private WifiP2pDevice device;
     private WifiP2pInfo info;
     ProgressDialog progressDialog = null;
-    private static String TAG = "DeviceDetialFragment";
+    private static String TAG = "DeviceDetailFragment";
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
@@ -56,28 +57,12 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         mContentView = inflater.inflate(R.layout.device_detail, null);
+        /*
         mContentView.findViewById(R.id.btn_connect).setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View v) {
-                WifiP2pConfig config = new WifiP2pConfig();
-                config.deviceAddress = device.deviceAddress;
-                config.wps.setup = WpsInfo.PBC;
-                if (progressDialog != null && progressDialog.isShowing()) {
-                    progressDialog.dismiss();
-                }
-                progressDialog = ProgressDialog.show(getActivity(), "Press back to cancel",
-                        "Connecting to :" + device.deviceAddress, true, true
-//                        new DialogInterface.OnCancelListener() {
-//
-//                            @Override
-//                            public void onCancel(DialogInterface dialog) {
-//                                ((DeviceActionListener) getActivity()).cancelDisconnect();
-//                            }
-//                        }
-                );
-                ((DeviceActionListener) getActivity()).connect(config);
-
+                ddf_connect();
             }
         });
 
@@ -86,7 +71,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 
                     @Override
                     public void onClick(View v) {
-                        ((DeviceActionListener) getActivity()).disconnect();
+                        ddf_disconnect();
                     }
                 });
 
@@ -95,20 +80,49 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 
                     @Override
                     public void onClick(View v) {
-                        // Allow user to pick an image from Gallery or other
-                        // registered apps
-                        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                        intent.setType("audio/*");
-                        startActivityForResult(intent, CHOOSE_FILE_RESULT_CODE);
+                        ddf_start_client();
                     }
                 });
+                */
 
         return mContentView;
     }
 
-    @Override
+    public void ddf_connect(){
+        WifiP2pConfig config = new WifiP2pConfig();
+        config.deviceAddress = device.deviceAddress;
+        config.wps.setup = WpsInfo.PBC;
+        if (progressDialog != null && progressDialog.isShowing()) {
+            progressDialog.dismiss();
+        }
+        progressDialog = ProgressDialog.show(getActivity(), "Press back to cancel",
+                "Connecting to :" + device.deviceAddress, true, true
+//                        new DialogInterface.OnCancelListener() {
+//
+//                            @Override
+//                            public void onCancel(DialogInterface dialog) {
+//                                ((DeviceActionListener) getActivity()).cancelDisconnect();
+//                            }
+//                        }
+        );
+        ((DeviceActionListener) getActivity()).connect(config);
+    }
+
+    public void ddf_disconnect(){
+        ((DeviceActionListener) getActivity()).disconnect();
+    }
+
+    public void ddf_start_client(){
+        // Allow user to pick an image from Gallery or other
+        // registered apps
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("audio/*");
+        startActivityForResult(intent, CHOOSE_FILE_RESULT_CODE);
+    }
+
+    @Deprecated
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Log.d("devicedetailfragment:", "onActivityResult");
+        Log.d(TAG, "onActivityResult");
 
         // User has picked a song. Transfer it to group owner i.e peer using
         // FileTransferService.
@@ -134,7 +148,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
             progressDialog.dismiss();
         }
         this.info = info;
-        this.getView().setVisibility(View.VISIBLE);
+        //this.getView().setVisibility(View.VISIBLE);
 
         // The owner IP is now known.
         TextView view = (TextView) mContentView.findViewById(R.id.group_owner);
@@ -158,23 +172,33 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
         // socket.
 
         if (info.groupFormed && info.isGroupOwner) {
-            Intent intent = new Intent(getActivity(), PlayerActivity.class);
-            startActivity(intent);
-
-            //new FileServerAsyncTask(getActivity(), mContentView.findViewById(R.id.status_text))
-            //        .execute();
+            Log.d(TAG, "Group Formed and is group owner");
+            // wait for ip address of member
         } else if (info.groupFormed) {
-            Intent intent = new Intent(getActivity(), PlayerActivity.class);
-            startActivity(intent);
-            // The other device acts as the client. In this case, we enable the
-            // get file button.
-            //mContentView.findViewById(R.id.btn_start_client).setVisibility(View.VISIBLE);
-            //((TextView) mContentView.findViewById(R.id.status_text)).setText(getResources()
-            //        .getString(R.string.client_text));
+            Log.d(TAG, "Group formed and is member, sending IP");
+            // send the ip address
+            sendIP();
+
         }
 
         // hide the connect button
         //mContentView.findViewById(R.id.btn_connect).setVisibility(View.GONE);
+    }
+
+    private void sendIP() {
+        WifiSingleton wifiSingleton = WifiSingleton.getInstance();
+        if (wifiSingleton.getInfo() != null && !wifiSingleton.getInfo().isGroupOwner) {
+            Intent serviceIntent = new Intent(getActivity(), FileTransferService.class);
+            serviceIntent.setAction(FileTransferService.ACTION_SEND_ADDRESS);
+            serviceIntent.putExtra(FileTransferService.EXTRAS_ADDRESS,
+                    wifiSingleton.getInfo().groupOwnerAddress.getHostAddress());
+            serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, 8988);
+            Log.d(TAG, "sending IP to group owner");
+            getActivity().getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                    WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+            showProgressDialog("Sending IP");
+            getActivity().startService(serviceIntent);
+        }
     }
 
     /**
@@ -184,7 +208,8 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
      */
     public void showDetails(WifiP2pDevice device) {
         this.device = device;
-        this.getView().setVisibility(View.VISIBLE);
+        //this.getView().setVisibility(View.VISIBLE);
+
         //TextView view = (TextView) mContentView.findViewById(R.id.device_address);
         //view.setText(device.deviceAddress);
         //view = (TextView) mContentView.findViewById(R.id.device_info);
@@ -206,28 +231,15 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
         view = (TextView) mContentView.findViewById(R.id.status_text);
         view.setText(R.string.empty);
         mContentView.findViewById(R.id.btn_start_client).setVisibility(View.GONE);
-        this.getView().setVisibility(View.GONE);
+        //this.getView().setVisibility(View.GONE);
     }
 
-    public static boolean copyFile(InputStream inputStream, OutputStream out) {
-        byte buf[] = new byte[1024];
-        int len;
-        long startTime = System.currentTimeMillis();
-        Log.d(TAG, "starting tranfser of file in copy file");
-        try {
-            while ((len = inputStream.read(buf)) != -1) {
-                out.write(buf, 0, len);
-            }
-            out.flush();
-            out.close();
-            inputStream.close();
-            long endTime = System.currentTimeMillis() - startTime;
-            Log.v("", "Time taken to transfer all bytes is : " + endTime);
-
-        } catch (IOException e) {
-            Log.d(TAG, e.toString());
-            return false;
+    private void showProgressDialog(String s){
+        if (progressDialog != null && progressDialog.isShowing()) {
+            progressDialog.dismiss();
         }
-        return true;
+
+        progressDialog = ProgressDialog.show(getActivity(), s,
+                "Please wait");
     }
 }

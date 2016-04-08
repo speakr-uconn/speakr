@@ -28,10 +28,19 @@ public class TimeSync {
     }
     public long getNTPOffset() {
         long offset = 0;
-        if (client.requestTime("0.north-america.pool.ntp.org", 5000)) // server path
+        if (client.requestTime("0.north-america.pool.ntp.org", 1000)) // server path
         {
-            Log.d(TAG, "Entered If");
+            Log.d("SendTimeStamp", "Entered pool 0");
             offset = client.getNtpTime() + SystemClock.elapsedRealtime() - client.getNtpTimeReference() - System.currentTimeMillis();
+            Log.d(TAG, "Offset: " + offset);
+            return offset;
+        }
+        else if (client.requestTime("1.north-america.pool.ntp.org", 1000)) // server path
+        {
+            Log.d("SendTimeStamp", "Entered pool 1");
+            offset = client.getNtpTime() + SystemClock.elapsedRealtime() - client.getNtpTimeReference() - System.currentTimeMillis();
+            Log.d(TAG, "Offset: " + offset);
+            return offset;
         }
         Log.d(TAG, "Offset: " + offset);
         return offset;

@@ -1,5 +1,8 @@
 package com.speakr.connorriley.speakr;
 
+import android.graphics.Bitmap;
+import android.graphics.Color;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -7,6 +10,7 @@ import java.util.ArrayList;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -53,11 +57,14 @@ public class SongListAdapter extends BaseAdapter {
         //-- Get title and artist views
         TextView songView = (TextView)songLay.findViewById(R.id.song_title);
         TextView artistView = (TextView)songLay.findViewById(R.id.song_artist);
-        //get song using position
+        ImageView albumView = (ImageView)songLay.findViewById(R.id.album_art);
+                //get song using position
         Song currSong = songs.get(position);
         //get title and artist strings
 
-        if(currSong.getTitle().length() > 25) {
+
+
+        if(currSong.getTitle() != null && currSong.getTitle().length() > 25) {
             songView.setText(currSong.getTitle().substring(0, 24) + "...");
         }
         else{
@@ -65,6 +72,16 @@ public class SongListAdapter extends BaseAdapter {
         }
 
         artistView.setText(currSong.getArtist());
+        Bitmap albumArt = currSong.getAlbumArt();
+        if(albumArt != null){
+            Log.e("album art", "ALBUM ART NOT NULL");
+            albumView.setImageBitmap(albumArt);
+        }
+
+        else{
+            Log.e("album art", "ALBUM ART NULL");
+            albumView.setImageResource(R.drawable.machine);
+        }
 
         final Button b = (Button) convertView.findViewById(R.id.add);
 

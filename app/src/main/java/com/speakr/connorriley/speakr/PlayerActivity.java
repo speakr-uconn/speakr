@@ -1,16 +1,22 @@
 package com.speakr.connorriley.speakr;
 
 import android.Manifest;
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.ContentUris;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaScannerConnection;
 import android.net.wifi.p2p.WifiP2pInfo;
+import android.os.Looper;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.AsyncTask;
+import android.os.ParcelFileDescriptor;
 import android.provider.MediaStore;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
@@ -21,10 +27,13 @@ import android.support.v4.widget.DrawerLayout;
 
 import java.io.DataInputStream;
 import java.io.File;
+import java.io.FileDescriptor;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Array;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -37,6 +46,10 @@ import android.database.Cursor;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.Window;
+import android.view.WindowManager;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.os.IBinder;
 import android.content.ComponentName;
@@ -46,6 +59,7 @@ import android.content.ServiceConnection;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.MediaController.MediaPlayerControl;
+import android.widget.Toast;
 
 public class PlayerActivity extends HamburgerActivity implements View.OnClickListener, MediaPlayerControl {
     //-- Referenced the following websites:
@@ -55,14 +69,19 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
 
     private ArrayList<Song> songList, songQueue;
     private ListView songQueueView, songListView;
+    ImageView album_art;
     private MusicService musicSrv;
     private Intent playIntent;
+    final private long ACTION_DELAY = 5000;
     private boolean musicBound = false;
     private MusicController controller;
+    private PlayerActivityReceiver receiver;
     private boolean paused = false, playbackPaused = false;     // playbackpuased is not updated correctly
+    ProgressDialog progressDialog = null;
     DrawerLayout drawerLayout;
     Toolbar toolbar;
-    private String TAG = "PlayerActivity";
+    private Thread serverthread;
+    private String TAG = PlayerActivity.class.getSimpleName();
     // Broadcast receiver to determine when music player has been prepared
     private BroadcastReceiver onPrepareReceiver = new BroadcastReceiver() {
         @Override
@@ -84,16 +103,32 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         songListView = (ListView) findViewById(R.id.song_list);
         songQueue = new ArrayList<Song>();
         getPermissions();
-        ServerRunnable serverRunnable = new ServerRunnable(getApplicationContext());
-        Thread thread = new Thread(serverRunnable);
-        thread.start();
         config();
+
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-
+        ServerRunnable serverRunnable = new ServerRunnable(getApplicationContext());
+        serverthread = new Thread(serverRunnable);
+        serverthread.start();
+        IntentFilter filter = new IntentFilter(PlayerActivityReceiver.ACTION_RESP);
+        filter.addCategory(Intent.CATEGORY_DEFAULT);
+        receiver = new PlayerActivityReceiver();
+        registerReceiver(receiver, filter);
+        if (playIntent == null) {
+            playIntent = new Intent(this, MusicService.class);
+            bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE);
+            startService(playIntent);
+        }
         // Set up receiver for media player onPrepared broadcast
         LocalBroadcastManager.getInstance(this).registerReceiver(onPrepareReceiver,
                 new IntentFilter("MEDIA_PLAYER_PREPARED"));
@@ -105,23 +140,38 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         }
     }
 
+    @Override
+    protected void onPause() {
+        Log.d(TAG, "On Pause");
+        try {
+            unbindService(musicConnection);
+            unregisterReceiver(receiver);
+            stopService(playIntent);
+            WifiSingleton.getInstance().disconnect();
+        } catch(IllegalArgumentException e) {
+            e.printStackTrace();
+        }
+        controller.hide();
+        musicSrv = null;
+        super.onPause();
+        paused = true;
+    }
+
     private void setUpTimeStamp(Long receivedTime, String actionstring) {
         Log.d(TAG, "timeStampReceived: " + receivedTime);
         new SongActionAtTimeStamp(getApplicationContext()).execute(
                 receivedTime.toString(), actionstring);
     }
-    private void sendIP() {
-        WifiSingleton wifiSingleton = WifiSingleton.getInstance();
-        if (wifiSingleton.getInfo() != null && !wifiSingleton.getInfo().isGroupOwner) {
-            Intent serviceIntent = new Intent(this, FileTransferService.class);
-            serviceIntent.setAction(FileTransferService.ACTION_SEND_ADDRESS);
-            serviceIntent.putExtra(FileTransferService.EXTRAS_ADDRESS,
-                    wifiSingleton.getInfo().groupOwnerAddress.getHostAddress());
-            serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, 8990);
-            Log.d(TAG, "sending IP to group owner");
-            startService(serviceIntent);
+
+    private void showProgressDialog(String s){
+        if (progressDialog != null && progressDialog.isShowing()) {
+            progressDialog.dismiss();
         }
+
+        progressDialog = ProgressDialog.show(this, s,
+                "Please wait");
     }
+
     private void setUpReceivedSong(String songpath) {
         Log.d(TAG, "setupreceivedsong");
         try {
@@ -129,9 +179,25 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             mmr.setDataSource(getApplicationContext(), Uri.parse(songpath));
             String title = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
             String artist = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
+            byte[] art = mmr.getEmbeddedPicture();
+            Bitmap albumArt;
+            if( art != null ){
+                albumArt = BitmapFactory.decodeByteArray(art, 0,art.length);
+            }
+            else{
+                albumArt = null;
+            }
+
+            if(title == null) {
+                title = "NULL";
+            }
+            if(artist == null) {
+                artist = "NULL";
+            }
             Log.d(TAG, "Title: " + title);
             Log.d(TAG, "Artist: " + artist);
-            final Song receivedSong = new Song(songpath, title, artist, 0);
+
+            final Song receivedSong = new Song(songpath, title, artist, 0, albumArt);
             Handler mainHandler = new Handler(getApplicationContext().getMainLooper());
             mainHandler.post(new Runnable() {
                 @Override
@@ -246,6 +312,8 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         Uri musicUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
         Cursor musicCursor = musicResolver.query(musicUri, null, null, null, null);
 
+
+
         if (musicCursor != null && musicCursor.moveToFirst()) {
             //get columns
             int titleColumn = musicCursor.getColumnIndex
@@ -254,6 +322,8 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                     (android.provider.MediaStore.Audio.Media._ID);
             int artistColumn = musicCursor.getColumnIndex
                     (android.provider.MediaStore.Audio.Media.ARTIST);
+            int albumColumn = musicCursor.getColumnIndex
+                    (MediaStore.Audio.Albums.ALBUM_ID);
 
             //add songs to list
 
@@ -265,9 +335,28 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                 long thisId = musicCursor.getLong(idColumn);
                 String thisTitle = musicCursor.getString(titleColumn);
                 String thisArtist = musicCursor.getString(artistColumn);
+                long albumID = musicCursor.getLong(albumColumn);
+                Bitmap bm = null;
+                try
+                {
+                    final Uri sArtworkUri = Uri
+                            .parse("content://media/external/audio/albumart");
+
+                    Uri uri = ContentUris.withAppendedId(sArtworkUri, albumID);
+
+                    ParcelFileDescriptor pfd = getContentResolver()
+                            .openFileDescriptor(uri, "r");
+
+                    if (pfd != null)
+                    {
+                        FileDescriptor fd = pfd.getFileDescriptor();
+                        bm = BitmapFactory.decodeFileDescriptor(fd);
+                    }
+                } catch (Exception e) {
+                }
                 if (thisArtist.contains("<unknown>") || thisTitle.contains("<unknown>")) //-- Temporary fix to some unwanted items coming up as songs
                     continue;
-                songList.add(new Song(thisId, thisTitle, thisArtist, 0));
+                songList.add(new Song(thisId, thisTitle, thisArtist, 0, bm));
                 //-- TODO: The last parameter corresponds to the ID of the owner
                 //-- We will want to update this 0 to something useful, so we can list songs by person
             }
@@ -311,6 +400,9 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             }
             serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, 8990);
             Log.d("DeviceDetailFragment", "startService about to be called");
+            getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                    WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+            showProgressDialog("Sending Music file");
             startService(serviceIntent);
         }
     }
@@ -329,7 +421,8 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         try {
             boolean addedSong = false;
             for (int i = 0; i < songList.size(); i++) {
-                if (songCompare(receivedSong, songList.get(i))) {
+                if (receivedSong != null && songList.get(i) != null &&
+                        songCompare(receivedSong, songList.get(i))) {
                     Log.d(TAG, "Song found in list, adding to queue");
                     songQueue.add(songList.get(i));
                     addedSong = true;
@@ -440,6 +533,8 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
 
             serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, 8990);
             Log.d("PlayerActivity", "startService about to be called for sending timestamp");
+            //getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+            //        WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
             startService(serviceIntent);
         }
     }
@@ -484,36 +579,6 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             setController();
             playbackPaused = false;
         }
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        if (playIntent == null) {
-            playIntent = new Intent(this, MusicService.class);
-            bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE);
-            startService(playIntent);
-        }
-    }
-
-    @Override
-    protected void onStop() {
-        controller.hide();
-        unbindService(musicConnection);
-        super.onStop();
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        paused = true;
-    }
-
-    @Override
-    protected void onDestroy() {
-        stopService(playIntent);
-        musicSrv = null;
-        super.onDestroy();
     }
 
     @Override
@@ -591,6 +656,11 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     public boolean onOptionsItemSelected(MenuItem item) {
         //menu item selected
         switch (item.getItemId()) {
+            case R.id.action_disconnect:
+                //openJamsActivity();
+                //((JamListActivity) getActivity()).ddf_disconnect();
+                break;
+            /*
             case R.id.action_shuffle:
                 musicSrv.setShuffle();
                 break;
@@ -599,6 +669,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                 musicSrv = null;
                 System.exit(0);
                 break;
+            */
 
         }
         return super.onOptionsItemSelected(item);
@@ -615,7 +686,6 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             //pass list
             musicSrv.setList(songList);
             musicBound = true;
-            sendIP();
         }
 
         @Override
@@ -628,7 +698,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     This class is used on the receiving end. After the song and time stamp have been received,
     set the receiving device to play or pause the song at a certain time.
      */
-    class SongActionAtTimeStamp extends AsyncTask<String, Void, Long> {
+    class SongActionAtTimeStamp extends AsyncTask<String, String, Long> {
         private String actionstring = null;
         private Context context;
 
@@ -652,6 +722,8 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                 String receivedtimestampstring = voids[0];
                 Long receivedtimestamp = Long.parseLong(receivedtimestampstring);
                 actionstring = voids[1];
+
+                publishProgress(actionstring);
                 // get current time offset
                 TimeSync timeSync = new TimeSync();
                 //long offset = timeSync.getNTPOffset();
@@ -667,9 +739,19 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         }
 
         @Override
+        protected void onProgressUpdate(String... strings) {
+            getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                    WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+            showProgressDialog("Preparing '" + strings[0] + "' request.");
+        }
+
+        @Override
         protected void onPostExecute(Long localPlayTime) {
-            // TODO wait, and then play song
             Log.d(TAG, "OnPostExecute");
+            progressDialog.dismiss();
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+            Toast.makeText(PlayerActivity.this, "Request processed. One moment.",
+                    Toast.LENGTH_SHORT).show();
             SongTimer songtimer = new SongTimer(localPlayTime, musicSrv, controller, actionstring,
                     context);
         }
@@ -679,14 +761,17 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     This class is used after a play or pause command has been issued and sends a time stamp to
      another device and then sets a timer for the action.
      */
-    class SendTimeStamp extends AsyncTask<String, Void, Long> {
+    class SendTimeStamp extends AsyncTask<String, String, Long> {
         private String actionstring = null;
         private String TAG = "SendTimeStamp";
         private Context context;
+
         public SendTimeStamp(Context c) {
             this.context = c;
         }
 
+        //ping the NTP server n times for an offset and calculate the
+        //average of those values
         private long getAverageNTPOffset(TimeSync timeSync, int n) {
             long offsetAcc = 0;
             for (int i = 0; i < n; i++) {
@@ -700,15 +785,16 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         @Override
         protected Long doInBackground(String... voids) {
             actionstring = voids[0];
+            publishProgress(actionstring);
             long result = 0;
             Log.d(TAG, "doInBackground");
             try {
                 // get current time offset
                 TimeSync timeSync = new TimeSync();
                 //long offset = timeSync.getNTPOffset();
-                long offset = getAverageNTPOffset(timeSync, 5); //get 5 offset values
+                long offset = getAverageNTPOffset(timeSync, 10); //get 5 offset values
                 Log.d(TAG, "Average Offset: " + offset);
-                long localPlayTime = System.currentTimeMillis() + 20000; // take action in 15 seconds
+                long localPlayTime = System.currentTimeMillis() + ACTION_DELAY; // take action in 15 seconds
                 Log.d(TAG, "LocalPlayTime: " + localPlayTime);
                 long internetPlayTime = timeSync.setServerPlayTime(offset, localPlayTime);
                 Log.d(TAG, "ServerPlayTime: " + internetPlayTime);
@@ -721,9 +807,18 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         }
 
         @Override
+        protected void onProgressUpdate(String... strings) {
+            getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                    WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+            showProgressDialog("Preparing '" + strings[0] + "' request.");
+        }
+        @Override
         protected void onPostExecute(Long localPlayTime) {
-            // TODO wait, and then play song
             Log.d(TAG, "OnPostExecute");
+            progressDialog.dismiss();
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+            Toast.makeText(PlayerActivity.this, "Play/Pause request successfully sent.",
+                    Toast.LENGTH_SHORT).show();
             SongTimer songtimer = new SongTimer(localPlayTime, musicSrv, controller, actionstring,
                     context);
         }
@@ -734,13 +829,19 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         private Context context;
         private String TAG = "ServerThread";
         private String dataType = null;
+        private Handler mainHandler;
 
         /**
          * @param context
          */
         public ServerRunnable(Context context) {
             this.context = context;
+            mainHandler = new Handler(context.getMainLooper());
+            if(Looper.myLooper() == null) {
+                Looper.prepare();
+            }
         }
+
         @Override
         public void run() {
             try {
@@ -750,6 +851,14 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                 while(true) {
                     Socket client = serverSocket.accept();
                     Log.d(TAG, "Server: connection done");
+                    mainHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                                    WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                            showProgressDialog("Receiving data.");
+                        }
+                    });
                     // receive data type string
                     DataInputStream is = new DataInputStream(client.getInputStream());
                     dataType = is.readUTF();
@@ -881,6 +990,15 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                                 Log.v(TAG,
                                         "Scan completed: file " + path + " was scanned successfully: " + uri);
                                 Log.d("DeviceDetailFrag", "start music player intent");
+                                mainHandler.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        progressDialog.dismiss();
+                                        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                                        Toast.makeText(PlayerActivity.this, "File received",
+                                                Toast.LENGTH_SHORT).show();
+                                    }
+                                });
                                 setUpReceivedSong(path);
                             }
                         });
@@ -888,11 +1006,29 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                     case "IP":
                         dataType = null;
                         WifiSingleton.getInstance().setMemberIP(result);
+                        mainHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                progressDialog.dismiss();
+                                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                                Toast.makeText(PlayerActivity.this, "IP received",
+                                    Toast.LENGTH_SHORT).show();
+                            }
+                        });
                         break;
                     case "Play":
                         musicaction = dataType;
                         dataType = null;
                         Long playtime = Long.parseLong(result);
+                        mainHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                progressDialog.dismiss();
+                                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                                Toast.makeText(PlayerActivity.this, "Play request received",
+                                        Toast.LENGTH_SHORT).show();
+                            }
+                        });
                         //create
                         setUpTimeStamp(playtime, musicaction);
                         break;
@@ -900,24 +1036,60 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                         musicaction = dataType;
                         dataType = null;
                         Long pausetime = Long.parseLong(result);
+                        mainHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                progressDialog.dismiss();
+                                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                                Toast.makeText(PlayerActivity.this, "Pause request received",
+                                        Toast.LENGTH_SHORT).show();
+                            }
+                        });
                         setUpTimeStamp(pausetime, musicaction);
                         break;
                     case "Resume":
                         musicaction = dataType;
                         dataType = null;
                         Long resumetime = Long.parseLong(result);
+                        mainHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                progressDialog.dismiss();
+                                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                                Toast.makeText(PlayerActivity.this, "Resume request received",
+                                        Toast.LENGTH_SHORT).show();
+                            }
+                        });
                         setUpTimeStamp(resumetime, musicaction);
                         break;
                     case "Next":
                         musicaction = dataType;
                         dataType = null;
                         Long nextPlayTime = Long.parseLong(result);
+                        mainHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                progressDialog.dismiss();
+                                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                                Toast.makeText(PlayerActivity.this, "Next request received",
+                                        Toast.LENGTH_SHORT).show();
+                            }
+                        });
                         setUpTimeStamp(nextPlayTime, musicaction);
                         break;
                     case "Previous":
                         musicaction = dataType;
                         dataType = null;
                         Long previousPlayTime = Long.parseLong(result);
+                        mainHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                progressDialog.dismiss();
+                                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                                Toast.makeText(PlayerActivity.this, "Previous request received",
+                                        Toast.LENGTH_SHORT).show();
+                            }
+                        });
                         setUpTimeStamp(previousPlayTime, musicaction);
                         break;
                     default:
@@ -959,6 +1131,27 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                 return false;
             }
             return true;
+        }
+    }
+
+    public class PlayerActivityReceiver extends BroadcastReceiver {
+        public static final String ACTION_RESP =
+                "idk";
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String text = intent.getStringExtra(FileTransferService.PARAM_OUT_MSG);
+            Log.d("player activity", "BROADCAST RECEIVED");
+            progressDialog.dismiss();
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+            if(text.equals("Sent IP")){
+                Toast.makeText(PlayerActivity.this, "IP successfully sent",
+                        Toast.LENGTH_SHORT).show();
+            }
+
+            else if(text.equals("Sent File")){
+                Toast.makeText(PlayerActivity.this, "File successfully sent",
+                        Toast.LENGTH_SHORT).show();
+            }
         }
     }
 }

@@ -4,12 +4,12 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
-    android:background="#FFFF0F"
+    android:background="@color/primaryLight"
     android:paddingTop="20px">
 
     <android.support.v7.widget.CardView
         android:layout_width="match_parent"
-        android:layout_height="fill_parent"
+        android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:layout_marginBottom="@dimen/card_margin"
         android:layout_marginLeft="@dimen/card_margin"
@@ -36,7 +36,7 @@
                     android:src="@drawable/machine" />
                 <LinearLayout
                     android:orientation="vertical"
-                    android:background="#2EFEF7"
+                    android:background="#FFFFFF"
                     android:layout_width="match_parent"
                     android:layout_weight="1"
                     android:layout_height="wrap_content">
@@ -59,6 +59,30 @@
                         android:ellipsize="marquee"
                         android:gravity="center_vertical"/>
                 </LinearLayout>
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/ddf_proxy"
+                xmlns:android="http://schemas.android.com/apk/res/android"
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone">
+                <Button
+                    android:id="@+id/btn_connect"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/connect_peer_button" />
+                <Button
+                    android:id="@+id/btn_disconnect"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/disconnect_peer_button" />
+                <Button
+                    android:id="@+id/btn_start_client"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/get_file_button"
+                    android:visibility="gone" />
             </LinearLayout>
         </LinearLayout>
     </android.support.v7.widget.CardView>

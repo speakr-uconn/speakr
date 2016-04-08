@@ -33,9 +33,16 @@
             </intent-filter>
         </activity>
         <activity
+            android:name=".AlbumArtActivity"
+            android:label="@string/title_activity_album"
+            android:theme="@style/AppTheme.NoActionBar" >
+            android:flag="FLAG_ACTIVITY_NEW_TASK"
+        </activity>
+        <activity
             android:name=".JamListActivity"
             android:label="@string/title_activity_home"
             android:theme="@style/AppTheme.NoActionBar" >
+            android:flag="FLAG_ACTIVITY_NEW_TASK"
         </activity>
         <activity
             android:name=".CreateJamActivity"

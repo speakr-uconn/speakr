@@ -40,6 +40,9 @@ public class FileTransferService extends IntentService {
     public static final String EXTRAS_TIMESTAMP = "timestamp";
     public static final String EXTRAS_ADDRESS = "go_host";
     public static final String EXTRAS_PORT = "go_port";
+    public static final String PARAM_OUT_MSG = "output";
+    public static final String ACTION_SEND_IP_ACK = "send_ip_ack";
+
     private final String TAG = FileTransferService.class.getSimpleName();
 
     public FileTransferService(String name) {
@@ -88,6 +91,11 @@ public class FileTransferService extends IntentService {
                 }
                 copyFile(is, stream);
                 Log.d(TAG, "Client: Data written");
+                Intent broadcastIntent = new Intent();
+                broadcastIntent.addCategory(Intent.CATEGORY_DEFAULT);
+                broadcastIntent.setAction(PlayerActivity.PlayerActivityReceiver.ACTION_RESP);
+                broadcastIntent.putExtra(PARAM_OUT_MSG, "Sent File");
+                sendBroadcast(broadcastIntent);
             } catch (IOException e) {
                 Log.e(TAG, e.getMessage());
             }
@@ -106,13 +114,18 @@ public class FileTransferService extends IntentService {
                 DataOutputStream datastream = new DataOutputStream(socket.getOutputStream());
 
                 //send string so they know to expect timestamp
-                //right now assumes that we just want to play the song
                 datastream.writeUTF(actionString);
 
                 // send timestamp
                 String timestamp = intent.getExtras().getString(EXTRAS_TIMESTAMP);
                 Log.e("String", "timestamp:  " + timestamp);
                 datastream.writeUTF(timestamp);
+
+                /*Intent broadcastIntent = new Intent();
+                broadcastIntent.addCategory(Intent.CATEGORY_DEFAULT);
+                broadcastIntent.setAction(PlayerActivity.PlayerActivityReceiver.ACTION_RESP);
+                broadcastIntent.putExtra(PARAM_OUT_MSG, "Sent request");
+                sendBroadcast(broadcastIntent);*/
 
             } catch (IOException e) {
                 Log.e(TAG, e.getMessage());
@@ -141,6 +154,34 @@ public class FileTransferService extends IntentService {
                 String localIP = getWifiDirectIP(localIPArray);
                 Log.d(TAG, "Local IP: " + localIP);
                 datastream.writeUTF(localIP);
+
+                Intent broadcastIntent = new Intent();
+                broadcastIntent.addCategory(Intent.CATEGORY_DEFAULT);
+                broadcastIntent.setAction(JamListActivity.JamListActivityReceiver.ACTION_RESP);
+                broadcastIntent.putExtra(PARAM_OUT_MSG, "Sent IP");
+                sendBroadcast(broadcastIntent);
+
+            } catch (IOException e) {
+                Log.e(TAG, e.getMessage());
+            }
+        } else if (intent.getAction().equals(ACTION_SEND_IP_ACK)) {
+            String host = intent.getExtras().getString(EXTRAS_ADDRESS);
+            Log.d(TAG, "send address: " + host);
+            Socket socket = new Socket();
+            int port = intent.getExtras().getInt(EXTRAS_PORT);
+            try {
+                Log.d(TAG, "Opening client socket for address- ");
+
+                socket.bind(null);
+                socket.connect((new InetSocketAddress(host, port)), SOCKET_TIMEOUT);
+                Log.d(TAG, "Client socket - " + socket.isConnected());
+
+                DataOutputStream datastream = new DataOutputStream(socket.getOutputStream());
+
+                //send "IP" label
+                datastream.writeUTF("IP_ACK");
+                String member_ip = intent.getExtras().getString("IP_Address");
+                datastream.writeUTF(member_ip);
             } catch (IOException e) {
                 Log.e(TAG, e.getMessage());
             }
@@ -219,5 +260,4 @@ public class FileTransferService extends IntentService {
         }
         return strAddr;
     }
-
 }

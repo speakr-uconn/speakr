@@ -23,6 +23,9 @@ public class JamListBroadcastReceiver extends BroadcastReceiver {
         this.mManager = manager;
         this.mChannel = channel;
         this.mActivity = activity;
+        WifiSingleton.getInstance().setManager(mManager);
+        WifiSingleton.getInstance().setChannel(mChannel);
+
     }
 
     @Override

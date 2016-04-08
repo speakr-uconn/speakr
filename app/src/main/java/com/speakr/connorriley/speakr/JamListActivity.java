@@ -1,5 +1,6 @@
 package com.speakr.connorriley.speakr;
 
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -22,7 +23,13 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.WindowManager;
 import android.widget.Toast;
+
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
 
 
 public class JamListActivity extends HamburgerActivity implements OnClickListener, WifiP2pManager.ChannelListener, DeviceActionListener{
@@ -37,7 +44,8 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
     DeviceDetailFragment frag_detail;
     boolean isDiscovering = false;
 
-    public static final String TAG = "wifidrect";
+    public static final String TAG = JamListActivity.class.getSimpleName();
+
     private WifiP2pManager manager;
     private WifiP2pManager.Channel channel;
     private BroadcastReceiver receiver;
@@ -45,6 +53,7 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
     private boolean retryChannel = false;
     private boolean isWifiP2pEnabled = false;
     private boolean onConnection = false;
+    ProgressDialog progressDialog = null;
 
     public void setIsWifiP2pEnabled(boolean isWifiP2pEnabled) {
         this.isWifiP2pEnabled = isWifiP2pEnabled;
@@ -57,6 +66,8 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        WifiSingleton.getInstance().disconnect();
+        Log.d(TAG, "OnCreate");
         setContentView(R.layout.activity_jamlist);
 
         frag_list = (DeviceListFragment) getFragmentManager()
@@ -69,6 +80,16 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
         //setupTablayout();
         //setupCollapsingToolbarLayout();
         setupFab();
+
+        IntentFilter filter = new IntentFilter(JamListActivityReceiver.ACTION_RESP);
+        filter.addCategory(Intent.CATEGORY_DEFAULT);
+        receiver = new JamListActivityReceiver();
+        registerReceiver(receiver, filter);
+
+        IPServerRunnable ipserverRunnable = new IPServerRunnable(getApplicationContext());
+        Thread thread = new Thread(ipserverRunnable);
+        thread.start();
+
         //enable_atn_direct();
         startNetwork();
         //addDrawerItems();
@@ -120,10 +141,12 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
     }
 
     private void setupFab(){
+        /*
         fab = (FloatingActionButton) findViewById(R.id.fab);
         if(fab != null) {
             fab.setOnClickListener(this);
         }
+        */
         setupRefresh();
     }
 
@@ -157,12 +180,15 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
     @Override
     public void onClick(View view) {
 
+        /*
         if(view.getId() == R.id.fab){
 
             Intent intent = new Intent(JamListActivity.this, CreateJamActivity.class);
             startActivity(intent);
         }
-        else if(view.getId() == R.id.refresh_jams){
+        else
+         */
+        if(view.getId() == R.id.refresh_jams){
             if(!isDiscovering)
                 discoverPeers();
         }
@@ -188,9 +214,6 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
         if (!isWifiP2pEnabled) {
             //Toast.makeText(JamListActivity.this, R.string.p2p_off_warning,
             //        Toast.LENGTH_SHORT).show();
-
-            //startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS)); //-- enable p2p on/off
-            //return;
         }
 
         frag_list.onInitiateDiscovery();
@@ -248,6 +271,21 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
     public void showDetails(WifiP2pDevice device) {
         if(frag_detail != null)
             frag_detail.showDetails(device);
+    }
+
+    public void ddf_connect(){
+        if(frag_detail != null)
+            frag_detail.ddf_connect();
+    }
+
+    public void ddf_disconnect(){
+        if(frag_detail != null)
+            frag_detail.ddf_disconnect();
+    }
+
+    public void ddf_start_client(){
+        if(frag_detail != null)
+            frag_detail.ddf_start_client();
     }
 
     @Override
@@ -353,6 +391,7 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
 
     @Override
     public void onResume() {
+        Log.d(TAG, "OnResume");
         super.onResume();
         receiver = new JamListBroadcastReceiver(manager, channel, this);
         registerReceiver(receiver, intentFilter);
@@ -361,12 +400,126 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
 
     @Override
     public void onPause() {
-        super.onPause();
+        Log.d(TAG, "OnPause");
         unregisterReceiver(receiver);
+        super.onPause();
+    }
+
+    @Override
+    public void onStop() {
+        Log.d(TAG, "OnStop");
+        super.onStop();
     }
     @Override
     public void onDestroy() {
+        Log.d(TAG, "OnDestroy");
         super.onDestroy();
         //unregisterReceiver(receiver);
+    }
+
+
+    public class IPServerRunnable implements Runnable {
+
+        private Context context;
+        private String TAG = "ServerThread";
+        private String dataType = null;
+
+        /**
+         * @param context
+         */
+        public IPServerRunnable(Context context) {
+            this.context = context;
+        }
+        @Override
+        public void run() {
+            try {
+                ServerSocket serverSocket = null;
+                serverSocket = new ServerSocket(8988);
+                Log.d(TAG, "Server: Socket opened");
+                while(true) {
+                    Socket client = serverSocket.accept();
+                    Log.d(TAG, "Server: connection done");
+                    // receive data type string
+                    DataInputStream is = new DataInputStream(client.getInputStream());
+                    dataType = is.readUTF();
+                    //check if mimeType is all numbers or not
+                    String timestamp;
+                    Log.d(TAG, "datatype: " + dataType);
+                    switch (dataType) {
+                        case "IP":
+                            String receivedIP = receiveIP(client);
+                            receivedCommunication(receivedIP);
+                            break;
+                        case "IP_ACK":
+                            Intent intent = new Intent(context, PlayerActivity.class);
+                            startActivity(intent);
+                        default:
+                            Log.e(TAG, "No case match");
+                            break;
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+
+        private String receiveIP(Socket client) {
+            Log.d(TAG, "receiveIPMethod");
+            DataInputStream is = null;
+            try {
+                is = new DataInputStream(client.getInputStream());
+                String ip = is.readUTF();
+                return ip;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        public void receivedCommunication(String result) {
+            if(dataType != null) {
+                switch (dataType) {
+                    case "IP":
+                        dataType = null;
+                        WifiSingleton.getInstance().setMemberIP(result);
+                        sendIPACK(result);
+                        break;
+                    default:
+                        Log.e(TAG, "No case match");
+                        break;
+                }
+            }
+        }
+        private void sendIPACK(String ip) {
+            Intent serviceIntent = new Intent(context, FileTransferService.class);
+            serviceIntent.setAction(FileTransferService.ACTION_SEND_IP_ACK);
+            serviceIntent.putExtra(FileTransferService.EXTRAS_ADDRESS,
+                    WifiSingleton.getInstance().getMemberIP());
+            serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, 8988);
+            serviceIntent.putExtra("IP_Address", ip);
+            Log.d(TAG, "sending ACKIP group to member");
+            context.startService(serviceIntent);
+            Intent playerIntent = new Intent(context, PlayerActivity.class);
+            startActivity(playerIntent);
+        }
+    }
+
+    public class JamListActivityReceiver extends BroadcastReceiver {
+        public static final String ACTION_RESP =
+                "idk";
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String text = intent.getStringExtra(FileTransferService.PARAM_OUT_MSG);
+            Log.d("Jam list activity", "BROADCAST RECEIVED");
+            if (progressDialog != null && progressDialog.isShowing()) {
+                progressDialog.dismiss();
+            }
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+            if(text.equals("Sent IP")){
+                Toast.makeText(JamListActivity.this, "IP successfully sent",
+                        Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 }
