@@ -104,26 +104,44 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         setupToolbar();
 
         songQueueView = (ListView) findViewById(R.id.song_queue);
-        songQueueView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                Log.v("LongClick", "longclicked");
-                if (position != -1) {
-                    Song songToRemove = songQueue.get(position);
-                    //songList.add(songToRemove);
-                    songQueue.remove(songToRemove);
-                    updateSongAdapters();
-                }
-
-                return true;
-            }
-        });
-
+        configureSongQueueView(songQueueView);
         songListView = (ListView) findViewById(R.id.song_list);
         songQueue = new ArrayList<>();
         getPermissions();
         config();
 
+    }
+
+    private void configureSongQueueView(ListView songQueueView) {
+        songQueueView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                Log.v("LongClick", "longclicked");
+                final int index = position; //needed to pass position variable to alert dialog
+
+                DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        switch (which) {
+                            case DialogInterface.BUTTON_NEGATIVE:
+                                //if user says no, do nothing
+                                break;
+                            case DialogInterface.BUTTON_POSITIVE:
+                                if (index != -1) {
+                                    Song songToRemove = songQueue.get(index);
+                                    songQueue.remove(songToRemove);
+                                    updateSongAdapters();
+                                }
+                                break;
+                        }
+                    }
+                };
+                AlertDialog.Builder builder = new AlertDialog.Builder(view.getContext());
+                builder.setMessage("Remove song from queue?").setPositiveButton("Yes", dialogClickListener)
+                        .setNegativeButton("No", dialogClickListener).show();
+                return true;
+            }
+        });
     }
 
     @Override
