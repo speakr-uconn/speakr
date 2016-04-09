@@ -1,9 +1,11 @@
 package com.speakr.connorriley.speakr;
 
 import android.Manifest;
+import android.support.v7.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.ContentUris;
+import android.content.DialogInterface;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -49,6 +51,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.os.IBinder;
@@ -99,9 +102,25 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         setContentView(R.layout.activity_player);
         setupNavigationView();
         setupToolbar();
+
         songQueueView = (ListView) findViewById(R.id.song_queue);
+        songQueueView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                Log.v("LongClick", "longclicked");
+                if (position != -1) {
+                    Song songToRemove = songQueue.get(position);
+                    //songList.add(songToRemove);
+                    songQueue.remove(songToRemove);
+                    updateSongAdapters();
+                }
+
+                return true;
+            }
+        });
+
         songListView = (ListView) findViewById(R.id.song_list);
-        songQueue = new ArrayList<Song>();
+        songQueue = new ArrayList<>();
         getPermissions();
         config();
 

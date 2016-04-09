@@ -1,5 +1,6 @@
 package com.speakr.connorriley.speakr;
 
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -7,6 +8,8 @@ import java.util.ArrayList;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -48,6 +51,14 @@ public class SongQueueAdapter extends BaseAdapter {
 
         //-- Map to song layout
         RelativeLayout songLay = (RelativeLayout) songInf.inflate(R.layout.queuerow, parent, false);
+//        songLay.setOnLongClickListener(new View.OnLongClickListener() {
+//            @Override
+//            public boolean onLongClick(View v) {
+//                Log.v("LongClick", "Longclicked");
+//
+//                return true;
+//            }
+//        });
 
         //-- Get title and artist views
         TextView songView = (TextView)songLay.findViewById(R.id.song_title);
@@ -64,9 +75,9 @@ public class SongQueueAdapter extends BaseAdapter {
 
         artistView.setText(currSong.getArtist());
 
-        final Button up = (Button) convertView.findViewById(R.id.up);
-        final Button down = (Button) convertView.findViewById(R.id.down);
-        final Button remove = (Button) convertView.findViewById(R.id.remove);
+//        final ImageButton up = (ImageButton) convertView.findViewById(R.id.up);
+//        final ImageButton down = (ImageButton) convertView.findViewById(R.id.down);
+//        final Button remove = (Button) convertView.findViewById(R.id.remove);
 
         //set position as tag
         songLay.setTag(position);
