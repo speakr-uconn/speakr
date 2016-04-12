@@ -1,14 +1,12 @@
 package com.speakr.connorriley.speakr;
 
-import android.content.Context;
+import android.media.MediaPlayer;
 import android.os.AsyncTask;
-import android.text.format.Time;
 import android.util.Log;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
 
 /**
  * Created by Viren on 1/22/2016.
@@ -16,6 +14,7 @@ import java.util.Date;
 public class TimeSyncTask extends AsyncTask<TimeSync, Void, Long> {
 
     private final String LOG_TAG = TimeSyncTask.class.getSimpleName();
+
 
     @Override
     protected Long doInBackground(TimeSync... params) {
@@ -33,5 +32,9 @@ public class TimeSyncTask extends AsyncTask<TimeSync, Void, Long> {
             Log.e(LOG_TAG, "ERROR: time received was " + time);
         }
         return time;
+    }
+
+    @Override
+    protected void onPostExecute(Long aLong) {
     }
 }

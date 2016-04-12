@@ -3,10 +3,11 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/thisLayout"
     android:layout_width="fill_parent"
-    android:layout_height="80sp"
+    android:layout_height="wrap_content"
     android:onClick="songPicked"
     android:orientation="horizontal"
-    android:padding="1sp" >
+    android:padding="1sp"
+    android:longClickable="true" >
 
     <TextView
         android:id="@+id/song_title"
@@ -21,13 +22,15 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:textColor="#FFFFFF99"
-        android:layout_alignParentBottom="true"
-        android:textSize="18sp" />
-
+        android:textSize="18sp"
+        android:layout_below="@+id/song_title"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+<!--
     <Button
         android:id="@+id/remove"
         android:layout_width="50dp"
-        android:layout_height="50dp"
+        android:layout_height="35dp"
         android:layout_alignParentRight="true"
         android:layout_marginTop="15dp"
         android:layout_marginRight="50dp"
@@ -35,7 +38,7 @@
         android:text="x"
         android:gravity="center"
         />
-
+-->
     <LinearLayout
         android:id="@+id/arrows"
         android:layout_width="wrap_content"
@@ -44,24 +47,26 @@
         android:layout_alignParentRight="true"
         android:orientation="vertical" >
 
-        <Button
+        <ImageButton
             android:id="@+id/up"
+            android:src="@drawable/ic_up_arrow"
+            android:background="@null"
             android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_height="35dp"
             android:layout_alignParentRight="true"
             android:layout_marginRight="5dp"
             android:onClick="moveUp"
-            android:text="^"
             />
 
-        <Button
+        <ImageButton
             android:id="@+id/down"
+            android:src="@drawable/ic_down_arrow"
+            android:background="@null"
             android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_height="35dp"
             android:layout_alignParentRight="true"
             android:layout_marginRight="5dp"
             android:onClick="moveDown"
-            android:text="v"
             />
     </LinearLayout>
 
