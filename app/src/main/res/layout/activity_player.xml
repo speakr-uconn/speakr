@@ -40,12 +40,15 @@
             android:paddingTop="47dp">
             <!--android:background="#878767">-->
             <TextView
+                android:background="@android:drawable/dialog_holo_light_frame"
                 android:layout_width="fill_parent"
-                android:layout_height="40dp"
+                android:layout_height="50dp"
                 android:textSize="20sp"
-                android:layout_marginLeft="10dp"
+                android:textColor="#4F4C4B"
+                android:layout_marginTop="10dp"
                 android:gravity="center_vertical"
                 android:text="Queue"/>
+            <!--android:layout_marginLeft="10dp"-->
 
             <ListView
                 android:id="@+id/song_queue"
@@ -57,12 +60,14 @@
             </ListView>
 
             <TextView
+                android:background="@android:drawable/dialog_holo_light_frame"
                 android:layout_width="fill_parent"
-                android:layout_height="40dp"
-                android:layout_marginLeft="10dp"
+                android:layout_height="50dp"
                 android:textSize="20sp"
+                android:textColor="#4F4C4B"
                 android:gravity="center_vertical"
                 android:text="Song List"/>
+            <!--android:layout_marginLeft="10dp"-->
 
             <ListView
                 android:id="@+id/song_list"

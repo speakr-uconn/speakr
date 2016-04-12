@@ -27,16 +27,22 @@
         android:id="@+id/song_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="#FFFFFF99"
         android:textSize="20sp"
+        android:textColor="#FFFFFF"
         android:textStyle="bold"/>
+        <!--
+        android:textColor="#FFFFFF99"
+        -->
 
     <TextView
         android:id="@+id/song_artist"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="#FFFFFF99"
+        android:textColor="#FFFFFF"
         android:textSize="18sp"/>
+        <!--
+        android:textColor="#FFFFFF99"
+        -->
     </LinearLayout>
 
     <Button
