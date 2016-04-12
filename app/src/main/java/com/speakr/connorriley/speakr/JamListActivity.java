@@ -24,6 +24,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.WindowManager;
+import android.widget.ListView;
 import android.widget.Toast;
 
 import java.io.DataInputStream;
@@ -243,8 +244,13 @@ public class JamListActivity extends HamburgerActivity implements OnClickListene
                     public void run() {
                         if (!onConnection)
                             disconnect();
-                        Toast.makeText(JamListActivity.this, "No devices found.",
-                                Toast.LENGTH_SHORT).show();
+
+                        if (frag_list != null) {
+                            ListView lv = frag_list.getListView();
+                            if(lv.getCount() == 0)
+                                Toast.makeText(JamListActivity.this, "No devices found.",
+                                    Toast.LENGTH_SHORT).show();
+                        }
                     }
                 },
                 10000);
