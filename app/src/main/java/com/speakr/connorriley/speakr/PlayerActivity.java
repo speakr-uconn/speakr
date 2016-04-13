@@ -84,6 +84,8 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     DrawerLayout drawerLayout;
     Toolbar toolbar;
     private Thread serverthread;
+    private LocalSynchronization localsync;
+
     private String TAG = PlayerActivity.class.getSimpleName();
     // Broadcast receiver to determine when music player has been prepared
     private BroadcastReceiver onPrepareReceiver = new BroadcastReceiver() {
@@ -102,14 +104,13 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         setContentView(R.layout.activity_player);
         setupNavigationView();
         setupToolbar();
-
         songQueueView = (ListView) findViewById(R.id.song_queue);
         configureSongQueueView(songQueueView);
         songListView = (ListView) findViewById(R.id.song_list);
         songQueue = new ArrayList<>();
         getPermissions();
         config();
-
+        localsync = new LocalSynchronization(this);
     }
 
     private void configureSongQueueView(ListView songQueueView) {
@@ -541,7 +542,8 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         musicSrv.setSong(Integer.parseInt(view.getTag().toString()));
         Log.d(TAG, "execute offset class");
         try {
-            new SendTimeStamp(getApplicationContext()).execute("Play");
+            //new SendTimeStamp(getApplicationContext()).execute("Play");
+            localsync.sendtimestamp("CalcOffset_1");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -570,8 +572,6 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
 
             serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, 8990);
             Log.d("PlayerActivity", "startService about to be called for sending timestamp");
-            //getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
-            //        WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
             startService(serviceIntent);
         }
     }
@@ -867,7 +867,8 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         private String TAG = "ServerThread";
         private String dataType = null;
         private Handler mainHandler;
-
+        private long calcOffsetStartTime;
+        private ArrayList<Long> calculatedOffsets = new ArrayList<Long>();
         /**
          * @param context
          */
@@ -903,6 +904,36 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                     String timestamp;
                     Log.d(TAG, "datatype: " + dataType);
                     switch (dataType) {
+                        case "CalcOffset_1":
+                            receiveTimeStamp(client);
+                            localsync.sendtimestamp("CalcOffset_2");
+                            break;
+                        case "CalcOffset_2":
+                            String endtime = calcEndTime(client);
+                            Long latency = Long.parseLong(endtime) - localsync.getStartTime();
+                            Log.d(TAG, "Latency Calculated: " + latency);
+                            localsync.addLatencyToList(latency);
+                            break;
+                        case "CalcOffset_3":
+                            receiveTimeStamp(client);
+                            localsync.sendtimestamp("CalcOffset_4");
+                            break;
+                        case "CalcOffset_4":
+                            // calculate offset
+                            String offset = localReceiveOffsetTimeStamp(client);
+                            Log.d(TAG, "Local Offset: " + offset);
+                            localsync.setOffset(Long.parseLong(offset));
+                            localsync.sendtimestamp("RequestTimeP");
+                            break;
+                        case "RequestTimeP":
+                            Long playtime = System.currentTimeMillis() + 5000;
+                            new SongTimer(playtime, musicSrv, controller, "Play", context);
+                            sendTimeStamp(playtime, "Play_Offset");
+                            break;
+                        case "Play_Offset":
+                            timestamp = receiveTimeStamp(client);
+                            receivedCommunication(timestamp);
+                            break;
                         case "Play":
                             timestamp = receiveTimeStamp(client);
                             receivedCommunication(timestamp);
@@ -949,6 +980,35 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                 is = new DataInputStream(client.getInputStream());
                 String ip = is.readUTF();
                 return ip;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        private String localReceiveOffsetTimeStamp(Socket client) {
+            Log.d(TAG, "localReceiveOffsetTimeStamp");
+            DataInputStream is = null;
+            try {
+                is = new DataInputStream(client.getInputStream());
+                String timeStamp = is.readUTF();
+                long timeStampLong = Long.parseLong(timeStamp);
+                Long offset = System.currentTimeMillis() - (timeStampLong + localsync.getLatency());
+                return offset.toString();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        private String calcEndTime(Socket client) {
+            Log.d(TAG, "calcEndTime");
+            DataInputStream is = null;
+            try {
+                is = new DataInputStream(client.getInputStream());
+                String timeStamp = is.readUTF();
+                Long calcEndTime = System.currentTimeMillis();
+                return calcEndTime.toString();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -1052,6 +1112,12 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                                     Toast.LENGTH_SHORT).show();
                             }
                         });
+                        break;
+                    case "Play_Offset":
+                        musicaction = "Play";
+                        dataType = null;
+                        Long playoffsettime = localsync.getOffset() + Long.parseLong(result);
+                        setUpTimeStamp(playoffsettime, musicaction);
                         break;
                     case "Play":
                         musicaction = dataType;
