@@ -48,20 +48,17 @@ public class LocalSynchronization {
                     FileTransferService.class);
             serviceIntent.setAction(FileTransferService.ACTION_SEND_TIMESTAMP);
             serviceIntent.putExtra("Action", action);
-            starttime = System.currentTimeMillis();
-            serviceIntent.putExtra(FileTransferService.EXTRAS_TIMESTAMP, "" + starttime);
-            Log.d(TAG, "string version of long timestamp to be sent: " + starttime);
             if(!wifiSingleton.getInfo().isGroupOwner){
                 serviceIntent.putExtra(FileTransferService.EXTRAS_ADDRESS,
                         wifiSingleton.getInfo().groupOwnerAddress.getHostAddress());
-            }
-
-            else{
+            } else{
                 serviceIntent.putExtra(FileTransferService.EXTRAS_ADDRESS,
                         wifiSingleton.getMemberIP());
             }
             serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, 8990);
             Log.d(TAG, "startService about to be called for sending timestamp");
+            starttime = System.currentTimeMillis();
+            serviceIntent.putExtra(FileTransferService.EXTRAS_TIMESTAMP, "" + starttime);
             playerActivity.getApplicationContext().startService(serviceIntent);
         }
     }
@@ -71,7 +68,9 @@ public class LocalSynchronization {
         for(int i = 0; i < latencylist.size(); i++) {
             avglatency += latencylist.get(i);
         }
-        return avglatency/latencylist.size();
+        int size = latencylist.size();
+        latencylist = new ArrayList<Long>();
+        return avglatency/size;
     }
 
     public void startoffsetcalculation() {

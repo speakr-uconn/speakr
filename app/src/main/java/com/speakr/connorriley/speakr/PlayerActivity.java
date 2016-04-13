@@ -910,7 +910,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                             break;
                         case "CalcOffset_2":
                             String endtime = calcEndTime(client);
-                            Long latency = Long.parseLong(endtime) - localsync.getStartTime();
+                            Long latency = (Long.parseLong(endtime) - localsync.getStartTime())/2;
                             Log.d(TAG, "Latency Calculated: " + latency);
                             localsync.addLatencyToList(latency);
                             break;
@@ -1114,10 +1114,20 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                         });
                         break;
                     case "Play_Offset":
+                        Log.d(TAG, "Play_Offset case");
                         musicaction = "Play";
                         dataType = null;
                         Long playoffsettime = localsync.getOffset() + Long.parseLong(result);
-                        setUpTimeStamp(playoffsettime, musicaction);
+                        mainHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                progressDialog.dismiss();
+                                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                                Toast.makeText(PlayerActivity.this, "local play request received",
+                                        Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                        new SongTimer(playoffsettime, musicSrv, controller, musicaction, context);
                         break;
                     case "Play":
                         musicaction = dataType;
