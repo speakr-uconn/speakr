@@ -9,7 +9,7 @@ import java.util.ArrayList;
  * Created by connorriley on 4/12/16.
  */
 public class LocalSynchronization {
-    private final long NUM_LATENCY_TESTS = 5;
+    private final long NUM_LATENCY_TESTS = 10;
     private ArrayList<Long> latencylist = new ArrayList<Long>();
     private PlayerActivity playerActivity;
     private String TAG = LocalSynchronization.class.getSimpleName();
@@ -28,7 +28,7 @@ public class LocalSynchronization {
 
     public void addLatencyToList(long latency) {
         latencylist.add(latency);
-        if(latencylist.size() < 5) {
+        if(latencylist.size() < NUM_LATENCY_TESTS) {
             sendtimestamp("CalcOffset_1");
         } else {
             // calculate offset and return

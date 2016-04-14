@@ -926,7 +926,17 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                             localsync.sendtimestamp("RequestTimeP");
                             break;
                         case "RequestTimeP":
+                            mainHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    progressDialog.dismiss();
+                                    getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                                    Toast.makeText(PlayerActivity.this, "local play request received",
+                                            Toast.LENGTH_SHORT).show();
+                                }
+                            });
                             Long playtime = System.currentTimeMillis() + 5000;
+                            //playtime = playtime + 500;
                             new SongTimer(playtime, musicSrv, controller, "Play", context);
                             sendTimeStamp(playtime, "Play_Offset");
                             break;
