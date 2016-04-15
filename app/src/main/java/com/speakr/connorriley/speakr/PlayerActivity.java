@@ -12,10 +12,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaScannerConnection;
-import android.net.wifi.p2p.WifiP2pInfo;
 import android.os.Looper;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.AsyncTask;
 import android.os.ParcelFileDescriptor;
@@ -31,11 +29,9 @@ import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.Array;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -49,7 +45,6 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
-import android.view.Window;
 import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ImageView;
@@ -85,6 +80,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     Toolbar toolbar;
     private Thread serverthread;
     private String TAG = PlayerActivity.class.getSimpleName();
+    private Long starttime;
     // Broadcast receiver to determine when music player has been prepared
     private BroadcastReceiver onPrepareReceiver = new BroadcastReceiver() {
         @Override
@@ -541,12 +537,34 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         musicSrv.setSong(Integer.parseInt(view.getTag().toString()));
         Log.d(TAG, "execute offset class");
         try {
-            new SendTimeStamp(getApplicationContext()).execute("Play");
+            starttime = System.currentTimeMillis();
+            sendMessage("LocalPlay_1");
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+    private void sendMessage(String message) {
+        Log.d(TAG, "SendTimeStamp");
+        //IT"S TIME TO SEND THE TIME :)
+        WifiSingleton wifiSingleton = WifiSingleton.getInstance();
+        if (wifiSingleton.getInfo() != null) {
+            Intent serviceIntent = new Intent(this, FileTransferService.class);
+            serviceIntent.setAction(FileTransferService.ACTION_SEND_TIMESTAMP);
+            serviceIntent.putExtra("Action", message);
+            if(!wifiSingleton.getInfo().isGroupOwner){
+                serviceIntent.putExtra(FileTransferService.EXTRAS_ADDRESS,
+                        wifiSingleton.getInfo().groupOwnerAddress.getHostAddress());
+            } else {
+                serviceIntent.putExtra(FileTransferService.EXTRAS_ADDRESS,
+                        wifiSingleton.getMemberIP());
+            }
+            serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, 8990);
+            Log.d("PlayerActivity", "startService about to be called for sending timestamp");
+            serviceIntent.putExtra(FileTransferService.EXTRAS_TIMESTAMP, "" + starttime);
+            startService(serviceIntent);
+        }
+    }
     private void sendTimeStamp(long serverPlayTime, String actionString) {
         Log.d(TAG, "SendTimeStamp");
 
@@ -694,20 +712,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         //menu item selected
         switch (item.getItemId()) {
             case R.id.action_disconnect:
-                //openJamsActivity();
-                //((JamListActivity) getActivity()).ddf_disconnect();
                 break;
-            /*
-            case R.id.action_shuffle:
-                musicSrv.setShuffle();
-                break;
-            case R.id.action_end:
-                stopService(playIntent);
-                musicSrv = null;
-                System.exit(0);
-                break;
-            */
-
         }
         return super.onOptionsItemSelected(item);
     }
@@ -790,7 +795,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             Toast.makeText(PlayerActivity.this, "Request processed. One moment.",
                     Toast.LENGTH_SHORT).show();
             SongTimer songtimer = new SongTimer(localPlayTime, musicSrv, controller, actionstring,
-                    context);
+                    context, false);
         }
     }
 
@@ -857,7 +862,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             Toast.makeText(PlayerActivity.this, "Play/Pause request successfully sent.",
                     Toast.LENGTH_SHORT).show();
             SongTimer songtimer = new SongTimer(localPlayTime, musicSrv, controller, actionstring,
-                    context);
+                    context, false);
         }
     }
 
@@ -903,6 +908,36 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                     String timestamp;
                     Log.d(TAG, "datatype: " + dataType);
                     switch (dataType) {
+                        case "LocalPlay_1":
+                            // set timer for five seconds
+                            receiveTimeStamp(client);
+                            mainHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    progressDialog.dismiss();
+                                    getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                                    Toast.makeText(PlayerActivity.this, "File received",
+                                            Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                            new SongTimer(ACTION_DELAY, musicSrv, controller, "Play", context, true);
+                            sendMessage("LocalPlay_2");
+                            break;
+                        case "LocalPlay_2":
+                            receiveTimeStamp(client);
+                            mainHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    progressDialog.dismiss();
+                                    getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                                    Toast.makeText(PlayerActivity.this, "File received",
+                                            Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                            Long latency = (System.currentTimeMillis() - starttime)/2;
+                            new SongTimer(ACTION_DELAY - latency, musicSrv, controller, "Play",
+                                    context, true);
+                            break;
                         case "Play":
                             timestamp = receiveTimeStamp(client);
                             receivedCommunication(timestamp);
@@ -940,7 +975,6 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                 e.printStackTrace();
             }
         }
-
 
         private String receiveIP(Socket client) {
             Log.d(TAG, "receiveIPMethod");
