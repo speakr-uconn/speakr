@@ -69,6 +69,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     private ListView songQueueView, songListView;
     ImageView album_art;
     private MusicService musicSrv;
+    private String SynchronizationMode = "Local";     // could be NTPServer, LocalAverage, Local
     private Intent playIntent;
     final private long ACTION_DELAY = 5000;
     private boolean musicBound = false;
@@ -536,11 +537,18 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
 
         musicSrv.setSong(Integer.parseInt(view.getTag().toString()));
         Log.d(TAG, "execute offset class");
-        try {
-            starttime = System.currentTimeMillis();
-            sendMessage("LocalPlay_1");
-        } catch (Exception e) {
-            e.printStackTrace();
+        switch(SynchronizationMode) {
+            case "NTPServer":
+                new SendTimeStamp(getApplicationContext()).execute("Play");
+                break;
+            case "Local":
+                try {
+                    starttime = System.currentTimeMillis();
+                    sendMessage("LocalPlay_1");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                break;
         }
     }
 
@@ -621,7 +629,19 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     }
 
     private void playNext() {
-        new SendTimeStamp(getApplicationContext()).execute("Next");
+        switch (SynchronizationMode) {
+            case "NTPServer":
+                new SendTimeStamp(getApplicationContext()).execute("Next");
+                break;
+            case "Local":
+                try {
+                    starttime = System.currentTimeMillis();
+                    sendMessage("LocalNext_1");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                break;
+        }
         if (playbackPaused) {
             setController();
             playbackPaused = false;
@@ -629,7 +649,19 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     }
 
     private void playPrev() {
-        new SendTimeStamp(getApplicationContext()).execute("Previous");
+        switch (SynchronizationMode) {
+            case "NTPServer":
+                new SendTimeStamp(getApplicationContext()).execute("Previous");
+                break;
+            case "Local":
+                try {
+                    starttime = System.currentTimeMillis();
+                    sendMessage("LocalPrevious_1");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                break;
+        }
         if (playbackPaused) {
             setController();
             playbackPaused = false;
@@ -639,7 +671,19 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     @Override
     public void start() {
         // restart the music player after a pause.
-        new SendTimeStamp(getApplicationContext()).execute("Resume");
+        switch(SynchronizationMode) {
+            case "NTPServer":
+                new SendTimeStamp(getApplicationContext()).execute("Resume");
+                break;
+            case "Local":
+                try {
+                    starttime = System.currentTimeMillis();
+                    sendMessage("LocalResume_1");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                break;
+        }
     }
 
     @Override
@@ -650,8 +694,20 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     @Override
     public void pause() {
         // Pause music player
-        playbackPaused = true;
-        new SendTimeStamp(getApplicationContext()).execute("Pause");
+        switch(SynchronizationMode) {
+            case "NTPServer":
+                playbackPaused = true;
+                new SendTimeStamp(getApplicationContext()).execute("Pause");
+                break;
+            case "Local":
+                try {
+                    starttime = System.currentTimeMillis();
+                    sendMessage("LocalPause_1");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                break;
+        }
     }
 
     @Override
@@ -920,8 +976,8 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                                             Toast.LENGTH_SHORT).show();
                                 }
                             });
-                            new SongTimer(ACTION_DELAY, musicSrv, controller, "Play", context, true);
                             sendMessage("LocalPlay_2");
+                            new SongTimer(ACTION_DELAY, musicSrv, controller, "Play", context, true);
                             break;
                         case "LocalPlay_2":
                             receiveTimeStamp(client);
@@ -934,8 +990,124 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                                             Toast.LENGTH_SHORT).show();
                                 }
                             });
-                            Long latency = (System.currentTimeMillis() - starttime)/2;
-                            new SongTimer(ACTION_DELAY - latency, musicSrv, controller, "Play",
+                            Long playlatency = (System.currentTimeMillis() - starttime)/2;
+                            new SongTimer(ACTION_DELAY - playlatency, musicSrv, controller, "Play",
+                                    context, true);
+                            break;
+                        case "LocalPause_1":
+                            receiveTimeStamp(client);
+                            mainHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    progressDialog.dismiss();
+                                    getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                                    Toast.makeText(PlayerActivity.this, "File received",
+                                            Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                            sendMessage("LocalPause_2");
+                            new SongTimer(ACTION_DELAY, musicSrv, controller, "Pause", context, true);
+                            break;
+                        case "LocalPause_2":
+                            receiveTimeStamp(client);
+                            mainHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    progressDialog.dismiss();
+                                    getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                                    Toast.makeText(PlayerActivity.this, "File received",
+                                            Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                            long pauselatency = (System.currentTimeMillis() - starttime)/2;
+                            new SongTimer(ACTION_DELAY - pauselatency, musicSrv, controller, "Pause",
+                                    context, true);
+                            break;
+                        case "LocalNext_1":
+                            receiveTimeStamp(client);
+                            mainHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    progressDialog.dismiss();
+                                    getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                                    Toast.makeText(PlayerActivity.this, "File received",
+                                            Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                            sendMessage("LocalNext_2");
+                            new SongTimer(ACTION_DELAY, musicSrv, controller, "Next", context, true);
+                            break;
+                        case "LocalNext_2":
+                            receiveTimeStamp(client);
+                            mainHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    progressDialog.dismiss();
+                                    getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                                    Toast.makeText(PlayerActivity.this, "File received",
+                                            Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                            long nextlatency = (System.currentTimeMillis() - starttime)/2;
+                            new SongTimer(ACTION_DELAY - nextlatency, musicSrv, controller, "Next",
+                                    context, true);
+                            break;
+                        case "LocalPrevious_1":
+                            receiveTimeStamp(client);
+                            mainHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    progressDialog.dismiss();
+                                    getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                                    Toast.makeText(PlayerActivity.this, "File received",
+                                            Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                            sendMessage("LocalPrevious_2");
+                            new SongTimer(ACTION_DELAY, musicSrv, controller, "Previous", context, true);
+                            break;
+                        case "LocalPrevious_2":
+                            receiveTimeStamp(client);
+                            mainHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    progressDialog.dismiss();
+                                    getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                                    Toast.makeText(PlayerActivity.this, "File received",
+                                            Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                            long previousLatency = (System.currentTimeMillis() - starttime)/2;
+                            new SongTimer(ACTION_DELAY - previousLatency, musicSrv, controller, "Previous",
+                                    context, true);
+                            break;
+                        case "LocalResume_1":
+                            receiveTimeStamp(client);
+                            mainHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    progressDialog.dismiss();
+                                    getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                                    Toast.makeText(PlayerActivity.this, "File received",
+                                            Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                            sendMessage("LocalResume_2");
+                            new SongTimer(ACTION_DELAY, musicSrv, controller, "Resume", context, true);
+                            break;
+                        case "LocalResume_2":
+                            receiveTimeStamp(client);
+                            mainHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    progressDialog.dismiss();
+                                    getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                                    Toast.makeText(PlayerActivity.this, "File received",
+                                            Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                            long resumeLatency = (System.currentTimeMillis() - starttime)/2;
+                            new SongTimer(ACTION_DELAY - resumeLatency, musicSrv, controller, "Resume",
                                     context, true);
                             break;
                         case "Play":
