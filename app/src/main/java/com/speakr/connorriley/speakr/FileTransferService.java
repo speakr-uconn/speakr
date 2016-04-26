@@ -39,6 +39,7 @@ public class FileTransferService extends IntentService {
     public static final String EXTRAS_FILE_PATH = "file.url";
     public static final String EXTRAS_TIMESTAMP = "timestamp";
     public static final String EXTRAS_ADDRESS = "go_host";
+    public static final String EXTRAS_PAUSETIME = "go_pause";
     public static final String EXTRAS_PORT = "go_port";
     public static final String PARAM_OUT_MSG = "output";
     public static final String ACTION_SEND_IP_ACK = "send_ip_ack";
@@ -115,6 +116,12 @@ public class FileTransferService extends IntentService {
 
                 //send string so they know to expect timestamp
                 datastream.writeUTF(actionString);
+
+                if(actionString.equals("LocalPause_1") || actionString.equals("LocalPause_2")){
+                    Log.e("FTS", "action string equals LocalPause 1/2");
+                    String p = intent.getExtras().getString(EXTRAS_PAUSETIME);
+                    datastream.writeUTF(p);
+                }
 
                 // send timestamp
                 String timestamp = intent.getExtras().getString(EXTRAS_TIMESTAMP);

@@ -230,6 +230,8 @@ public class MusicService extends Service implements
         player.pause();
     }
 
+
+
     public void seek(int posn){
         player.seekTo(posn);
     }
