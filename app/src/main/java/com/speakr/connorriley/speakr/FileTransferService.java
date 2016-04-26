@@ -140,27 +140,21 @@ public class FileTransferService extends IntentService {
             int port = intent.getExtras().getInt(EXTRAS_PORT);
             try {
                 Log.d(TAG, "Opening client socket for address- ");
-
                 socket.bind(null);
                 socket.connect((new InetSocketAddress(host, port)), SOCKET_TIMEOUT);
                 Log.d(TAG, "Client socket - " + socket.isConnected());
-
                 DataOutputStream datastream = new DataOutputStream(socket.getOutputStream());
-
                 //send "IP" label
                 datastream.writeUTF("IP");
-
                 ArrayList<String> localIPArray = getDottedDecimalIP(getLocalIPAddress());
                 String localIP = getWifiDirectIP(localIPArray);
                 Log.d(TAG, "Local IP: " + localIP);
                 datastream.writeUTF(localIP);
-
                 Intent broadcastIntent = new Intent();
                 broadcastIntent.addCategory(Intent.CATEGORY_DEFAULT);
                 broadcastIntent.setAction(JamListActivity.JamListActivityReceiver.ACTION_RESP);
                 broadcastIntent.putExtra(PARAM_OUT_MSG, "Sent IP");
                 sendBroadcast(broadcastIntent);
-
             } catch (IOException e) {
                 Log.e(TAG, e.getMessage());
             }

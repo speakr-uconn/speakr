@@ -20,16 +20,20 @@ public class SongTimer {
     private MusicController controller;
     private String TAG = "SongTimer";
     public SongTimer(long localPlayTime, MusicService m, MusicController c, String action,
-                     Context context1) {
+                     Context context1, boolean local) {
         Log.d(TAG, "New SongTimer");
         controller = c;
         context = context1;
         musicSrv = m;
         timer = new Timer();
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(localPlayTime);
-        Date time = calendar.getTime();
-        timer.schedule(new SongTask(action), time);
+        if (local) {
+            timer.schedule(new SongTask(action), localPlayTime);
+        } else {
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTimeInMillis(localPlayTime);
+            Date time = calendar.getTime();
+            timer.schedule(new SongTask(action), time);
+        }
     }
 
     class SongTask extends TimerTask {
