@@ -635,7 +635,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                 });
         controller.setMediaPlayer(this);
         //-- Place the controller, with the { |<, <<, play/pause, >>, >| } buttons, at the bottom (anchored to the bottom of the layout)
-        controller.setAnchorView(findViewById(R.id.playerLayout));
+        controller.setAnchorView(findViewById(R.id.playerLayoutBottom));
         controller.setEnabled(true);
     }
 
