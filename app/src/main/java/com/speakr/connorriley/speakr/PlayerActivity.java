@@ -69,6 +69,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     private ListView songQueueView, songListView;
     ImageView album_art;
     private MusicService musicSrv;
+    private int upIndex, downIndex;
     private String SynchronizationMode = "Local";     // could be NTPServer, LocalAverage, Local
     private Intent playIntent;
     final private long ACTION_DELAY = 5000;
@@ -499,15 +500,19 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
 
     public void moveUp(View view) {
         int index = getQueueRowIndex(view);
-        if (index > 0)
+        if (index > 0) {
             Collections.swap(songQueue, index, index - 1);
+            sendMoveQueue("MoveUp", Integer.toString(index));
+        }
         updateSongAdapters();
     }
 
     public void moveDown(View view) {
         int index = getQueueRowIndex(view);
-        if (index < (songQueue.size() - 1))
+        if (index < (songQueue.size() - 1)) {
             Collections.swap(songQueue, index, index + 1);
+            sendMoveQueue("MoveDown", Integer.toString(index));
+        }
         updateSongAdapters();
     }
 
@@ -556,6 +561,24 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         }
     }
 
+    private void sendMoveQueue(String message, String index) {
+        WifiSingleton wifiSingleton = WifiSingleton.getInstance();
+        if (wifiSingleton.getInfo() != null) {
+            Intent serviceIntent = new Intent(this, FileTransferService.class);
+            serviceIntent.setAction(FileTransferService.ACTION_SEND_MOVEQUEUE);
+            serviceIntent.putExtra(FileTransferService.EXTRAS_MOVEINDEX, index);
+            serviceIntent.putExtra("Action", message);
+            if (!wifiSingleton.getInfo().isGroupOwner) {
+                serviceIntent.putExtra(FileTransferService.EXTRAS_ADDRESS,
+                        wifiSingleton.getInfo().groupOwnerAddress.getHostAddress());
+            } else {
+                serviceIntent.putExtra(FileTransferService.EXTRAS_ADDRESS,
+                        wifiSingleton.getMemberIP());
+            }
+            serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, 8990);
+            startService(serviceIntent);
+        }
+    }
     private void sendMessage(String message, String extra) {
         Log.d(TAG, "SendTimeStamp");
         //IT"S TIME TO SEND THE TIME :)
@@ -572,7 +595,6 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                         wifiSingleton.getMemberIP());
             }
             if(message.equals("LocalPause_1") || message.equals("LocalPause_2")){
-                Log.d("PlayerActivity", "message equals LocalPause 1/2");
                 serviceIntent.putExtra(FileTransferService.EXTRAS_PAUSETIME,
                         extra);
             }
@@ -713,7 +735,6 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                 break;
             case "Local":
                 try {
-                    starttime = System.currentTimeMillis();
                     int currPos = musicSrv.getPosn();
                     Log.e("currpos", Integer.toString(currPos));
                     Log.e("currpos + action delay", Integer.toString((int) (currPos + ACTION_DELAY)));
@@ -724,6 +745,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                     else
                         pausePos = (long) currPos;
 
+                    starttime = System.currentTimeMillis();
                     sendMessage("LocalPause_1", "" + pausePos);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -1016,8 +1038,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                                     context, true, null);
                             break;
                         case "LocalPause_1":
-                            pauseTime = is.readUTF();
-                            receiveTimeStamp(client);
+                            pauseTime = receiveTimeStamp(client);
                             mainHandler.post(new Runnable() {
                                 @Override
                                 public void run() {
@@ -1031,8 +1052,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                             new SongTimer(ACTION_DELAY, musicSrv, controller, "Pause", context, true, pauseTime);
                             break;
                         case "LocalPause_2":
-                            pauseTime = is.readUTF();
-                            receiveTimeStamp(client);
+                            pauseTime = receiveTimeStamp(client);
                             mainHandler.post(new Runnable() {
                                 @Override
                                 public void run() {
@@ -1133,6 +1153,34 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                             new SongTimer(ACTION_DELAY - resumeLatency, musicSrv, controller, "Resume",
                                     context, true, null);
                             break;
+                        case "MoveUp":
+                            upIndex = receiveMove(client);
+                            mainHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    progressDialog.dismiss();
+                                    getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                                    Toast.makeText(PlayerActivity.this, "Move Song Up in Queue",
+                                            Toast.LENGTH_SHORT).show();
+                                    Collections.swap(songQueue, upIndex, upIndex - 1);
+                                    updateSongAdapters();
+                                }
+                            });
+                            break;
+                        case "MoveDown":
+                            downIndex = receiveMove(client);
+                            mainHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    progressDialog.dismiss();
+                                    getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                                    Toast.makeText(PlayerActivity.this, "Move Song Down in Queue",
+                                            Toast.LENGTH_SHORT).show();
+                                    Collections.swap(songQueue, downIndex, downIndex + 1);
+                                    updateSongAdapters();
+                                }
+                            });
+                            break;
                         case "Play":
                             timestamp = receiveTimeStamp(client);
                             receivedCommunication(timestamp);
@@ -1195,6 +1243,18 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                 e.printStackTrace();
             }
             return null;
+        }
+        private int receiveMove(Socket client) {
+            Log.d(TAG, "receive move");
+            DataInputStream is = null;
+            try {
+                is = new DataInputStream(client.getInputStream());
+                String index = is.readUTF();
+                return Integer.parseInt(index);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return 0;
         }
 
         private String receiveFile(Socket client) {

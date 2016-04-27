@@ -41,25 +41,6 @@ public class WifiSingleton {
                     Log.d(TAG, "removeGroup onFailure -" + reason);
                 }
             });
-            /*mManager.requestGroupInfo(mChannel, new WifiP2pManager.GroupInfoListener() {
-                @Override
-                public void onGroupInfoAvailable(WifiP2pGroup group) {
-                    if (group != null && mManager != null && mChannel != null
-                            ) {
-                        mManager.removeGroup(mChannel, new WifiP2pManager.ActionListener() {
-
-                            @Override
-                            public void onSuccess() {
-                                Log.d(TAG, "removeGroup onSuccess -");
-                            }
-                            @Override
-                            public void onFailure(int reason) {
-                                Log.d(TAG, "removeGroup onFailure -" + reason);
-                            }
-                        });
-                    }
-                }
-            });*/
         }
     }
 
