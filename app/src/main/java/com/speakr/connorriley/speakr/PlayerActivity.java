@@ -69,7 +69,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     private ListView songQueueView, songListView;
     ImageView album_art;
     private MusicService musicSrv;
-    private int upIndex, downIndex;
+    private int upIndex, downIndex, removeIndex;
     private String SynchronizationMode = "Local";     // could be NTPServer, LocalAverage, Local
     private Intent playIntent;
     final private long ACTION_DELAY = 5000;
@@ -128,6 +128,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                                 if (index != -1) {
                                     Song songToRemove = songQueue.get(index);
                                     songQueue.remove(songToRemove);
+                                    sendQueueAction("Remove", Integer.toString(index));
                                     updateSongAdapters();
                                 }
                                 break;
@@ -488,6 +489,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         return false;
     }
 
+    @Deprecated
     public void removeFromQueue(View view) {
         int index = getQueueRowIndex(view);
         if (index != -1) {
@@ -502,7 +504,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         int index = getQueueRowIndex(view);
         if (index > 0) {
             Collections.swap(songQueue, index, index - 1);
-            sendMoveQueue("MoveUp", Integer.toString(index));
+            sendQueueAction("MoveUp", Integer.toString(index));
         }
         updateSongAdapters();
     }
@@ -511,7 +513,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         int index = getQueueRowIndex(view);
         if (index < (songQueue.size() - 1)) {
             Collections.swap(songQueue, index, index + 1);
-            sendMoveQueue("MoveDown", Integer.toString(index));
+            sendQueueAction("MoveDown", Integer.toString(index));
         }
         updateSongAdapters();
     }
@@ -561,7 +563,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         }
     }
 
-    private void sendMoveQueue(String message, String index) {
+    private void sendQueueAction(String message, String index) {
         WifiSingleton wifiSingleton = WifiSingleton.getInstance();
         if (wifiSingleton.getInfo() != null) {
             Intent serviceIntent = new Intent(this, FileTransferService.class);
@@ -1177,6 +1179,21 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                                     Toast.makeText(PlayerActivity.this, "Move Song Down in Queue",
                                             Toast.LENGTH_SHORT).show();
                                     Collections.swap(songQueue, downIndex, downIndex + 1);
+                                    updateSongAdapters();
+                                }
+                            });
+                            break;
+                        case "Remove":
+                            removeIndex = receiveMove(client);
+                            mainHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    progressDialog.dismiss();
+                                    getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                                    Toast.makeText(PlayerActivity.this, "Remove song from Queue",
+                                            Toast.LENGTH_SHORT).show();
+                                    Song songToRemove = songQueue.get(removeIndex);
+                                    songQueue.remove(songToRemove);
                                     updateSongAdapters();
                                 }
                             });
