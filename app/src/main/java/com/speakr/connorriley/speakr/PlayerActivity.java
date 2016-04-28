@@ -83,6 +83,8 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     private Thread serverthread;
     private String TAG = PlayerActivity.class.getSimpleName();
     private Long starttime;
+    private ServerRunnable serverRunnable;
+
     // Broadcast receiver to determine when music player has been prepared
     private BroadcastReceiver onPrepareReceiver = new BroadcastReceiver() {
         @Override
@@ -97,6 +99,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         //-- TODO: Add useful items, such as the "Shuffle" icon, to the action bar ...
         //-- In menu_main.xml I had several app:showAsAction="always" calls, but it didn't fix it. Haven't gone back to fix that yet.
         super.onCreate(savedInstanceState);
+        serverRunnable = new ServerRunnable(getApplicationContext());
         setContentView(R.layout.activity_player);
         setupNavigationView();
         setupToolbar();
@@ -106,6 +109,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         songListView = (ListView) findViewById(R.id.song_list);
         songQueue = new ArrayList<>();
         config();
+        setController();
         getPermissions();
     }
 
@@ -156,9 +160,15 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     @Override
     protected void onResume() {
         super.onResume();
-        ServerRunnable serverRunnable = new ServerRunnable(getApplicationContext());
-        serverthread = new Thread(serverRunnable);
-        serverthread.start();
+        if(serverRunnable == null) {
+            serverRunnable = new ServerRunnable(getApplicationContext());
+        }
+        if(serverthread == null) {
+            serverthread = new Thread(serverRunnable);
+        }
+        if(!serverthread.isAlive()) {
+            serverthread.start();
+        }
         IntentFilter filter = new IntentFilter(PlayerActivityReceiver.ACTION_RESP);
         filter.addCategory(Intent.CATEGORY_DEFAULT);
         receiver = new PlayerActivityReceiver();
@@ -173,7 +183,9 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                 new IntentFilter("MEDIA_PLAYER_PREPARED"));
         config();
         if (paused) {
-            setController();
+            if(playbackPaused) {
+                setController();
+            }
             paused = false;
         }
     }
@@ -182,17 +194,21 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     protected void onPause() {
         Log.d(TAG, "On Pause");
         try {
-            unbindService(musicConnection);
-            unregisterReceiver(receiver);
-            stopService(playIntent);
             WifiSingleton.getInstance().disconnect();
         } catch(IllegalArgumentException e) {
             e.printStackTrace();
         }
-        controller.hide();
-        musicSrv = null;
-        super.onPause();
+        //controller.hide();
         paused = true;
+        super.onPause();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unbindService(musicConnection);
+        unregisterReceiver(receiver);
+        stopService(playIntent);
     }
 
     private void setUpTimeStamp(Long receivedTime, String actionstring) {
@@ -272,7 +288,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     public void config() {
         songList = WifiSingleton.getInstance().getSongList();
         updateSongAdapters();
-        setController();
+        //setController();
     }
 
     public void openPlayerActivity() {
@@ -561,6 +577,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         } else {
             musicSrv.playSong();
         }
+        playbackPaused = false;
     }
 
     private void sendQueueAction(String message, String index) {
@@ -740,6 +757,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         } else {
             musicSrv.go();
         }
+        playbackPaused = false;
     }
 
     @Override
@@ -780,6 +798,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         } else {
             musicSrv.pausePlayer();
         }
+        playbackPaused = true;
     }
 
     @Override
