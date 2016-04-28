@@ -16,6 +16,7 @@ public class WifiSingleton {
     private String memberIP;
     private WifiP2pManager mManager;
     private WifiP2pManager.Channel mChannel;
+    private boolean connected;
     protected WifiSingleton() {
 
     }
@@ -41,25 +42,6 @@ public class WifiSingleton {
                     Log.d(TAG, "removeGroup onFailure -" + reason);
                 }
             });
-            /*mManager.requestGroupInfo(mChannel, new WifiP2pManager.GroupInfoListener() {
-                @Override
-                public void onGroupInfoAvailable(WifiP2pGroup group) {
-                    if (group != null && mManager != null && mChannel != null
-                            ) {
-                        mManager.removeGroup(mChannel, new WifiP2pManager.ActionListener() {
-
-                            @Override
-                            public void onSuccess() {
-                                Log.d(TAG, "removeGroup onSuccess -");
-                            }
-                            @Override
-                            public void onFailure(int reason) {
-                                Log.d(TAG, "removeGroup onFailure -" + reason);
-                            }
-                        });
-                    }
-                }
-            });*/
         }
     }
 
@@ -74,6 +56,9 @@ public class WifiSingleton {
     public void setManager(WifiP2pManager manager) {
         mManager = manager;
     }
+    public void setConnected(boolean x) {
+        connected = x;
+    }
     public void setChannel(WifiP2pManager.Channel channel) {
         mChannel = channel;
     }
@@ -81,7 +66,9 @@ public class WifiSingleton {
         memberIP = ip;
         Log.d(TAG, "member ip: " + memberIP);
     }
-
+    public boolean isConnected() {
+        return connected;
+    }
     public String getMemberIP(){
         return memberIP;
     }

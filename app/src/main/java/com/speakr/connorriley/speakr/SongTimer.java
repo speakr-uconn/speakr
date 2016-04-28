@@ -19,27 +19,30 @@ public class SongTimer {
     private Context context;
     private MusicController controller;
     private String TAG = "SongTimer";
+    private String pause;
     public SongTimer(long localPlayTime, MusicService m, MusicController c, String action,
-                     Context context1, boolean local) {
+                     Context context1, boolean local, String pauseTime) {
         Log.d(TAG, "New SongTimer");
         controller = c;
         context = context1;
         musicSrv = m;
         timer = new Timer();
         if (local) {
-            timer.schedule(new SongTask(action), localPlayTime);
+            timer.schedule(new SongTask(action, pauseTime), localPlayTime);
         } else {
             Calendar calendar = Calendar.getInstance();
             calendar.setTimeInMillis(localPlayTime);
             Date time = calendar.getTime();
-            timer.schedule(new SongTask(action), time);
+            timer.schedule(new SongTask(action, null), time);
         }
     }
 
     class SongTask extends TimerTask {
         private String action;
-        public SongTask(String action) {
+        private String pauseTime;
+        public SongTask(String action, String t) {
             this.action = action;
+            this.pauseTime = t;
         }
         public void run() {
             Log.d(TAG, action);
@@ -49,6 +52,8 @@ public class SongTimer {
                     musicSrv.playSong();
                     break;
                 case "Pause":
+                    Log.e("SongTime", Integer.toString((int) Long.parseLong(pauseTime)));
+                    musicSrv.seek((int) Long.parseLong(pauseTime));
                     musicSrv.pausePlayer();
                     break;
                 case "Resume":

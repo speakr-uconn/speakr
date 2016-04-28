@@ -39,9 +39,12 @@ public class FileTransferService extends IntentService {
     public static final String EXTRAS_FILE_PATH = "file.url";
     public static final String EXTRAS_TIMESTAMP = "timestamp";
     public static final String EXTRAS_ADDRESS = "go_host";
+    public static final String EXTRAS_PAUSETIME = "go_pause";
     public static final String EXTRAS_PORT = "go_port";
     public static final String PARAM_OUT_MSG = "output";
     public static final String ACTION_SEND_IP_ACK = "send_ip_ack";
+    public static final String EXTRAS_MOVEINDEX = "move_index";
+    public static final String ACTION_SEND_MOVEQUEUE = "move_queue";
 
     private final String TAG = FileTransferService.class.getSimpleName();
 
@@ -109,23 +112,19 @@ public class FileTransferService extends IntentService {
                 socket.bind(null);
                 socket.connect((new InetSocketAddress(host, port)), SOCKET_TIMEOUT);
                 Log.d(TAG, "Client socket - " + socket.isConnected());
-
-
                 DataOutputStream datastream = new DataOutputStream(socket.getOutputStream());
-
                 //send string so they know to expect timestamp
                 datastream.writeUTF(actionString);
-
-                // send timestamp
-                String timestamp = intent.getExtras().getString(EXTRAS_TIMESTAMP);
-                Log.e("String", "timestamp:  " + timestamp);
-                datastream.writeUTF(timestamp);
-
-                /*Intent broadcastIntent = new Intent();
-                broadcastIntent.addCategory(Intent.CATEGORY_DEFAULT);
-                broadcastIntent.setAction(PlayerActivity.PlayerActivityReceiver.ACTION_RESP);
-                broadcastIntent.putExtra(PARAM_OUT_MSG, "Sent request");
-                sendBroadcast(broadcastIntent);*/
+                if(actionString.equals("LocalPause_1") || actionString.equals("LocalPause_2")){
+                    Log.e("FTS", "action string equals LocalPause 1/2");
+                    String p = intent.getExtras().getString(EXTRAS_PAUSETIME);
+                    datastream.writeUTF(p);
+                }
+                else {// send timestamp
+                    String timestamp = intent.getExtras().getString(EXTRAS_TIMESTAMP);
+                    Log.e("String", "timestamp:  " + timestamp);
+                    datastream.writeUTF(timestamp);
+                }
 
             } catch (IOException e) {
                 Log.e(TAG, e.getMessage());
@@ -176,6 +175,24 @@ public class FileTransferService extends IntentService {
                 datastream.writeUTF("IP_ACK");
                 String member_ip = intent.getExtras().getString("IP_Address");
                 datastream.writeUTF(member_ip);
+            } catch (IOException e) {
+                Log.e(TAG, e.getMessage());
+            }
+        } else if(intent.getAction().equals(ACTION_SEND_MOVEQUEUE)) {
+            String actionString = intent.getExtras().getString("Action");
+            String host = intent.getExtras().getString(EXTRAS_ADDRESS);
+            String index = intent.getExtras().getString(EXTRAS_MOVEINDEX);
+            Socket socket = new Socket();
+            int port = intent.getExtras().getInt(EXTRAS_PORT);
+            try {
+                Log.d(TAG, "Opening client socket for timestamp- ");
+                socket.bind(null);
+                socket.connect((new InetSocketAddress(host, port)), SOCKET_TIMEOUT);
+                Log.d(TAG, "Client socket - " + socket.isConnected());
+                DataOutputStream datastream = new DataOutputStream(socket.getOutputStream());
+                datastream.writeUTF(actionString);
+                Log.e("String", "index:  " + index);
+                datastream.writeUTF(index);
             } catch (IOException e) {
                 Log.e(TAG, e.getMessage());
             }
