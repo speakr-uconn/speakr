@@ -58,31 +58,22 @@ public class FileTransferService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        Log.d("FileTransferService", "onHandleIntent Started");
         Context context = getApplicationContext();
         if (intent.getAction().equals(ACTION_SEND_FILE)) {
             String fileUri = intent.getExtras().getString(EXTRAS_FILE_PATH);
             String host = intent.getExtras().getString(EXTRAS_ADDRESS);
             // check this address
-            Log.d(TAG, "host: " + host);
             Socket socket = new Socket();
             int port = intent.getExtras().getInt(EXTRAS_PORT);
             try {
-                Log.d(TAG, "Opening client socket - ");
                 socket.bind(null);
                 socket.connect((new InetSocketAddress(host, port)), SOCKET_TIMEOUT);
-                Log.d(TAG, "Client socket - " + socket.isConnected());
-
-
                 DataOutputStream datastream = new DataOutputStream(socket.getOutputStream());
                 ContentResolver cr = context.getContentResolver();
-
                 //send "File" label
                 datastream.writeUTF("File");
-
                 // send mime type
                 String type = cr.getType(Uri.parse(fileUri));
-                Log.e("String", "type:  " + type);
                 datastream.writeUTF(type);
 
                 OutputStream stream = socket.getOutputStream();
@@ -93,7 +84,6 @@ public class FileTransferService extends IntentService {
                     Log.d(TAG, e.toString());
                 }
                 copyFile(is, stream);
-                Log.d(TAG, "Client: Data written");
                 Intent broadcastIntent = new Intent();
                 broadcastIntent.addCategory(Intent.CATEGORY_DEFAULT);
                 broadcastIntent.setAction(PlayerActivity.PlayerActivityReceiver.ACTION_RESP);
@@ -108,21 +98,17 @@ public class FileTransferService extends IntentService {
             Socket socket = new Socket();
             int port = intent.getExtras().getInt(EXTRAS_PORT);
             try {
-                Log.d(TAG, "Opening client socket for timestamp- ");
                 socket.bind(null);
                 socket.connect((new InetSocketAddress(host, port)), SOCKET_TIMEOUT);
-                Log.d(TAG, "Client socket - " + socket.isConnected());
                 DataOutputStream datastream = new DataOutputStream(socket.getOutputStream());
                 //send string so they know to expect timestamp
                 datastream.writeUTF(actionString);
                 if(actionString.equals("LocalPause_1") || actionString.equals("LocalPause_2")){
-                    Log.e("FTS", "action string equals LocalPause 1/2");
                     String p = intent.getExtras().getString(EXTRAS_PAUSETIME);
                     datastream.writeUTF(p);
                 }
                 else {// send timestamp
                     String timestamp = intent.getExtras().getString(EXTRAS_TIMESTAMP);
-                    Log.e("String", "timestamp:  " + timestamp);
                     datastream.writeUTF(timestamp);
                 }
 
@@ -134,20 +120,16 @@ public class FileTransferService extends IntentService {
         //send current device's address
         else if (intent.getAction().equals(ACTION_SEND_ADDRESS)) {
             String host = intent.getExtras().getString(EXTRAS_ADDRESS);
-            Log.d(TAG, "send address: " + host);
             Socket socket = new Socket();
             int port = intent.getExtras().getInt(EXTRAS_PORT);
             try {
-                Log.d(TAG, "Opening client socket for address- ");
                 socket.bind(null);
                 socket.connect((new InetSocketAddress(host, port)), SOCKET_TIMEOUT);
-                Log.d(TAG, "Client socket - " + socket.isConnected());
                 DataOutputStream datastream = new DataOutputStream(socket.getOutputStream());
                 //send "IP" label
                 datastream.writeUTF("IP");
                 ArrayList<String> localIPArray = getDottedDecimalIP(getLocalIPAddress());
                 String localIP = getWifiDirectIP(localIPArray);
-                Log.d(TAG, "Local IP: " + localIP);
                 datastream.writeUTF(localIP);
                 Intent broadcastIntent = new Intent();
                 broadcastIntent.addCategory(Intent.CATEGORY_DEFAULT);
@@ -159,16 +141,11 @@ public class FileTransferService extends IntentService {
             }
         } else if (intent.getAction().equals(ACTION_SEND_IP_ACK)) {
             String host = intent.getExtras().getString(EXTRAS_ADDRESS);
-            Log.d(TAG, "send address: " + host);
             Socket socket = new Socket();
             int port = intent.getExtras().getInt(EXTRAS_PORT);
             try {
-                Log.d(TAG, "Opening client socket for address- ");
-
                 socket.bind(null);
                 socket.connect((new InetSocketAddress(host, port)), SOCKET_TIMEOUT);
-                Log.d(TAG, "Client socket - " + socket.isConnected());
-
                 DataOutputStream datastream = new DataOutputStream(socket.getOutputStream());
 
                 //send "IP" label
@@ -185,13 +162,10 @@ public class FileTransferService extends IntentService {
             Socket socket = new Socket();
             int port = intent.getExtras().getInt(EXTRAS_PORT);
             try {
-                Log.d(TAG, "Opening client socket for timestamp- ");
                 socket.bind(null);
                 socket.connect((new InetSocketAddress(host, port)), SOCKET_TIMEOUT);
-                Log.d(TAG, "Client socket - " + socket.isConnected());
                 DataOutputStream datastream = new DataOutputStream(socket.getOutputStream());
                 datastream.writeUTF(actionString);
-                Log.e("String", "index:  " + index);
                 datastream.writeUTF(index);
             } catch (IOException e) {
                 Log.e(TAG, e.getMessage());
@@ -211,7 +185,6 @@ public class FileTransferService extends IntentService {
         byte buf[] = new byte[1024];
         int len;
         long startTime = System.currentTimeMillis();
-        Log.d(TAG, "starting tranfser of file in copy file");
         try {
             while ((len = inputStream.read(buf)) != -1) {
                 out.write(buf, 0, len);
@@ -220,7 +193,6 @@ public class FileTransferService extends IntentService {
             out.close();
             inputStream.close();
             long endTime = System.currentTimeMillis() - startTime;
-            Log.v("", "Time taken to transfer all bytes is : " + endTime);
 
         } catch (IOException e) {
             Log.d(TAG, e.toString());

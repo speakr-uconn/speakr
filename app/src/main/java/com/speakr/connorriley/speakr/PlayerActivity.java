@@ -1021,10 +1021,8 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             try {
                 ServerSocket serverSocket = null;
                 serverSocket = new ServerSocket(8990);
-                Log.d(TAG, "Server: Socket opened");
                 while(true) {
                     Socket client = serverSocket.accept();
-                    Log.d(TAG, "Server: connection done");
                     mainHandler.post(new Runnable() {
                         @Override
                         public void run() {
@@ -1037,7 +1035,6 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                     DataInputStream is = new DataInputStream(client.getInputStream());
                     dataType = is.readUTF();
                     String timestamp, pauseTime;
-                    Log.d(TAG, "datatype: " + dataType);
                     switch (dataType) {
                         case "LocalPlay_1":
                             // set timer for five seconds
@@ -1267,7 +1264,6 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         }
 
         private String receiveIP(Socket client) {
-            Log.d(TAG, "receiveIPMethod");
             DataInputStream is = null;
             try {
                 is = new DataInputStream(client.getInputStream());
@@ -1280,7 +1276,6 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         }
 
         private String receiveTimeStamp(Socket client) {
-            Log.d(TAG, "recieveTimeStamp");
             DataInputStream is = null;
             try {
                 is = new DataInputStream(client.getInputStream());
@@ -1292,7 +1287,6 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             return null;
         }
         private int receiveMove(Socket client) {
-            Log.d(TAG, "receive move");
             DataInputStream is = null;
             try {
                 is = new DataInputStream(client.getInputStream());
@@ -1308,14 +1302,12 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             try {
                 DataInputStream is = new DataInputStream(client.getInputStream());
                 String mimeType = is.readUTF();
-                Log.d("String", "type: " + mimeType);
                 String fileExtention = null;
                 try {
                     fileExtention = getFileExtention(mimeType);
                 } catch (MimeTypeException e) {
                     e.printStackTrace();
                 }
-                Log.d(TAG, "File Extention: " + fileExtention);
                 final File f = new File(context.getFilesDir().getParent() + "/"
                         + "/wifip2pshared-" + System.currentTimeMillis()
                         + fileExtention);
@@ -1323,8 +1315,6 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                 if (!dirs.exists())
                     dirs.mkdirs();
                 f.createNewFile();
-
-                Log.d(TAG, "server: copying files " + f.toString());
                 InputStream inputstream = client.getInputStream();
                 copyFile(inputstream, new FileOutputStream(f));
                 return f.getAbsolutePath();
@@ -1340,7 +1330,6 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                 switch (dataType) {
                     case "File":
                         dataType = null;
-                        Log.d("DeviceDeatilFrag", "File copied - " + result);
                         // send a broadcast to add the file to the media store
                         File resultFile = new File(result);
                         Uri resultUri = Uri.fromFile(resultFile);
@@ -1360,9 +1349,6 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                             @Override
                             public void onScanCompleted(String path, Uri uri) {
                                 // when scan completes, bundle the path and uri and launch player
-                                Log.v(TAG,
-                                        "Scan completed: file " + path + " was scanned successfully: " + uri);
-                                Log.d("DeviceDetailFrag", "start music player intent");
                                 mainHandler.post(new Runnable() {
                                     @Override
                                     public void run() {
@@ -1488,7 +1474,6 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             byte buf[] = new byte[1024];
             int len;
             long startTime = System.currentTimeMillis();
-            Log.d(TAG, "starting tranfser of file in copy file");
             try {
                 while ((len = inputStream.read(buf)) != -1) {
                     out.write(buf, 0, len);
@@ -1497,10 +1482,8 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                 out.close();
                 inputStream.close();
                 long endTime = System.currentTimeMillis() - startTime;
-                Log.v("", "Time taken to transfer all bytes is : " + endTime);
 
             } catch (IOException e) {
-                Log.d(TAG, e.toString());
                 return false;
             }
             return true;
@@ -1513,7 +1496,6 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         @Override
         public void onReceive(Context context, Intent intent) {
             String text = intent.getStringExtra(FileTransferService.PARAM_OUT_MSG);
-            Log.d("player activity", "BROADCAST RECEIVED");
             progressDialog.dismiss();
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
             if(text.equals("Sent IP")){
