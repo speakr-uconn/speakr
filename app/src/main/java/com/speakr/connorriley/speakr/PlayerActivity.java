@@ -1049,7 +1049,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                                 public void run() {
                                     progressDialog.dismiss();
                                     getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
-                                    Toast.makeText(PlayerActivity.this, "File received",
+                                    Toast.makeText(PlayerActivity.this, "Play request received",
                                             Toast.LENGTH_SHORT).show();
                                 }
                             });
@@ -1063,7 +1063,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                                 public void run() {
                                     progressDialog.dismiss();
                                     getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
-                                    Toast.makeText(PlayerActivity.this, "File received",
+                                    Toast.makeText(PlayerActivity.this, "Play request received",
                                             Toast.LENGTH_SHORT).show();
                                 }
                             });
@@ -1078,7 +1078,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                                 public void run() {
                                     progressDialog.dismiss();
                                     getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
-                                    Toast.makeText(PlayerActivity.this, "File received",
+                                    Toast.makeText(PlayerActivity.this, "Pause request received",
                                             Toast.LENGTH_SHORT).show();
                                 }
                             });
@@ -1092,7 +1092,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                                 public void run() {
                                     progressDialog.dismiss();
                                     getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
-                                    Toast.makeText(PlayerActivity.this, "File received",
+                                    Toast.makeText(PlayerActivity.this, "Pause request received",
                                             Toast.LENGTH_SHORT).show();
                                 }
                             });
@@ -1107,7 +1107,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                                 public void run() {
                                     progressDialog.dismiss();
                                     getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
-                                    Toast.makeText(PlayerActivity.this, "File received",
+                                    Toast.makeText(PlayerActivity.this, "Next request received",
                                             Toast.LENGTH_SHORT).show();
                                 }
                             });
@@ -1121,7 +1121,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                                 public void run() {
                                     progressDialog.dismiss();
                                     getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
-                                    Toast.makeText(PlayerActivity.this, "File received",
+                                    Toast.makeText(PlayerActivity.this, "Next request received",
                                             Toast.LENGTH_SHORT).show();
                                 }
                             });
@@ -1136,7 +1136,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                                 public void run() {
                                     progressDialog.dismiss();
                                     getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
-                                    Toast.makeText(PlayerActivity.this, "File received",
+                                    Toast.makeText(PlayerActivity.this, "Previous request received",
                                             Toast.LENGTH_SHORT).show();
                                 }
                             });
@@ -1150,7 +1150,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                                 public void run() {
                                     progressDialog.dismiss();
                                     getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
-                                    Toast.makeText(PlayerActivity.this, "File received",
+                                    Toast.makeText(PlayerActivity.this, "Previous request received",
                                             Toast.LENGTH_SHORT).show();
                                 }
                             });
@@ -1165,7 +1165,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                                 public void run() {
                                     progressDialog.dismiss();
                                     getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
-                                    Toast.makeText(PlayerActivity.this, "File received",
+                                    Toast.makeText(PlayerActivity.this, "Resume request received",
                                             Toast.LENGTH_SHORT).show();
                                 }
                             });
@@ -1179,7 +1179,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                                 public void run() {
                                     progressDialog.dismiss();
                                     getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
-                                    Toast.makeText(PlayerActivity.this, "File received",
+                                    Toast.makeText(PlayerActivity.this, "Resume request received",
                                             Toast.LENGTH_SHORT).show();
                                 }
                             });
