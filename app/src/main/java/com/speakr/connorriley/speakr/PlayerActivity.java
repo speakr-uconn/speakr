@@ -811,6 +811,8 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     @Override
     public boolean canSeekBackward() {
         if(WifiSingleton.getInstance().isConnected()) {
+            Toast.makeText(PlayerActivity.this, "Seeking Disabled",
+                    Toast.LENGTH_SHORT).show();
             return false;
         } else {
             return true;
@@ -820,6 +822,8 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     @Override
     public boolean canSeekForward() {
         if(WifiSingleton.getInstance().isConnected()) {
+            Toast.makeText(PlayerActivity.this, "Seeking Disabled",
+                    Toast.LENGTH_SHORT).show();
             return false;
         } else {
             return true;
