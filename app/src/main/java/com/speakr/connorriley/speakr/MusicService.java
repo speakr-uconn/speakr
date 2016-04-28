@@ -188,9 +188,10 @@ public class MusicService extends Service implements
 
     public void playPrev(){
         songPosn--;
-        if(songPosn < 0) //-- go back to the last song in the list
-            songPosn=songs.size()-1;
-        playSong();
+        //if(songPosn < 0) //-- go back to the last song in the list
+        //    songPosn=songs.size()-1;
+        if(songPosn >= 0)
+            playSong();
     }
 
     //-- skip to next
@@ -208,10 +209,19 @@ public class MusicService extends Service implements
         }
         else{
             songPosn++;
-            if(songPosn >= songs.size())
-                songPosn=0;
+            //if(songPosn >= songs.size())
+            //    songPosn=0;
         }
-        playSong();
+        if(songPosn < songs.size())
+            playSong();
+    }
+
+    public boolean isFirstSong(){
+        return (songPosn == 0);
+    }
+
+    public boolean isLastSong(){
+        return (songPosn == (songs.size() - 1));
     }
 
     public int getPosn(){

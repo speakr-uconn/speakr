@@ -666,6 +666,9 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     }
 
     private void playNext() {
+        if(musicSrv.isLastSong()) //-- if we're at the last song in the queue, don't do it
+            return;
+
         if (WifiSingleton.getInstance().isConnected()) {
             switch (SynchronizationMode) {
                 case "NTPServer":
@@ -691,6 +694,11 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     }
 
     private void playPrev() {
+        if(musicSrv.isFirstSong())
+            //-- if we're at the first song in the queue, don't do it
+            return;
+
+
         if(WifiSingleton.getInstance().isConnected()) {
             switch (SynchronizationMode) {
                 case "NTPServer":
