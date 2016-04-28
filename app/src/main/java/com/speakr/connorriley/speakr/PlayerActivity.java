@@ -105,9 +105,8 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         configureSongQueueView(songQueueView);
         songListView = (ListView) findViewById(R.id.song_list);
         songQueue = new ArrayList<>();
-        getPermissions();
         config();
-
+        getPermissions();
     }
 
     private void configureSongQueueView(ListView songQueueView) {
@@ -173,7 +172,6 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         LocalBroadcastManager.getInstance(this).registerReceiver(onPrepareReceiver,
                 new IntentFilter("MEDIA_PLAYER_PREPARED"));
         config();
-        //getSongList();           // might not be config, might just need to get song list
         if (paused) {
             setController();
             paused = false;
@@ -272,7 +270,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     }
 
     public void config() {
-        getSongList();
+        songList = WifiSingleton.getInstance().getSongList();
         updateSongAdapters();
         setController();
     }
