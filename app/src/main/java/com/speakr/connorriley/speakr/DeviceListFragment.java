@@ -93,7 +93,7 @@ public class DeviceListFragment extends ListFragment implements PeerListListener
         //-- Now we need to show/hide our "fake" layout, while hiding the other ones
         //-- Hide all other connect/disconnect button layouts
         List<LinearLayout> proxies = listAdapter.getProxies();
-        Log.d(TAG, "Number of layouts: " + Integer.toString(pos));
+        Log.d(TAG, "Number of layouts: " + Integer.toString(pos) + "; size: " + Integer.toString(proxies.size()));
         for(int i = 0; i < proxies.size(); i++) {
             LinearLayout curLayout = proxies.get(i);
             if(i != pos)
