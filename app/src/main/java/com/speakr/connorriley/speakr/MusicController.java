@@ -12,6 +12,14 @@ public class MusicController extends MediaController {
         super(c);
     }
 
+    public MusicController(Context c, boolean isFfwd){
+        super(c, isFfwd);
+    }
+
     public void hide(){}
+
+    public void doSomething(){
+
+    }
 
 }
