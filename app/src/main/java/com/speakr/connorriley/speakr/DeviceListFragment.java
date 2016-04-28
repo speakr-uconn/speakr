@@ -89,6 +89,12 @@ public class DeviceListFragment extends ListFragment implements PeerListListener
         toggleVisibility(position);
     }
 
+    public void itemClick(int position) {
+        WifiP2pDevice device = (WifiP2pDevice) getListAdapter().getItem(position);
+        ((DeviceActionListener) getActivity()).showDetails(device);
+        toggleVisibility(position);
+    }
+
     public void toggleVisibility(int pos){
         //-- Now we need to show/hide our "fake" layout, while hiding the other ones
         //-- Hide all other connect/disconnect button layouts
@@ -137,7 +143,7 @@ public class DeviceListFragment extends ListFragment implements PeerListListener
                 LayoutInflater vi = (LayoutInflater) getActivity().getSystemService(
                         Context.LAYOUT_INFLATER_SERVICE);
                 v = vi.inflate(R.layout.row_devices, null);
-                setActionListeners(v);
+                setActionListeners(v, position);
 
                 //-- Keep our list of proxies so that we can show/hide them as necessary
                 LinearLayout proxy = (LinearLayout) v.findViewById(R.id.ddf_proxy);
@@ -159,7 +165,7 @@ public class DeviceListFragment extends ListFragment implements PeerListListener
         }
     }
 
-    public void setActionListeners(View v){
+    public void setActionListeners(View v, final int position){
         Button connect = (Button) v.findViewById(R.id.btn_connect);
         Button disconnect = (Button) v.findViewById(R.id.btn_disconnect);
         Button start_client = (Button) v.findViewById(R.id.btn_start_client);
@@ -186,6 +192,13 @@ public class DeviceListFragment extends ListFragment implements PeerListListener
                         ((JamListActivity) getActivity()).ddf_start_client();
                     }
                 });
+
+        v.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                itemClick(position);
+            }
+        });
     }
 
     /**
