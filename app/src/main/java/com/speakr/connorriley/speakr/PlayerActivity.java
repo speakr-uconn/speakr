@@ -545,21 +545,23 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     }
 
     public void songPicked(View view) {
-
         musicSrv.setSong(Integer.parseInt(view.getTag().toString()));
-        Log.d(TAG, "execute offset class");
-        switch(SynchronizationMode) {
-            case "NTPServer":
-                new SendTimeStamp(getApplicationContext()).execute("Play");
-                break;
-            case "Local":
-                try {
-                    starttime = System.currentTimeMillis();
-                    sendMessage("LocalPlay_1", null);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                break;
+        if(WifiSingleton.getInstance().isConnected()) {
+            switch (SynchronizationMode) {
+                case "NTPServer":
+                    new SendTimeStamp(getApplicationContext()).execute("Play");
+                    break;
+                case "Local":
+                    try {
+                        starttime = System.currentTimeMillis();
+                        sendMessage("LocalPlay_1", null);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    break;
+            }
+        } else {
+            musicSrv.playSong();
         }
     }
 
@@ -664,38 +666,47 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     }
 
     private void playNext() {
-        switch (SynchronizationMode) {
-            case "NTPServer":
-                new SendTimeStamp(getApplicationContext()).execute("Next");
-                break;
-            case "Local":
-                try {
-                    starttime = System.currentTimeMillis();
-                    sendMessage("LocalNext_1", null);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                break;
+        if (WifiSingleton.getInstance().isConnected()) {
+            switch (SynchronizationMode) {
+                case "NTPServer":
+                    new SendTimeStamp(getApplicationContext()).execute("Next");
+                    break;
+                case "Local":
+                    try {
+                        starttime = System.currentTimeMillis();
+                        sendMessage("LocalNext_1", null);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    break;
+            }
+        } else {
+            musicSrv.playNext();
         }
         if (playbackPaused) {
             setController();
             playbackPaused = false;
         }
+
     }
 
     private void playPrev() {
-        switch (SynchronizationMode) {
-            case "NTPServer":
-                new SendTimeStamp(getApplicationContext()).execute("Previous");
-                break;
-            case "Local":
-                try {
-                    starttime = System.currentTimeMillis();
-                    sendMessage("LocalPrevious_1", null);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                break;
+        if(WifiSingleton.getInstance().isConnected()) {
+            switch (SynchronizationMode) {
+                case "NTPServer":
+                    new SendTimeStamp(getApplicationContext()).execute("Previous");
+                    break;
+                case "Local":
+                    try {
+                        starttime = System.currentTimeMillis();
+                        sendMessage("LocalPrevious_1", null);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    break;
+            }
+        } else {
+            musicSrv.playPrev();
         }
         if (playbackPaused) {
             setController();
@@ -706,53 +717,62 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     @Override
     public void start() {
         // restart the music player after a pause.
-        switch(SynchronizationMode) {
-            case "NTPServer":
-                new SendTimeStamp(getApplicationContext()).execute("Resume");
-                break;
-            case "Local":
-                try {
-                    starttime = System.currentTimeMillis();
-                    sendMessage("LocalResume_1", null);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                break;
+        if(WifiSingleton.getInstance().isConnected()) {
+            switch (SynchronizationMode) {
+                case "NTPServer":
+                    new SendTimeStamp(getApplicationContext()).execute("Resume");
+                    break;
+                case "Local":
+                    try {
+                        starttime = System.currentTimeMillis();
+                        sendMessage("LocalResume_1", null);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    break;
+            }
+        } else {
+            musicSrv.go();
         }
     }
 
     @Override
     public void seekTo(int pos) {
-        musicSrv.seek(pos);
+        if(WifiSingleton.getInstance().isConnected()) {
+            Toast.makeText(PlayerActivity.this, "Seeking Disabled",
+                    Toast.LENGTH_SHORT).show();
+        } else {
+            musicSrv.seek(pos);
+        }
     }
 
     @Override
     public void pause() {
         // Pause music player
-        Log.e("PlayerActivity", "PRESSED PAUSE");
-        switch(SynchronizationMode) {
-            case "NTPServer":
-                playbackPaused = true;
-                new SendTimeStamp(getApplicationContext()).execute("Pause");
-                break;
-            case "Local":
-                try {
-                    int currPos = musicSrv.getPosn();
-                    Log.e("currpos", Integer.toString(currPos));
-                    Log.e("currpos + action delay", Integer.toString((int) (currPos + ACTION_DELAY)));
-                    Log.e("getDur", Integer.toString(musicSrv.getDur()));
-                    long pausePos;
-                    if((currPos + ACTION_DELAY) < musicSrv.getDur())
-                        pausePos = (currPos + ACTION_DELAY);
-                    else
-                        pausePos = (long) currPos;
+        if(WifiSingleton.getInstance().isConnected()) {
+            switch (SynchronizationMode) {
+                case "NTPServer":
+                    playbackPaused = true;
+                    new SendTimeStamp(getApplicationContext()).execute("Pause");
+                    break;
+                case "Local":
+                    try {
+                        int currPos = musicSrv.getPosn();
+                        long pausePos;
+                        if ((currPos + ACTION_DELAY) < musicSrv.getDur())
+                            pausePos = (currPos + ACTION_DELAY);
+                        else
+                            pausePos = (long) currPos;
 
-                    starttime = System.currentTimeMillis();
-                    sendMessage("LocalPause_1", "" + pausePos);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                break;
+                        starttime = System.currentTimeMillis();
+                        sendMessage("LocalPause_1", "" + pausePos);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    break;
+            }
+        } else {
+            musicSrv.pausePlayer();
         }
     }
 
@@ -790,12 +810,20 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
 
     @Override
     public boolean canSeekBackward() {
-        return true;
+        if(WifiSingleton.getInstance().isConnected()) {
+            return false;
+        } else {
+            return true;
+        }
     }
 
     @Override
     public boolean canSeekForward() {
-        return true;
+        if(WifiSingleton.getInstance().isConnected()) {
+            return false;
+        } else {
+            return true;
+        }
     }
 
     @Override

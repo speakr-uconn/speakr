@@ -57,34 +57,6 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         mContentView = inflater.inflate(R.layout.device_detail, null);
-        /*
-        mContentView.findViewById(R.id.btn_connect).setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                ddf_connect();
-            }
-        });
-
-        mContentView.findViewById(R.id.btn_disconnect).setOnClickListener(
-                new View.OnClickListener() {
-
-                    @Override
-                    public void onClick(View v) {
-                        ddf_disconnect();
-                    }
-                });
-
-        mContentView.findViewById(R.id.btn_start_client).setOnClickListener(
-                new View.OnClickListener() {
-
-                    @Override
-                    public void onClick(View v) {
-                        ddf_start_client();
-                    }
-                });
-                */
-
         return mContentView;
     }
 
@@ -144,6 +116,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
     public void onConnectionInfoAvailable(final WifiP2pInfo info) {
         WifiSingleton instance = WifiSingleton.getInstance();
         instance.setInfo(info);
+        instance.setConnected(true);
         if (progressDialog != null && progressDialog.isShowing()) {
             progressDialog.dismiss();
         }
@@ -160,13 +133,6 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
         view = (TextView) mContentView.findViewById(R.id.device_info);
         view.setText("Group Owner IP - " + info.groupOwnerAddress.getHostAddress());
 
-
-        // set both up as clients and servers
-        /*new FileServerAsyncTask(getActivity(), mContentView.findViewById(R.id.status_text))
-                .execute();
-        mContentView.findViewById(R.id.btn_start_client).setVisibility(View.VISIBLE);
-        ((TextView) mContentView.findViewById(R.id.status_text)).setText(getResources()
-                .getString(R.string.client_text)); */
         // After the group negotiation, we assign the group owner as the file
         // server. The file server is single threaded, single connection server
         // socket.
@@ -208,13 +174,6 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
      */
     public void showDetails(WifiP2pDevice device) {
         this.device = device;
-        //this.getView().setVisibility(View.VISIBLE);
-
-        //TextView view = (TextView) mContentView.findViewById(R.id.device_address);
-        //view.setText(device.deviceAddress);
-        //view = (TextView) mContentView.findViewById(R.id.device_info);
-        //view.setText(device.toString());
-
     }
 
     /**
@@ -231,7 +190,6 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
         view = (TextView) mContentView.findViewById(R.id.status_text);
         view.setText(R.string.empty);
         mContentView.findViewById(R.id.btn_start_client).setVisibility(View.GONE);
-        //this.getView().setVisibility(View.GONE);
     }
 
     private void showProgressDialog(String s){

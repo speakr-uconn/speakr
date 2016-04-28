@@ -16,6 +16,7 @@ public class WifiSingleton {
     private String memberIP;
     private WifiP2pManager mManager;
     private WifiP2pManager.Channel mChannel;
+    private boolean connected;
     protected WifiSingleton() {
 
     }
@@ -55,6 +56,9 @@ public class WifiSingleton {
     public void setManager(WifiP2pManager manager) {
         mManager = manager;
     }
+    public void setConnected(boolean x) {
+        connected = x;
+    }
     public void setChannel(WifiP2pManager.Channel channel) {
         mChannel = channel;
     }
@@ -62,7 +66,9 @@ public class WifiSingleton {
         memberIP = ip;
         Log.d(TAG, "member ip: " + memberIP);
     }
-
+    public boolean isConnected() {
+        return connected;
+    }
     public String getMemberIP(){
         return memberIP;
     }
