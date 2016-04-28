@@ -1,9 +1,22 @@
 package com.speakr.connorriley.speakr;
 
+import android.content.ContentResolver;
+import android.content.ContentUris;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.net.wifi.p2p.WifiP2pGroup;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
+import android.os.ParcelFileDescriptor;
+import android.provider.MediaStore;
 import android.util.Log;
+
+import java.io.FileDescriptor;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 /**
  * Created by connorriley on 2/22/16.
@@ -17,6 +30,8 @@ public class WifiSingleton {
     private WifiP2pManager mManager;
     private WifiP2pManager.Channel mChannel;
     private boolean connected;
+    private ArrayList<Song> songList;
+    private ContentResolver musicResolver;
     protected WifiSingleton() {
 
     }
@@ -59,6 +74,9 @@ public class WifiSingleton {
     public void setConnected(boolean x) {
         connected = x;
     }
+    public ArrayList<Song> getSongList() {
+        return songList;
+    }
     public void setChannel(WifiP2pManager.Channel channel) {
         mChannel = channel;
     }
@@ -73,4 +91,69 @@ public class WifiSingleton {
         return memberIP;
     }
 
+    public void setMusicResolver(ContentResolver x) {
+        musicResolver = x;
+    }
+    public void makeSongList() {
+        //retrieve song info
+        Log.d(TAG, "Get Song List");
+        songList = new ArrayList<Song>();
+        Uri musicUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+        Cursor musicCursor = musicResolver.query(musicUri, null, null, null, null);
+
+
+
+        if (musicCursor != null && musicCursor.moveToFirst()) {
+            //get columns
+            int titleColumn = musicCursor.getColumnIndex
+                    (android.provider.MediaStore.Audio.Media.TITLE);
+            int idColumn = musicCursor.getColumnIndex
+                    (android.provider.MediaStore.Audio.Media._ID);
+            int artistColumn = musicCursor.getColumnIndex
+                    (android.provider.MediaStore.Audio.Media.ARTIST);
+            int albumColumn = musicCursor.getColumnIndex
+                    (MediaStore.Audio.Albums.ALBUM_ID);
+
+            //add songs to list
+
+            //-- TODO: Make sure we're looking at a file with a valid type
+            //-- At the moment I've tested MP3 files and find that they play. MPEG-4, for example, do not.
+            //-- Use this link to determine compatible file types: http://developer.android.com/guide/appendix/media-formats.html
+
+            do {
+                long thisId = musicCursor.getLong(idColumn);
+                String thisTitle = musicCursor.getString(titleColumn);
+                String thisArtist = musicCursor.getString(artistColumn);
+                long albumID = musicCursor.getLong(albumColumn);
+                Bitmap bm = null;
+                try
+                {
+                    final Uri sArtworkUri = Uri
+                            .parse("content://media/external/audio/albumart");
+
+                    Uri uri = ContentUris.withAppendedId(sArtworkUri, albumID);
+                    ParcelFileDescriptor pfd = musicResolver.openFileDescriptor(uri, "r");
+                    if (pfd != null)
+                    {
+                        FileDescriptor fd = pfd.getFileDescriptor();
+                        bm = BitmapFactory.decodeFileDescriptor(fd);
+                    }
+                } catch (Exception e) {
+                }
+                if (thisArtist.contains("<unknown>") || thisTitle.contains("<unknown>")) //-- Temporary fix to some unwanted items coming up as songs
+                    continue;
+                songList.add(new Song(thisId, thisTitle, thisArtist, 0, bm));
+                //-- TODO: The last parameter corresponds to the ID of the owner
+                //-- We will want to update this 0 to something useful, so we can list songs by person
+            }
+            while (musicCursor.moveToNext());
+            musicCursor.close();
+        }
+
+        Collections.sort(songList, new Comparator<Song>() {
+            public int compare(Song a, Song b) {
+                return a.getTitle().compareTo(b.getTitle());
+            }
+        });
+    }
 }
