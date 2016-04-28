@@ -134,6 +134,7 @@ public class MusicService extends Service implements
 
     public void setList(ArrayList<Song> theSongs){
         songs=theSongs;
+        updateSongPos();
     }
 
     public void setSong(int songIndex){
@@ -187,7 +188,6 @@ public class MusicService extends Service implements
     }
 
     public void playPrev(){
-        songPosn = getSongIndex();
         songPosn--;
         //if(songPosn < 0) //-- go back to the last song in the list
         //    songPosn=songs.size()-1;
@@ -200,9 +200,6 @@ public class MusicService extends Service implements
         //-- TODO: Update the icon bar to show the "Pause" icon, not the "Play" icon ...
         //-- At the moment, if you're playing a song and skip to the next, it'll show the "Play" icon
         //-- Even though it's already playing. In that instance, hitting "Play" does nothing.
-
-        songPosn = getSongIndex();
-
         if(shuffle){
             int newSong = songPosn;
             while(newSong==songPosn){
@@ -227,16 +224,6 @@ public class MusicService extends Service implements
         return (songPosn == (songs.size() - 1));
     }
 
-    public int getSongIndex(){
-        for(int i = 0; i < songs.size(); i++){
-            String curTitle = songs.get(i).getTitle();
-            if(songTitle.equals(curTitle)) {
-                return i;
-            }
-        }
-        return 0;
-    }
-
     public int getPosn(){
         return player.getCurrentPosition();
     }
@@ -253,7 +240,14 @@ public class MusicService extends Service implements
         player.pause();
     }
 
-
+    public void updateSongPos(){
+        for(int i = 0; i < songs.size(); i++){
+            String curTitle = songs.get(i).getTitle();
+            if(songTitle.equals(curTitle)) {
+                songPosn = i;
+            }
+        }
+    }
 
     public void seek(int posn){
         player.seekTo(posn);

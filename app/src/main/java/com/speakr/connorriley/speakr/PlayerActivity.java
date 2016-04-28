@@ -1201,6 +1201,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                                             Toast.LENGTH_SHORT).show();
                                     Collections.swap(songQueue, upIndex, upIndex - 1);
                                     updateSongAdapters();
+                                    musicSrv.updateSongPos();
                                 }
                             });
                             break;
@@ -1215,6 +1216,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                                             Toast.LENGTH_SHORT).show();
                                     Collections.swap(songQueue, downIndex, downIndex + 1);
                                     updateSongAdapters();
+                                    musicSrv.updateSongPos();
                                 }
                             });
                             break;
