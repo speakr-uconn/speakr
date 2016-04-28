@@ -74,12 +74,10 @@ public class SongListAdapter extends BaseAdapter {
         artistView.setText(currSong.getArtist());
         Bitmap albumArt = currSong.getAlbumArt();
         if(albumArt != null){
-            Log.e("album art", "ALBUM ART NOT NULL");
             albumView.setImageBitmap(albumArt);
         }
 
         else{
-            Log.e("album art", "ALBUM ART NULL");
             albumView.setImageResource(R.drawable.machine);
         }
 
