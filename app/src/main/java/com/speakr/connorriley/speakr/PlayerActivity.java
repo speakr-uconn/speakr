@@ -673,6 +673,9 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
 
             serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, 8990);
             Log.d("PlayerActivity", "startService about to be called for sending timestamp");
+            if(extra != null && extra.equals("connorhack")) {
+                starttime = System.currentTimeMillis();
+            }
             serviceIntent.putExtra(FileTransferService.EXTRAS_TIMESTAMP, "" + starttime);
             startService(serviceIntent);
         }
