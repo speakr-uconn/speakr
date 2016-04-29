@@ -57,6 +57,7 @@ import android.content.ServiceConnection;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.MediaController.MediaPlayerControl;
+import android.widget.TextView;
 import android.widget.Toast;
 
 public class PlayerActivity extends HamburgerActivity implements View.OnClickListener, MediaPlayerControl {
@@ -631,6 +632,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             if(message.equals("LocalPause_1") || message.equals("LocalPause_2")){
                 serviceIntent.putExtra(FileTransferService.EXTRAS_PAUSETIME,
                         extra);
+                controller.setPauseTime(extra);
             }
             serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, 8990);
             Log.d("PlayerActivity", "startService about to be called for sending timestamp");
@@ -695,6 +697,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                     }
                 });
         controller.setMediaPlayer(this);
+
         //-- Place the controller, with the { |<, <<, play/pause, >>, >| } buttons, at the bottom (anchored to the bottom of the layout)
         controller.setAnchorView(findViewById(R.id.playerLayoutBottom));
         controller.setEnabled(true);
@@ -819,8 +822,11 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             musicSrv.pausePlayer();
         }
         //musicSrv.go(); //-- calling this has the thing doing it right
+
         Log.d(TAG, "SHOW CONTROLLER PROPERLY PLS");
-        playbackPaused = true;
+        controller.holdup();
+        //controller.show(0);
+        //playbackPaused = true;
     }
 
     @Override
