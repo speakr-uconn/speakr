@@ -192,6 +192,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             }
             paused = false;
         }
+        WifiSingleton.getInstance().setPlayerActivity(this);
     }
 
     @Override
