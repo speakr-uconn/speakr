@@ -114,6 +114,12 @@ public class FileTransferService extends IntentService {
                     datastream.writeUTF(timestamp);
                 }
 
+                Intent broadcastIntent = new Intent();
+                broadcastIntent.addCategory(Intent.CATEGORY_DEFAULT);
+                broadcastIntent.setAction(PlayerActivity.PlayerActivityReceiver.ACTION_RESP);
+                broadcastIntent.putExtra(PARAM_OUT_MSG, "Sent request");
+                sendBroadcast(broadcastIntent);
+
             } catch (IOException e) {
                 Log.e(TAG, e.getMessage());
             }

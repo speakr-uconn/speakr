@@ -633,7 +633,25 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             }
             serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, 8990);
             Log.d("PlayerActivity", "startService about to be called for sending timestamp");
+
+            String action;
+
+            if(message.equals("LocalPause_1") || message.equals("LocalPause_2")){
+                action = "pause";
+            }
+
+            else if(message.equals("LocalPlay_1") || message.equals("LocalPlay_2")){
+                action = "play";
+            }
+
+            else{
+                action = "";
+            }
             serviceIntent.putExtra(FileTransferService.EXTRAS_TIMESTAMP, "" + starttime);
+
+            getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                    WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+            showProgressDialog("Sending " + action + " request.");
             startService(serviceIntent);
         }
     }
@@ -1085,6 +1103,9 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                                     getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
                                     Toast.makeText(PlayerActivity.this, "Play request received",
                                             Toast.LENGTH_SHORT).show();
+                                    getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                                            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                                    showProgressDialog("Processing play request. Please wait");
                                 }
                             });
                             sendMessage("LocalPlay_2", null);
@@ -1561,6 +1582,11 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
 
             else if(text.equals("Sent File")){
                 Toast.makeText(PlayerActivity.this, "File successfully sent",
+                        Toast.LENGTH_SHORT).show();
+            }
+
+            else if(text.equals("Sent request")){
+                Toast.makeText(PlayerActivity.this, "Request successfully sent",
                         Toast.LENGTH_SHORT).show();
             }
         }
