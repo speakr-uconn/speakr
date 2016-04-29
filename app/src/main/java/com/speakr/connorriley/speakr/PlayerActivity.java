@@ -188,6 +188,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             }
             paused = false;
         }
+        WifiSingleton.getInstance().setPlayerActivity(this);
     }
 
     @Override
@@ -356,8 +357,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             }
         }
     }
-
-    //-- TODO: Reorder the methods in this and MusicService.java to have a sensible ordering, to make it easier to find stuff
+    @Deprecated
     public void getSongList() {
         //retrieve song info
         Log.d(TAG, "Get Song List");
@@ -486,7 +486,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             if (!addedSong) {
                 // couldn't find song in list, add to list and queue
                 Log.d(TAG, "Couldn't find song in list, added to list and queue");
-                songList.add(receivedSong);
+                //songList.add(receivedSong);
                 songQueue.add(receivedSong);
             }
             updateSongAdapters();
@@ -567,8 +567,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                     break;
                 case "Local":
                     try {
-                        starttime = System.currentTimeMillis();
-                        sendMessage("LocalPlay_1", null);
+                        sendSetSong("SetSong", view.getTag().toString());
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -579,7 +578,24 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         }
         playbackPaused = false;
     }
-
+    private void sendSetSong(String message, String index) {
+        WifiSingleton wifiSingleton = WifiSingleton.getInstance();
+        if (wifiSingleton.getInfo() != null) {
+            Intent serviceIntent = new Intent(this, FileTransferService.class);
+            serviceIntent.setAction(FileTransferService.ACTION_SEND_SETSONG);
+            serviceIntent.putExtra(FileTransferService.EXTRAS_SONG, index);
+            serviceIntent.putExtra("Action", message);
+            if (!wifiSingleton.getInfo().isGroupOwner) {
+                serviceIntent.putExtra(FileTransferService.EXTRAS_ADDRESS,
+                        wifiSingleton.getInfo().groupOwnerAddress.getHostAddress());
+            } else {
+                serviceIntent.putExtra(FileTransferService.EXTRAS_ADDRESS,
+                        wifiSingleton.getMemberIP());
+            }
+            serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, 8990);
+            startService(serviceIntent);
+        }
+    }
     private void sendQueueAction(String message, String index) {
         WifiSingleton wifiSingleton = WifiSingleton.getInstance();
         if (wifiSingleton.getInfo() != null) {
@@ -598,8 +614,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             startService(serviceIntent);
         }
     }
-    private void sendMessage(String message, String extra) {
-        Log.d(TAG, "SendTimeStamp");
+    public void sendMessage(String message, String extra) {
         //IT"S TIME TO SEND THE TIME :)
         WifiSingleton wifiSingleton = WifiSingleton.getInstance();
         if (wifiSingleton.getInfo() != null) {
@@ -619,6 +634,9 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             }
             serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, 8990);
             Log.d("PlayerActivity", "startService about to be called for sending timestamp");
+            if(extra != null && extra.equals("connorhack")) {
+                starttime = System.currentTimeMillis();
+            }
             serviceIntent.putExtra(FileTransferService.EXTRAS_TIMESTAMP, "" + starttime);
             startService(serviceIntent);
         }
@@ -840,8 +858,6 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     @Override
     public boolean canSeekBackward() {
         if(WifiSingleton.getInstance().isConnected()) {
-            Toast.makeText(PlayerActivity.this, "Seeking Disabled",
-                    Toast.LENGTH_SHORT).show();
             return false;
         } else {
             return true;
@@ -851,8 +867,6 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
     @Override
     public boolean canSeekForward() {
         if(WifiSingleton.getInstance().isConnected()) {
-            Toast.makeText(PlayerActivity.this, "Seeking Disabled",
-                    Toast.LENGTH_SHORT).show();
             return false;
         } else {
             return true;
@@ -1214,7 +1228,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                                     context, true, null);
                             break;
                         case "MoveUp":
-                            upIndex = receiveMove(client);
+                            upIndex = receiveInt(client);
                             mainHandler.post(new Runnable() {
                                 @Override
                                 public void run() {
@@ -1229,7 +1243,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                             });
                             break;
                         case "MoveDown":
-                            downIndex = receiveMove(client);
+                            downIndex = receiveInt(client);
                             mainHandler.post(new Runnable() {
                                 @Override
                                 public void run() {
@@ -1244,7 +1258,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                             });
                             break;
                         case "Remove":
-                            removeIndex = receiveMove(client);
+                            removeIndex = receiveInt(client);
                             mainHandler.post(new Runnable() {
                                 @Override
                                 public void run() {
@@ -1257,6 +1271,21 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                                     updateSongAdapters();
                                 }
                             });
+                            break;
+                        case "SetSong":
+                            int songIndex = receiveInt(client);
+                            mainHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    progressDialog.dismiss();
+                                    getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                                    Toast.makeText(PlayerActivity.this, "Set Song for Playback",
+                                            Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                            musicSrv.setSong(songIndex);
+                            starttime = System.currentTimeMillis();
+                            sendMessage("LocalPlay_1", null);
                             break;
                         case "Play":
                             timestamp = receiveTimeStamp(client);
@@ -1319,7 +1348,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             }
             return null;
         }
-        private int receiveMove(Socket client) {
+        private int receiveInt(Socket client) {
             DataInputStream is = null;
             try {
                 is = new DataInputStream(client.getInputStream());

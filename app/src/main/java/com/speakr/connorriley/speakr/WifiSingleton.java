@@ -32,6 +32,7 @@ public class WifiSingleton {
     private boolean connected;
     private ArrayList<Song> songList;
     private ContentResolver musicResolver;
+    private PlayerActivity playerActivity;
     protected WifiSingleton() {
 
     }
@@ -42,8 +43,12 @@ public class WifiSingleton {
         return instance;
     }
 
-
-
+    public void setPlayerActivity(PlayerActivity p) {
+        playerActivity = p;
+    }
+    public PlayerActivity getPlayerActivity() {
+        return playerActivity;
+    }
     public void disconnect() {
         if (mManager != null && mChannel != null) {
             mManager.removeGroup(mChannel, new WifiP2pManager.ActionListener() {
@@ -93,6 +98,9 @@ public class WifiSingleton {
 
     public void setMusicResolver(ContentResolver x) {
         musicResolver = x;
+    }
+    public boolean isGroupOwner() {
+        return info.isGroupOwner;
     }
     public void makeSongList() {
         //retrieve song info

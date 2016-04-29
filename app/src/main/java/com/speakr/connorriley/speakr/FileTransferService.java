@@ -45,6 +45,8 @@ public class FileTransferService extends IntentService {
     public static final String ACTION_SEND_IP_ACK = "send_ip_ack";
     public static final String EXTRAS_MOVEINDEX = "move_index";
     public static final String ACTION_SEND_MOVEQUEUE = "move_queue";
+    public static final String ACTION_SEND_SETSONG = "set_song";
+    public static final String EXTRAS_SONG = "song_index";
 
     private final String TAG = FileTransferService.class.getSimpleName();
 
@@ -159,6 +161,21 @@ public class FileTransferService extends IntentService {
             String actionString = intent.getExtras().getString("Action");
             String host = intent.getExtras().getString(EXTRAS_ADDRESS);
             String index = intent.getExtras().getString(EXTRAS_MOVEINDEX);
+            Socket socket = new Socket();
+            int port = intent.getExtras().getInt(EXTRAS_PORT);
+            try {
+                socket.bind(null);
+                socket.connect((new InetSocketAddress(host, port)), SOCKET_TIMEOUT);
+                DataOutputStream datastream = new DataOutputStream(socket.getOutputStream());
+                datastream.writeUTF(actionString);
+                datastream.writeUTF(index);
+            } catch (IOException e) {
+                Log.e(TAG, e.getMessage());
+            }
+        } else if(intent.getAction().equals(ACTION_SEND_SETSONG)) {
+            String actionString = intent.getExtras().getString("Action");
+            String host = intent.getExtras().getString(EXTRAS_ADDRESS);
+            String index = intent.getExtras().getString(EXTRAS_SONG);
             Socket socket = new Socket();
             int port = intent.getExtras().getInt(EXTRAS_PORT);
             try {
