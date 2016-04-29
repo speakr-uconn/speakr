@@ -18,7 +18,14 @@ public class MusicController extends MediaController {
 
     public void hide(){}
 
-    public void doSomething(){
+    public void setPausedProgress(){
+        //-- When paused, update the times
+        /*
+         if (mEndTime != null)
+            mEndTime.setText(stringForTime(duration));
+        if (mCurrentTime != null)
+            mCurrentTime.setText(stringForTime(position));
+         */
 
     }
 

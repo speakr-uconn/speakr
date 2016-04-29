@@ -800,6 +800,8 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         } else {
             musicSrv.pausePlayer();
         }
+        //musicSrv.go(); //-- calling this has the thing doing it right
+        Log.d(TAG, "SHOW CONTROLLER PROPERLY PLS");
         playbackPaused = true;
     }
 
