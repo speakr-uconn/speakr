@@ -47,7 +47,9 @@ public class SongTimer {
         public void run() {
             Log.d(TAG, action);
             Looper.prepare();
-            WifiSingleton.getInstance().getPlayerActivity().progressDialog.dismiss();
+            if(WifiSingleton.getInstance().getPlayerActivity().progressDialog != null && WifiSingleton.getInstance().getPlayerActivity().progressDialog.isShowing()){
+                WifiSingleton.getInstance().getPlayerActivity().progressDialog.dismiss();
+            }
             WifiSingleton.getInstance().getPlayerActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
             switch (action) {
 
