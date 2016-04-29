@@ -1589,10 +1589,12 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             }
 
             else if(text.equals("Sent LocalPause_1")){
+                progressDialog.dismiss();
                 showProgressDialog("Processing pause request. Please wait.");
             }
 
             else if(text.equals("Sent LocalPlay_1")){
+                progressDialog.dismiss();
                 showProgressDialog("Processing play request. Please wait.");
             }
         }
