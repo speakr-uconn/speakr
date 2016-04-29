@@ -633,18 +633,20 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                 serviceIntent.putExtra(FileTransferService.EXTRAS_PAUSETIME,
                         extra);
                 action = "pause";
+                getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                        WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                showProgressDialog("Sending " + action + " request");
             }
 
             else if(message.equals("LocalPlay_1") || message.equals("LocalPlay_2")){
                 action = "play";
+                getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                        WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                showProgressDialog("Sending " + action + " request");
             }
             serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, 8990);
             Log.d("PlayerActivity", "startService about to be called for sending timestamp");
             serviceIntent.putExtra(FileTransferService.EXTRAS_TIMESTAMP, "" + starttime);
-
-            getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
-                    WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
-            showProgressDialog("Sending " + action + " request");
             startService(serviceIntent);
         }
     }
@@ -1084,7 +1086,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                     // receive data type string
                     DataInputStream is = new DataInputStream(client.getInputStream());
                     dataType = is.readUTF();
-                    String timestamp, pauseTime;
+                    final String timestamp, pauseTime;
                     switch (dataType) {
                         case "LocalPlay_1":
                             // set timer for five seconds
@@ -1096,10 +1098,9 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                                     //getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
                                     Toast.makeText(PlayerActivity.this, "Play request received",
                                             Toast.LENGTH_SHORT).show();
-                                    showProgressDialog("Processing play request. Please wait.");
+                                    sendMessage("LocalPlay_2", null);
                                 }
                             });
-                            sendMessage("LocalPlay_2", null);
                             new SongTimer(ACTION_DELAY, musicSrv, controller, "Play", context, true, null);
                             break;
                         case "LocalPlay_2":
@@ -1127,10 +1128,10 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                                     getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
                                     Toast.makeText(PlayerActivity.this, "Pause request received",
                                             Toast.LENGTH_SHORT).show();
+                                    sendMessage("LocalPause_2", pauseTime);
                                     showProgressDialog("Processing pause request. Please wait.");
                                 }
                             });
-                            sendMessage("LocalPause_2", pauseTime);
                             new SongTimer(ACTION_DELAY, musicSrv, controller, "Pause", context, true, pauseTime);
                             break;
                         case "LocalPause_2":
@@ -1568,21 +1569,26 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         @Override
         public void onReceive(Context context, Intent intent) {
             String text = intent.getStringExtra(FileTransferService.PARAM_OUT_MSG);
-            progressDialog.dismiss();
-            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
             if(text.equals("Sent IP")){
+                progressDialog.dismiss();
+                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
                 Toast.makeText(PlayerActivity.this, "IP successfully sent",
                         Toast.LENGTH_SHORT).show();
             }
 
             else if(text.equals("Sent File")){
+                progressDialog.dismiss();
+                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
                 Toast.makeText(PlayerActivity.this, "File successfully sent",
                         Toast.LENGTH_SHORT).show();
             }
 
-            else if(text.equals("Sent request")){
-                Toast.makeText(PlayerActivity.this, "Request successfully sent",
-                        Toast.LENGTH_SHORT).show();
+            else if(text.equals("Sent LocalPause_1")){
+                showProgressDialog("Processing pause request. Please wait.");
+            }
+
+            else if(text.equals("Sent LocalPlay_1")){
+                showProgressDialog("Processing play request. Please wait.");
             }
         }
     }
