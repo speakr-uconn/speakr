@@ -895,6 +895,8 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         //menu item selected
         switch (item.getItemId()) {
             case R.id.action_disconnect:
+                WifiSingleton.getInstance().setConnected(false);
+                WifiSingleton.getInstance().disconnect();
                 break;
         }
         return super.onOptionsItemSelected(item);
