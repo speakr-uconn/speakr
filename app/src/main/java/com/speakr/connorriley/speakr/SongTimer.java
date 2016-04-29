@@ -50,13 +50,6 @@ public class SongTimer {
         public void run() {
             Log.d(TAG, action);
             Looper.prepare();
-            if(pd != null && pd.isShowing()){
-                pd.dismiss();
-            }
-            PlayerActivity a = WifiSingleton.getInstance().getPlayerActivity();
-            if(a != null){
-                a.removeFlags();
-            }
             switch (action) {
 
                 case "Play":
@@ -81,6 +74,13 @@ public class SongTimer {
             mainHandler.post(new Runnable() {
                 @Override
                 public void run() {
+                    if(pd != null && pd.isShowing()){
+                        pd.dismiss();
+                    }
+                    PlayerActivity a = WifiSingleton.getInstance().getPlayerActivity();
+                    if(a != null){
+                        a.removeFlags();
+                    }
                     controller.show(0);
                 }
             });
