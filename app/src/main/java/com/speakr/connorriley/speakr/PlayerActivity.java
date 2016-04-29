@@ -1085,7 +1085,6 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                     DataInputStream is = new DataInputStream(client.getInputStream());
                     dataType = is.readUTF();
                     String timestamp, pauseTime;
-                    Looper.prepare();
                     switch (dataType) {
                         case "LocalPlay_1":
                             // set timer for five seconds
@@ -1284,6 +1283,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                             break;
                         case "SetSong":
                             int songIndex = receiveInt(client);
+                            musicSrv.setSong(songIndex);
                             mainHandler.post(new Runnable() {
                                 @Override
                                 public void run() {
@@ -1291,11 +1291,11 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                                     getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
                                     Toast.makeText(PlayerActivity.this, "Set Song for Playback",
                                             Toast.LENGTH_SHORT).show();
+                                    starttime = System.currentTimeMillis();
+                                    sendMessage("LocalPlay_1", null);
                                 }
                             });
-                            musicSrv.setSong(songIndex);
-                            starttime = System.currentTimeMillis();
-                            sendMessage("LocalPlay_1", null);
+
                             break;
                         case "Play":
                             timestamp = receiveTimeStamp(client);
