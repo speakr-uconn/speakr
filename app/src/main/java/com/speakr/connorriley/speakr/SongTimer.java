@@ -19,7 +19,6 @@ public class SongTimer {
     private Context context;
     private MusicController controller;
     private String TAG = "SongTimer";
-    private String pause;
     public SongTimer(long localPlayTime, MusicService m, MusicController c, String action,
                      Context context1, boolean local, String pauseTime) {
         Log.d(TAG, "New SongTimer");
@@ -52,7 +51,6 @@ public class SongTimer {
                     musicSrv.playSong();
                     break;
                 case "Pause":
-                    Log.e("SongTime", Integer.toString((int) Long.parseLong(pauseTime)));
                     musicSrv.seek((int) Long.parseLong(pauseTime));
                     musicSrv.pausePlayer();
                     break;
