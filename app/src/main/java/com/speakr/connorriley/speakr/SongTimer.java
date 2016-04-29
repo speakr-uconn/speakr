@@ -74,13 +74,8 @@ public class SongTimer {
             mainHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    if(pd != null && pd.isShowing()){
-                        pd.dismiss();
-                    }
-                    PlayerActivity a = WifiSingleton.getInstance().getPlayerActivity();
-                    if(a != null){
-                        a.removeFlags();
-                    }
+                    pd.dismiss();
+                    WifiSingleton.getInstance().getPlayerActivity().removeFlags();
                     controller.show(0);
                 }
             });
