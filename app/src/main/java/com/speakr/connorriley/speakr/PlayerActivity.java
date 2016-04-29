@@ -657,8 +657,10 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
 
     private void setController() {
         //-- Method to set up the controller. This is the object controlling the playback options, of Skip, Play/Pause, and Seek.
-        if (controller == null)
-            controller = new MusicController(this); //-- only make a new controller if it's null
+        boolean isConnected = WifiSingleton.getInstance().isConnected();
+        if (controller == null) {
+            controller = new MusicController(this, !isConnected); //-- only make a new controller if it's null
+        }
 
         controller.setPrevNextListeners(
                 //-- "Next" button listener
