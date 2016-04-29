@@ -560,6 +560,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
 
     public void songPicked(View view) {
         musicSrv.setSong(Integer.parseInt(view.getTag().toString()));
+        Log.d(TAG, "set song: " + view.getTag().toString());
         if(WifiSingleton.getInstance().isConnected()) {
             switch (SynchronizationMode) {
                 case "NTPServer":
