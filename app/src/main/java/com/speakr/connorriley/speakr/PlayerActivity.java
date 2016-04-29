@@ -486,7 +486,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             if (!addedSong) {
                 // couldn't find song in list, add to list and queue
                 Log.d(TAG, "Couldn't find song in list, added to list and queue");
-                songList.add(receivedSong);
+                //songList.add(receivedSong);
                 songQueue.add(receivedSong);
             }
             updateSongAdapters();
