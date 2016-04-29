@@ -663,6 +663,14 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                         WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
                 showProgressDialog("Sending " + action + " request");
             }
+
+            else if(message.equals("LocalResume_1") || message.equals("LocalResume_2")){
+                action = "resume";
+                getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                        WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                showProgressDialog("Sending " + action + " request");
+            }
+
             serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, 8990);
             Log.d("PlayerActivity", "startService about to be called for sending timestamp");
             serviceIntent.putExtra(FileTransferService.EXTRAS_TIMESTAMP, "" + starttime);
@@ -1210,7 +1218,6 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                                     Toast.makeText(PlayerActivity.this, "Previous request received",
                                             Toast.LENGTH_SHORT).show();
                                     sendMessage("LocalPrevious_2", null);
-
                                 }
                             });
 
@@ -1241,9 +1248,10 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                                     getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
                                     Toast.makeText(PlayerActivity.this, "Resume request received",
                                             Toast.LENGTH_SHORT).show();
+                                    sendMessage("LocalResume_2", null);
                                 }
                             });
-                            sendMessage("LocalResume_2", null);
+
                             new SongTimer(ACTION_DELAY, musicSrv, controller, "Resume", context, true, null, progressDialog);
                             break;
                         case "LocalResume_2":
@@ -1255,6 +1263,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                                     getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
                                     Toast.makeText(PlayerActivity.this, "Resume request received",
                                             Toast.LENGTH_SHORT).show();
+                                    showProgressDialog("Processing resume request. Please wait.");
                                 }
                             });
                             long resumeLatency = (System.currentTimeMillis() - starttime)/2;
@@ -1625,6 +1634,11 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             else if(text.equals("Sent LocalPrevious_1")){
                 progressDialog.dismiss();
                 showProgressDialog("Processing previous request. Please wait.");
+            }
+
+            else if(text.equals("Sent LocalResume_1")){
+                progressDialog.dismiss();
+                showProgressDialog("Processing resume request. Please wait.");
             }
         }
     }
