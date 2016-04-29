@@ -53,7 +53,10 @@ public class SongTimer {
             if(pd != null && pd.isShowing()){
                 pd.dismiss();
             }
-            WifiSingleton.getInstance().getPlayerActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+            PlayerActivity a = WifiSingleton.getInstance().getPlayerActivity();
+            if(a != null){
+                a.removeFlags();
+            }
             switch (action) {
 
                 case "Play":

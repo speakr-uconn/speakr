@@ -157,6 +157,10 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
         return true;
     }
 
+    public void removeFlags(){
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
