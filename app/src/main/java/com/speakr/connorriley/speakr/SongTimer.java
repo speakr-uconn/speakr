@@ -7,6 +7,7 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.view.WindowManager;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -19,7 +20,6 @@ public class SongTimer {
     private Context context;
     private MusicController controller;
     private String TAG = "SongTimer";
-    private String pause;
     public SongTimer(long localPlayTime, MusicService m, MusicController c, String action,
                      Context context1, boolean local, String pauseTime) {
         Log.d(TAG, "New SongTimer");
@@ -47,12 +47,14 @@ public class SongTimer {
         public void run() {
             Log.d(TAG, action);
             Looper.prepare();
+            WifiSingleton.getInstance().getPlayerActivity().progressDialog.dismiss();
+            WifiSingleton.getInstance().getPlayerActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
             switch (action) {
+
                 case "Play":
                     musicSrv.playSong();
                     break;
                 case "Pause":
-                    Log.e("SongTime", Integer.toString((int) Long.parseLong(pauseTime)));
                     musicSrv.seek((int) Long.parseLong(pauseTime));
                     musicSrv.pausePlayer();
                     break;

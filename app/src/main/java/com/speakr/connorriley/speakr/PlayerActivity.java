@@ -613,7 +613,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             startService(serviceIntent);
         }
     }
-    private void sendMessage(String message, String extra) {
+    public void sendMessage(String message, String extra) {
         //IT"S TIME TO SEND THE TIME :)
         WifiSingleton wifiSingleton = WifiSingleton.getInstance();
         if (wifiSingleton.getInfo() != null) {
@@ -627,31 +627,24 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                 serviceIntent.putExtra(FileTransferService.EXTRAS_ADDRESS,
                         wifiSingleton.getMemberIP());
             }
+
+            String action = "";
             if(message.equals("LocalPause_1") || message.equals("LocalPause_2")){
                 serviceIntent.putExtra(FileTransferService.EXTRAS_PAUSETIME,
                         extra);
-            }
-            serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, 8990);
-            Log.d("PlayerActivity", "startService about to be called for sending timestamp");
-
-            String action;
-
-            if(message.equals("LocalPause_1") || message.equals("LocalPause_2")){
                 action = "pause";
             }
 
             else if(message.equals("LocalPlay_1") || message.equals("LocalPlay_2")){
                 action = "play";
             }
-
-            else{
-                action = "";
-            }
+            serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, 8990);
+            Log.d("PlayerActivity", "startService about to be called for sending timestamp");
             serviceIntent.putExtra(FileTransferService.EXTRAS_TIMESTAMP, "" + starttime);
 
             getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
                     WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
-            showProgressDialog("Sending " + action + " request.");
+            showProgressDialog("Sending " + action + " request");
             startService(serviceIntent);
         }
     }
@@ -1100,12 +1093,10 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                                 @Override
                                 public void run() {
                                     progressDialog.dismiss();
-                                    getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                                    //getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
                                     Toast.makeText(PlayerActivity.this, "Play request received",
                                             Toast.LENGTH_SHORT).show();
-                                    getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
-                                            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
-                                    showProgressDialog("Processing play request. Please wait");
+                                    showProgressDialog("Processing play request. Please wait.");
                                 }
                             });
                             sendMessage("LocalPlay_2", null);
@@ -1117,9 +1108,10 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                                 @Override
                                 public void run() {
                                     progressDialog.dismiss();
-                                    getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                                    //getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
                                     Toast.makeText(PlayerActivity.this, "Play request received",
                                             Toast.LENGTH_SHORT).show();
+                                    showProgressDialog("Processing play request. Please wait.");
                                 }
                             });
                             Long playlatency = (System.currentTimeMillis() - starttime)/2;
@@ -1135,6 +1127,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                                     getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
                                     Toast.makeText(PlayerActivity.this, "Pause request received",
                                             Toast.LENGTH_SHORT).show();
+                                    showProgressDialog("Processing pause request. Please wait.");
                                 }
                             });
                             sendMessage("LocalPause_2", pauseTime);
@@ -1149,6 +1142,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                                     getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
                                     Toast.makeText(PlayerActivity.this, "Pause request received",
                                             Toast.LENGTH_SHORT).show();
+                                    showProgressDialog("Processing pause request. Please wait.");
                                 }
                             });
                             long pauselatency = (System.currentTimeMillis() - starttime)/2;

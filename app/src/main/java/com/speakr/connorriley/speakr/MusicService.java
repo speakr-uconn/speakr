@@ -114,18 +114,7 @@ public class MusicService extends Service implements
         player.prepareAsync();
     }
 
-//    private void sendFile(Uri trackUri) {
-//        Intent serviceIntent = new Intent(getApplicationContext(), FileTransferService.class);
-//        WifiP2pInfo info = new WifiP2pInfo();
-//        serviceIntent.setAction(FileTransferService.ACTION_SEND_FILE);
-//        serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_PATH, trackUri.toString());
-//        serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS,
-//                info.groupOwnerAddress.getHostAddress());
-//        serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, 8988);
-//        Log.d("DeviceDetailFragment", "startService about to be called");
-//        getApplicationContext().startService(serviceIntent);
-//    }
-
+    @Deprecated
     public void setShuffle(){
         if(shuffle)
             shuffle=false;
@@ -143,9 +132,13 @@ public class MusicService extends Service implements
 
     @Override
     public void onCompletion(MediaPlayer mp) {
-        if(player.getCurrentPosition() > 0){
+        if(player.getCurrentPosition() > 0) {
             mp.reset();
-            playNext();
+            songPosn++;
+            if(songPosn < songs.size() && WifiSingleton.getInstance().isGroupOwner()) {
+                WifiSingleton.getInstance().getPlayerActivity().sendMessage("LocalPlay_1", "connorhack");
+            }
+            //playNext();
         }
     }
 
