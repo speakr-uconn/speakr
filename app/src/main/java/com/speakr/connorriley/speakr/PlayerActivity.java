@@ -979,7 +979,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             Toast.makeText(PlayerActivity.this, "Request processed. One moment.",
                     Toast.LENGTH_SHORT).show();
             SongTimer songtimer = new SongTimer(localPlayTime, musicSrv, controller, actionstring,
-                    context, false, null);
+                    context, false, null, progressDialog);
         }
     }
 
@@ -1046,7 +1046,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             Toast.makeText(PlayerActivity.this, "Play/Pause request successfully sent.",
                     Toast.LENGTH_SHORT).show();
             SongTimer songtimer = new SongTimer(localPlayTime, musicSrv, controller, actionstring,
-                    context, false, null);
+                    context, false, null, progressDialog);
         }
     }
 
@@ -1101,7 +1101,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                                     sendMessage("LocalPlay_2", null);
                                 }
                             });
-                            new SongTimer(ACTION_DELAY, musicSrv, controller, "Play", context, true, null);
+                            new SongTimer(ACTION_DELAY, musicSrv, controller, "Play", context, true, null, progressDialog);
                             break;
                         case "LocalPlay_2":
                             receiveTimeStamp(client);
@@ -1117,7 +1117,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                             });
                             Long playlatency = (System.currentTimeMillis() - starttime)/2;
                             new SongTimer(ACTION_DELAY - playlatency, musicSrv, controller, "Play",
-                                    context, true, null);
+                                    context, true, null, progressDialog);
                             break;
                         case "LocalPause_1":
                             pauseTime = receiveTimeStamp(client);
@@ -1132,7 +1132,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                                     showProgressDialog("Processing pause request. Please wait.");
                                 }
                             });
-                            new SongTimer(ACTION_DELAY, musicSrv, controller, "Pause", context, true, pauseTime);
+                            new SongTimer(ACTION_DELAY, musicSrv, controller, "Pause", context, true, pauseTime, progressDialog);
                             break;
                         case "LocalPause_2":
                             pauseTime = receiveTimeStamp(client);
@@ -1148,7 +1148,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                             });
                             long pauselatency = (System.currentTimeMillis() - starttime)/2;
                             new SongTimer(ACTION_DELAY - pauselatency, musicSrv, controller, "Pause",
-                                    context, true, pauseTime);
+                                    context, true, pauseTime, progressDialog);
                             break;
                         case "LocalNext_1":
                             receiveTimeStamp(client);
@@ -1162,7 +1162,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                                 }
                             });
                             sendMessage("LocalNext_2", null);
-                            new SongTimer(ACTION_DELAY, musicSrv, controller, "Next", context, true, null);
+                            new SongTimer(ACTION_DELAY, musicSrv, controller, "Next", context, true, null, progressDialog);
                             break;
                         case "LocalNext_2":
                             receiveTimeStamp(client);
@@ -1177,7 +1177,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                             });
                             long nextlatency = (System.currentTimeMillis() - starttime)/2;
                             new SongTimer(ACTION_DELAY - nextlatency, musicSrv, controller, "Next",
-                                    context, true, null);
+                                    context, true, null, progressDialog);
                             break;
                         case "LocalPrevious_1":
                             receiveTimeStamp(client);
@@ -1191,7 +1191,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                                 }
                             });
                             sendMessage("LocalPrevious_2", null);
-                            new SongTimer(ACTION_DELAY, musicSrv, controller, "Previous", context, true, null);
+                            new SongTimer(ACTION_DELAY, musicSrv, controller, "Previous", context, true, null, progressDialog);
                             break;
                         case "LocalPrevious_2":
                             receiveTimeStamp(client);
@@ -1206,7 +1206,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                             });
                             long previousLatency = (System.currentTimeMillis() - starttime)/2;
                             new SongTimer(ACTION_DELAY - previousLatency, musicSrv, controller, "Previous",
-                                    context, true, null);
+                                    context, true, null, progressDialog);
                             break;
                         case "LocalResume_1":
                             receiveTimeStamp(client);
@@ -1220,7 +1220,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                                 }
                             });
                             sendMessage("LocalResume_2", null);
-                            new SongTimer(ACTION_DELAY, musicSrv, controller, "Resume", context, true, null);
+                            new SongTimer(ACTION_DELAY, musicSrv, controller, "Resume", context, true, null, progressDialog);
                             break;
                         case "LocalResume_2":
                             receiveTimeStamp(client);
@@ -1235,7 +1235,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                             });
                             long resumeLatency = (System.currentTimeMillis() - starttime)/2;
                             new SongTimer(ACTION_DELAY - resumeLatency, musicSrv, controller, "Resume",
-                                    context, true, null);
+                                    context, true, null, progressDialog);
                             break;
                         case "MoveUp":
                             upIndex = receiveInt(client);

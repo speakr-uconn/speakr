@@ -3,6 +3,7 @@ package com.speakr.connorriley.speakr;
 /**
  * Created by connorriley on 3/1/16.
  */
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
@@ -19,14 +20,16 @@ public class SongTimer {
     private MusicService musicSrv;
     private Context context;
     private MusicController controller;
+    private ProgressDialog pd;
     private String TAG = "SongTimer";
     public SongTimer(long localPlayTime, MusicService m, MusicController c, String action,
-                     Context context1, boolean local, String pauseTime) {
+                     Context context1, boolean local, String pauseTime, ProgressDialog p) {
         Log.d(TAG, "New SongTimer");
         controller = c;
         context = context1;
         musicSrv = m;
         timer = new Timer();
+        pd = p;
         if (local) {
             timer.schedule(new SongTask(action, pauseTime), localPlayTime);
         } else {
@@ -47,8 +50,8 @@ public class SongTimer {
         public void run() {
             Log.d(TAG, action);
             Looper.prepare();
-            if(WifiSingleton.getInstance().getPlayerActivity().progressDialog != null && WifiSingleton.getInstance().getPlayerActivity().progressDialog.isShowing()){
-                WifiSingleton.getInstance().getPlayerActivity().progressDialog.dismiss();
+            if(pd != null && pd.isShowing()){
+                pd.dismiss();
             }
             WifiSingleton.getInstance().getPlayerActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
             switch (action) {
