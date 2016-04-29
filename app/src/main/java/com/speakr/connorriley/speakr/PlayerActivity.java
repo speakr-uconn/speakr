@@ -1085,6 +1085,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                     DataInputStream is = new DataInputStream(client.getInputStream());
                     dataType = is.readUTF();
                     String timestamp, pauseTime;
+                    Looper.prepare();
                     switch (dataType) {
                         case "LocalPlay_1":
                             // set timer for five seconds
