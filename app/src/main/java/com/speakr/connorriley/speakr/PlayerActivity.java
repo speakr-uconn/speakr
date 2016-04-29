@@ -637,13 +637,13 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
             if(message.equals("LocalPause_1") || message.equals("LocalPause_2")){
                 serviceIntent.putExtra(FileTransferService.EXTRAS_PAUSETIME,
                         extra);
-                action = "pause";
+               /* action = "pause";
                 getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
                         WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
-                showProgressDialog("Sending " + action + " request");
+                showProgressDialog("Sending " + action + " request");*/
             }
 
-            else if(message.equals("LocalPlay_1") || message.equals("LocalPlay_2")){
+           /* else if(message.equals("LocalPlay_1") || message.equals("LocalPlay_2")){
                 action = "play";
                 getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
                         WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
@@ -669,7 +669,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                 getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
                         WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
                 showProgressDialog("Sending " + action + " request");
-            }
+            }*/
 
             serviceIntent.putExtra(FileTransferService.EXTRAS_PORT, 8990);
             Log.d("PlayerActivity", "startService about to be called for sending timestamp");
@@ -1128,9 +1128,9 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                                     //getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
                                     Toast.makeText(PlayerActivity.this, "Play request received",
                                             Toast.LENGTH_SHORT).show();
-                                    sendMessage("LocalPlay_2", null);
                                 }
                             });
+                            sendMessage("LocalPlay_2", null);
                             new SongTimer(ACTION_DELAY, musicSrv, controller, "Play", context, true, null, progressDialog);
                             break;
                         case "LocalPlay_2":
@@ -1158,9 +1158,10 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                                     getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
                                     Toast.makeText(PlayerActivity.this, "Pause request received",
                                             Toast.LENGTH_SHORT).show();
-                                    sendMessage("LocalPause_2", pauseTime);
+
                                 }
                             });
+                            sendMessage("LocalPause_2", pauseTime);
                             new SongTimer(ACTION_DELAY, musicSrv, controller, "Pause", context, true, pauseTime, progressDialog);
                             break;
                         case "LocalPause_2":
@@ -1188,11 +1189,11 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                                     getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
                                     Toast.makeText(PlayerActivity.this, "Next request received",
                                             Toast.LENGTH_SHORT).show();
-                                    sendMessage("LocalNext_2", null);
+
 
                                 }
                             });
-
+                            sendMessage("LocalNext_2", null);
                             new SongTimer(ACTION_DELAY, musicSrv, controller, "Next", context, true, null, progressDialog);
                             break;
                         case "LocalNext_2":
@@ -1220,10 +1221,10 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                                     getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
                                     Toast.makeText(PlayerActivity.this, "Previous request received",
                                             Toast.LENGTH_SHORT).show();
-                                    sendMessage("LocalPrevious_2", null);
+
                                 }
                             });
-
+                            sendMessage("LocalPrevious_2", null);
                             new SongTimer(ACTION_DELAY, musicSrv, controller, "Previous", context, true, null, progressDialog);
                             break;
                         case "LocalPrevious_2":
@@ -1251,10 +1252,10 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                                     getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
                                     Toast.makeText(PlayerActivity.this, "Resume request received",
                                             Toast.LENGTH_SHORT).show();
-                                    sendMessage("LocalResume_2", null);
+
                                 }
                             });
-
+                            sendMessage("LocalResume_2", null);
                             new SongTimer(ACTION_DELAY, musicSrv, controller, "Resume", context, true, null, progressDialog);
                             break;
                         case "LocalResume_2":
