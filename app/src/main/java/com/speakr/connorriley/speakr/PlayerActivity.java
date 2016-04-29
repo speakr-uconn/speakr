@@ -1148,7 +1148,6 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                                     Toast.makeText(PlayerActivity.this, "Pause request received",
                                             Toast.LENGTH_SHORT).show();
                                     sendMessage("LocalPause_2", pauseTime);
-                                    showProgressDialog("Processing pause request. Please wait.");
                                 }
                             });
                             new SongTimer(ACTION_DELAY, musicSrv, controller, "Pause", context, true, pauseTime, progressDialog);
@@ -1179,7 +1178,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                                     Toast.makeText(PlayerActivity.this, "Next request received",
                                             Toast.LENGTH_SHORT).show();
                                     sendMessage("LocalNext_2", null);
-                                    showProgressDialog("Processing next request. Please wait.");
+
                                 }
                             });
 
@@ -1194,6 +1193,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                                     getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
                                     Toast.makeText(PlayerActivity.this, "Next request received",
                                             Toast.LENGTH_SHORT).show();
+                                    showProgressDialog("Processing next request. Please wait.");
                                 }
                             });
                             long nextlatency = (System.currentTimeMillis() - starttime)/2;
@@ -1210,7 +1210,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                                     Toast.makeText(PlayerActivity.this, "Previous request received",
                                             Toast.LENGTH_SHORT).show();
                                     sendMessage("LocalPrevious_2", null);
-                                    showProgressDialog("Processing previous request. Please wait.");
+
                                 }
                             });
 
@@ -1225,6 +1225,7 @@ public class PlayerActivity extends HamburgerActivity implements View.OnClickLis
                                     getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
                                     Toast.makeText(PlayerActivity.this, "Previous request received",
                                             Toast.LENGTH_SHORT).show();
+                                    showProgressDialog("Processing previous request. Please wait.");
                                 }
                             });
                             long previousLatency = (System.currentTimeMillis() - starttime)/2;
